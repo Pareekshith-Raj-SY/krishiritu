@@ -1,0 +1,120 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/theme/app_theme.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _form = GlobalKey<FormState>();
+  final _email = TextEditingController();
+  final _pass = TextEditingController();
+  bool _loading = false, _obscure = true;
+
+  Future<void> _login() async {
+    if (!_form.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: _email.text.trim(), password: _pass.text.trim());
+      if (mounted) context.go('/home');
+    } on AuthException catch (e) {
+      if (mounted) _showError(e.message);
+    } catch (_) {
+      if (mounted) _showError('Login failed. Please check your credentials.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _demoLogin() => context.go('/home');
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: AppColors.errorRed));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _form,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 32),
+                const Text('🌿', style: TextStyle(fontSize: 48)),
+                const SizedBox(height: 16),
+                const Text('Welcome Back!', style: TextStyle(
+                    fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.forestGreen)),
+                const SizedBox(height: 8),
+                const Text('Sign in to KrishiRitu AI', style: TextStyle(color: AppColors.textMedium)),
+                const SizedBox(height: 40),
+                TextFormField(
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                      labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+                  validator: (v) => v!.contains('@') ? null : 'Enter a valid email',
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _pass,
+                  obscureText: _obscure,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                    ),
+                  ),
+                  validator: (v) => v!.length >= 6 ? null : 'Password too short',
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => context.push('/forgot-password'),
+                    child: const Text('Forgot Password?'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _loading ? null : _login,
+                  child: _loading
+                      ? const SizedBox(width: 24, height: 24,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text('Sign In'),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: _demoLogin,
+                  child: const Text('Continue as Demo'),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account? "),
+                    TextButton(
+                      onPressed: () => context.go('/register'),
+                      child: const Text('Create Account'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
