@@ -45,7 +45,7 @@ jobs:
             flutter --version
             flutter pub get -v
           } > debug.log 2>&1 || {
-            ERR=$(tail -n 25 debug.log | tr '\n' ' ')
+            ERR=$(grep -E -C 3 -i "exception|error|failed|fatal" debug.log | head -n 20 | tr '\n' ' ')
             echo "::error title=PubGetFailed::$ERR"
             cat debug.log
             exit 1
