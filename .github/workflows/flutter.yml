@@ -41,13 +41,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          {
-            flutter --version
-            flutter pub get -v
-          } > debug.log 2>&1 || {
-            ERR=$(grep -E -C 3 -i "exception|error|failed|fatal" debug.log | head -n 20 | tr '\n' ' ')
+          flutter pub get || {
+            ERR=$(flutter pub get 2>&1 | tr '\n' ' ')
             echo "::error title=PubGetFailed::$ERR"
-            cat debug.log
             exit 1
           }
 
