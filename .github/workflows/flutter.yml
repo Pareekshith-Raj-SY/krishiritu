@@ -24,10 +24,11 @@ jobs:
           cache: 'gradle'
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          channel: 'stable'
-          cache: false
+        run: |
+          git clone https://github.com/flutter/flutter.git --depth 1 -b stable $HOME/flutter
+          git config --global --add safe.directory $HOME/flutter
+          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+          echo "$HOME/flutter/bin/cache/dart-sdk/bin" >> $GITHUB_PATH
 
       - name: Prepare Environment File
         run: |
