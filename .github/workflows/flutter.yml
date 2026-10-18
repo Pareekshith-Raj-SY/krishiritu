@@ -25,8 +25,8 @@ jobs:
 
       - name: Set up Flutter
         run: |
-          ARCHIVE=$(curl -s https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json | jq -r '.releases[] | select(.channel=="stable") | .archive' | head -1)
-          curl -sL "https://storage.googleapis.com/flutter_infra_release/releases/$ARCHIVE" | tar -xf - -C $HOME
+          git clone https://github.com/flutter/flutter.git --depth 1 -b stable $HOME/flutter
+          git config --global --add safe.directory $HOME/flutter
           echo "$HOME/flutter/bin" >> $GITHUB_PATH
           echo "FLUTTER_ROOT=$HOME/flutter" >> $GITHUB_ENV
           $HOME/flutter/bin/flutter precache --android

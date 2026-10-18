@@ -1,7 +1,13 @@
 class FormatUtils {
   static String rupees(double amount) {
-    if (amount >= 100000) return '₹${(amount / 100000).toStringAsFixed(1)}L';
-    if (amount >= 1000) return '₹${(amount / 1000).toStringAsFixed(1)}K';
+    if (amount >= 100000) {
+      final v = (amount / 100000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+      return '₹${v}L';
+    }
+    if (amount >= 1000) {
+      final v = (amount / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+      return '₹${v}K';
+    }
     return '₹${amount.toStringAsFixed(0)}';
   }
 
