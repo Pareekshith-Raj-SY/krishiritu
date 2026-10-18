@@ -40,12 +40,7 @@ jobs:
           fi
 
       - name: Install Dependencies
-        run: |
-          flutter pub get || {
-            ERR=$(flutter pub get 2>&1 | tr '\n' ' ')
-            echo "::error title=PubGetFailed::$ERR"
-            exit 1
-          }
+        run: flutter pub get
 
       - name: Analyze Project
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
