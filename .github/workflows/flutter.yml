@@ -27,8 +27,12 @@ jobs:
         run: |
           git clone https://github.com/flutter/flutter.git --depth 1 -b stable $HOME/flutter
           git config --global --add safe.directory $HOME/flutter
+          echo "FLUTTER_ROOT=$HOME/flutter" >> $GITHUB_ENV
+          echo "PUB_CACHE=$HOME/.pub-cache" >> $GITHUB_ENV
           echo "$HOME/flutter/bin" >> $GITHUB_PATH
           echo "$HOME/flutter/bin/cache/dart-sdk/bin" >> $GITHUB_PATH
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+          $HOME/flutter/bin/flutter precache --android
 
       - name: Prepare Environment File
         run: |
