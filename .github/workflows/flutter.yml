@@ -41,8 +41,15 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          flutter --version
-          flutter pub get
+          {
+            flutter --version
+            flutter pub get -v
+          } > debug.log 2>&1 || {
+            ERR=$(tail -n 25 debug.log | tr '\n' ' ')
+            echo "::error title=PubGetFailed::$ERR"
+            cat debug.log
+            exit 1
+          }
 
       - name: Analyze Project
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
