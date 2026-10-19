@@ -55,7 +55,12 @@ jobs:
           fi
 
       - name: Build Android Debug APK
-        run: flutter build apk --debug --android-skip-build-dependency-validation
+        run: |
+          flutter build apk --debug --android-skip-build-dependency-validation 2>&1 | tee apk_build.log || {
+            ERR=$(tail -n 35 apk_build.log | tr '\n' ' ')
+            echo "::error title=ApkBuildFailed::$ERR"
+            exit 1
+          }
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
