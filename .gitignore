@@ -22,6 +22,7 @@ android/gradlew.bat
 android/key.properties
 *.keystore
 *.jks
+android/app/src/main/java/**/GeneratedPluginRegistrant.java
 
 # iOS
 ios/Flutter/.last_build_id
