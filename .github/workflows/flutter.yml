@@ -76,5 +76,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.0 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK" --notes "Release APK with updated loading screen" || \
-          gh release upload v1.0.0 build/app/outputs/flutter-apk/app-release.apk --clobber
+          gh release create v1.0.1 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.1" --notes "Release APK with animated bottom loading splash screen" || \
+          gh release upload v1.0.1 build/app/outputs/flutter-apk/app-release.apk --clobber
