@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/authentication/screens/splash_screen.dart';
-import '../../features/authentication/screens/onboarding_screen.dart';
 import '../../features/authentication/screens/login_screen.dart';
 import '../../features/authentication/screens/register_screen.dart';
 import '../../features/authentication/screens/forgot_password_screen.dart';
@@ -26,13 +25,13 @@ import '../../features/farms/screens/farm_profile_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/login',
     redirect: (context, state) {
       return null;
     },
     routes: [
       GoRoute(path: '/splash', builder: (c, s) => const SplashScreen()),
-      GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
+      GoRoute(path: '/onboarding', redirect: (context, state) => '/login'),
       GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
       GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
       GoRoute(path: '/forgot-password', builder: (c, s) => const ForgotPasswordScreen()),

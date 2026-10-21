@@ -92,7 +92,7 @@ lib/
     models/              — FarmModel, CropModel, ExpenseModel
     repositories/        — CropRepository (local Karnataka data)
   features/
-    authentication/      — Splash, Onboarding, Login, Register
+    authentication/      — Splash, Login, Register
     farms/               — Farm setup, profile, provider
     dashboard/           — Main dashboard
     crop_planner/        — Season planner + crop detail
