@@ -87,7 +87,29 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _googleSignIn() async {
+  Future<void> _handleGoogleSignIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('user_email');
+    final savedName = prefs.getString('user_name');
+
+    if (!mounted) return;
+
+    final selectedEmail = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _GoogleAccountPickerSheet(
+        savedEmail: savedEmail,
+        savedName: savedName,
+      ),
+    );
+
+    if (selectedEmail != null && selectedEmail.trim().isNotEmpty) {
+      await _completeGoogleSignIn(selectedEmail.trim(), savedName);
+    }
+  }
+
+  Future<void> _completeGoogleSignIn(String email, [String? knownName]) async {
     setState(() => _loading = true);
     try {
       if (AppConfig.hasSupabase) {
@@ -99,8 +121,12 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_email', 'farmer@gmail.com');
-      await prefs.setString('user_name', 'Google Farmer');
+      final displayName = (knownName != null && knownName.isNotEmpty)
+          ? knownName
+          : _deriveNameFromEmail(email);
+
+      await prefs.setString('user_email', email);
+      await prefs.setString('user_name', displayName);
       await prefs.setBool('is_authenticated', true);
 
       if (mounted) context.go('/home');
@@ -108,6 +134,20 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) _showError('Google sign in failed. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _deriveNameFromEmail(String email) {
+    try {
+      final username = email.split('@').first;
+      final clean = username.replaceAll(RegExp(r'[^a-zA-Z]'), ' ').trim();
+      if (clean.isEmpty) return 'Google User';
+      final parts = clean.split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
+      return parts
+          .map((p) => p[0].toUpperCase() + p.substring(1).toLowerCase())
+          .join(' ');
+    } catch (_) {
+      return 'Google User';
     }
   }
 
@@ -192,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 OutlinedButton(
-                  onPressed: _loading ? null : _googleSignIn,
+                  onPressed: _loading ? null : _handleGoogleSignIn,
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(50),
                     backgroundColor: Colors.white,
@@ -204,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _GoogleIcon(),
+                      _GoogleIcon(size: 20),
                       SizedBox(width: 12),
                       Text(
                         'Sign in with Google',
@@ -238,62 +278,248 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 class _GoogleIcon extends StatelessWidget {
-  const _GoogleIcon();
+  final double size;
+  const _GoogleIcon({this.size = 22});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 22,
-      height: 22,
-      child: CustomPaint(
-        painter: _GoogleLogoPainter(),
-      ),
+    return Image.asset(
+      'assets/icons/google.png',
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return SizedBox(
+          width: size,
+          height: size,
+          child: const Center(
+            child: Text(
+              'G',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+                color: Color(0xFF4285F4),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
-class _GoogleLogoPainter extends CustomPainter {
+class _GoogleAccountPickerSheet extends StatefulWidget {
+  final String? savedEmail;
+  final String? savedName;
+
+  const _GoogleAccountPickerSheet({
+    this.savedEmail,
+    this.savedName,
+  });
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    final strokeWidth = size.width * 0.22;
-    final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
+  State<_GoogleAccountPickerSheet> createState() => _GoogleAccountPickerSheetState();
+}
 
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
+class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
+  final _emailCtrl = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _showCustomInput = false;
 
-    // Red (top)
-    paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(rect, -2.5, 1.8, false, paint);
-
-    // Blue (top-right & right)
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(rect, -0.7, 1.0, false, paint);
-
-    // Green (bottom)
-    paint.color = const Color(0xFF34A853);
-    canvas.drawArc(rect, 0.3, 1.6, false, paint);
-
-    // Yellow (left)
-    paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(rect, 1.9, 1.2, false, paint);
-
-    // Horizontal blue bar
-    final barPaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.fill;
-    final barRect = Rect.fromLTRB(
-      center.dx - 1,
-      center.dy - strokeWidth / 2,
-      size.width,
-      center.dy + strokeWidth / 2,
-    );
-    canvas.drawRect(barRect, barPaint);
+  @override
+  void initState() {
+    super.initState();
+    if (widget.savedEmail == null || widget.savedEmail!.isEmpty) {
+      _showCustomInput = true;
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  void dispose() {
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submitCustomEmail() {
+    if (_formKey.currentState?.validate() ?? false) {
+      Navigator.of(context).pop(_emailCtrl.text.trim());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final hasSaved = widget.savedEmail != null && widget.savedEmail!.isNotEmpty;
+
+    return Container(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 16,
+        bottom: bottomInset + 24,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                const _GoogleIcon(size: 26),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Choose an account',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    Text(
+                      'to continue to KrishiRitu AI',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            if (hasSaved) ...[
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.forestGreen,
+                  foregroundColor: Colors.white,
+                  child: Text(
+                    (widget.savedName?.isNotEmpty == true
+                            ? widget.savedName![0]
+                            : widget.savedEmail![0])
+                        .toUpperCase(),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                title: Text(
+                  widget.savedName?.isNotEmpty == true
+                      ? widget.savedName!
+                      : 'Google User',
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                ),
+                subtitle: Text(
+                  widget.savedEmail!,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                onTap: () => Navigator.of(context).pop(widget.savedEmail),
+              ),
+              const Divider(),
+            ],
+            if (!_showCustomInput && hasSaved)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  backgroundColor: Colors.grey.shade200,
+                  foregroundColor: AppColors.textDark,
+                  child: const Icon(Icons.person_add_alt_1_outlined, size: 20),
+                ),
+                title: const Text(
+                  'Use another account',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                ),
+                subtitle: Text(
+                  'Sign in with a different Google email',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                onTap: () => setState(() => _showCustomInput = true),
+              ),
+            if (_showCustomInput) ...[
+              const SizedBox(height: 8),
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasSaved ? 'Enter Google Account:' : 'Enter your Google Email:',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        hintText: 'e.g. farmer@gmail.com',
+                        prefixIcon: const Icon(Icons.alternate_email),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => _emailCtrl.clear(),
+                        ),
+                      ),
+                      validator: (v) {
+                        final val = v?.trim() ?? '';
+                        if (val.isEmpty) return 'Please enter your email';
+                        if (!val.contains('@') || !val.contains('.')) {
+                          return 'Enter a valid email address';
+                        }
+                        return null;
+                      },
+                      onFieldSubmitted: (_) => _submitCustomEmail(),
+                    ),
+                    const SizedBox(height: 14),
+                    ElevatedButton(
+                      onPressed: _submitCustomEmail,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        backgroundColor: AppColors.forestGreen,
+                      ),
+                      child: const Text('Continue with this account'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 18),
+            Text(
+              'To continue, Google will share your name, email address, language preference, and profile picture with KrishiRitu AI.',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade500, height: 1.3),
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
