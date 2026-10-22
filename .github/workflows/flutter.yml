@@ -7,6 +7,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build & Test Flutter App
@@ -76,5 +80,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.3 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.3" --notes "Release APK with seamless full-bleed single-screen splash" || \
-          gh release upload v1.0.3 build/app/outputs/flutter-apk/app-release.apk --clobber
+          gh release create v1.0.4 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.4" --notes "Release APK with updated sign in UI" || \
+          gh release upload v1.0.4 build/app/outputs/flutter-apk/app-release.apk --clobber

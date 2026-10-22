@@ -31,8 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _demoLogin() => context.go('/home');
-
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), backgroundColor: AppColors.errorRed));
@@ -52,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 const Text('🌿', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
-                const Text('Welcome Back!', style: TextStyle(
+                const Text('Welcome', style: TextStyle(
                     fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.forestGreen)),
                 const SizedBox(height: 8),
                 const Text('Sign in to KrishiRitu AI', style: TextStyle(color: AppColors.textMedium)),
@@ -93,11 +91,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? const SizedBox(width: 24, height: 24,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : const Text('Sign In'),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: _demoLogin,
-                  child: const Text('Continue as Demo'),
                 ),
                 const SizedBox(height: 24),
                 Row(
