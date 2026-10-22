@@ -6,10 +6,26 @@ class AppConfig {
   static String get openWeatherKey => dotenv.env['OPENWEATHER_API_KEY'] ?? '';
   static String get anthropicKey => dotenv.env['ANTHROPIC_API_KEY'] ?? '';
 
-  static bool get hasSupabase =>
-      supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
-  static bool get hasWeather => openWeatherKey.isNotEmpty;
-  static bool get hasAI => anthropicKey.isNotEmpty;
+  static bool get hasSupabase {
+    final url = supabaseUrl.trim().toLowerCase();
+    final key = supabaseAnonKey.trim().toLowerCase();
+    return url.isNotEmpty &&
+        key.isNotEmpty &&
+        !url.contains('your-project') &&
+        !url.contains('example.com') &&
+        !key.contains('your-anon-key') &&
+        !key.contains('your-key');
+  }
+
+  static bool get hasWeather {
+    final key = openWeatherKey.trim().toLowerCase();
+    return key.isNotEmpty && !key.contains('your-');
+  }
+
+  static bool get hasAI {
+    final key = anthropicKey.trim().toLowerCase();
+    return key.isNotEmpty && !key.contains('your-');
+  }
 
   static const appVersion = '1.0.0';
   static const appName = 'KrishiRitu AI';

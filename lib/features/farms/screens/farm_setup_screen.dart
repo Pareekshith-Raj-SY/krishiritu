@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/farm_provider.dart';
@@ -20,6 +21,30 @@ class _FarmSetupScreenState extends ConsumerState<FarmSetupScreen> {
   String _soil = 'Red Sandy Loam';
   String _irrigation = 'Rainfed';
   bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userName = prefs.getString('user_name');
+    if (userName != null && userName.isNotEmpty && mounted) {
+      setState(() {
+        _nameCtrl.text = '$userName\'s Farm';
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _villageCtrl.dispose();
+    _areaCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

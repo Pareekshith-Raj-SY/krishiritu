@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_theme.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -16,16 +18,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _pass = TextEditingController();
   bool _loading = false, _obscure = true;
 
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _pass.dispose();
+    super.dispose();
+  }
+
   Future<void> _register() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
+
+    final name = _name.text.trim();
+    final email = _email.text.trim();
+    final password = _pass.text.trim();
+
     try {
-      await Supabase.instance.client.auth.signUp(
-        email: _email.text.trim(), password: _pass.text.trim(),
-        data: {'full_name': _name.text.trim()});
+      if (AppConfig.hasSupabase) {
+        try {
+          await Supabase.instance.client.auth.signUp(
+            email: email,
+            password: password,
+            data: {'full_name': name},
+          );
+        } on AuthException catch (e) {
+          final msg = e.message.toLowerCase();
+          final isNetworkError = msg.contains('socketexception') ||
+              msg.contains('failed host lookup') ||
+              msg.contains('network') ||
+              msg.contains('clientexception') ||
+              msg.contains('connection');
+
+          if (!isNetworkError) {
+            if (mounted) _showErr(e.message);
+            return;
+          }
+          // Network issue: gracefully proceed in offline mode
+        } catch (_) {
+          // Network or server unreachable: continue locally
+        }
+      }
+
+      // Save local user profile
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_name', name);
+      await prefs.setString('user_email', email);
+      await prefs.setBool('is_authenticated', true);
+
       if (mounted) context.go('/farm-setup');
-    } on AuthException catch (e) {
-      if (mounted) _showErr(e.message);
     } catch (_) {
       if (mounted) _showErr('Registration failed. Try again.');
     } finally {

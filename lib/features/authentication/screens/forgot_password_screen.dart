@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_theme.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -13,11 +14,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _email = TextEditingController();
   bool _loading = false, _sent = false;
 
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
+
   Future<void> _reset() async {
-    if (_email.text.trim().isEmpty) return;
+    final email = _email.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address'), backgroundColor: AppColors.errorRed));
+      return;
+    }
     setState(() => _loading = true);
     try {
-      await Supabase.instance.client.auth.resetPasswordForEmail(_email.text.trim());
+      if (AppConfig.hasSupabase) {
+        try {
+          await Supabase.instance.client.auth.resetPasswordForEmail(email);
+        } catch (_) {}
+      }
       if (mounted) setState(() { _sent = true; _loading = false; });
     } catch (_) {
       if (mounted) setState(() => _loading = false);

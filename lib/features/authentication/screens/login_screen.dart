@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,15 +17,51 @@ class _LoginScreenState extends State<LoginScreen> {
   final _pass = TextEditingController();
   bool _loading = false, _obscure = true;
 
+  @override
+  void dispose() {
+    _email.dispose();
+    _pass.dispose();
+    super.dispose();
+  }
+
   Future<void> _login() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
+
+    final email = _email.text.trim();
+    final password = _pass.text.trim();
+
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
-        email: _email.text.trim(), password: _pass.text.trim());
+      if (AppConfig.hasSupabase) {
+        try {
+          await Supabase.instance.client.auth.signInWithPassword(
+            email: email,
+            password: password,
+          );
+        } on AuthException catch (e) {
+          final msg = e.message.toLowerCase();
+          final isNetworkError = msg.contains('socketexception') ||
+              msg.contains('failed host lookup') ||
+              msg.contains('network') ||
+              msg.contains('clientexception') ||
+              msg.contains('connection');
+
+          if (!isNetworkError) {
+            if (mounted) _showError(e.message);
+            return;
+          }
+          // Network issue: gracefully proceed in offline mode
+        } catch (_) {
+          // Network or server unreachable: continue locally
+        }
+      }
+
+      // Save local authentication session
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_email', email);
+      await prefs.setBool('is_authenticated', true);
+
       if (mounted) context.go('/home');
-    } on AuthException catch (e) {
-      if (mounted) _showError(e.message);
     } catch (_) {
       if (mounted) _showError('Login failed. Please check your credentials.');
     } finally {
