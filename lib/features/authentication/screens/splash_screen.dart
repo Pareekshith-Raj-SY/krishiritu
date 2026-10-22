@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/config/app_config.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -45,13 +48,31 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _animController.forward();
 
-    _animController.addStatusListener((status) {
+    _animController.addStatusListener((status) async {
       if (status == AnimationStatus.completed) {
+        if (!mounted) return;
+        final isAuth = await _checkAuth();
         if (mounted) {
-          context.go('/login');
+          if (isAuth) {
+            context.go('/home');
+          } else {
+            context.go('/login');
+          }
         }
       }
     });
+  }
+
+  Future<bool> _checkAuth() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isLocalAuth = prefs.getBool('is_authenticated') ?? false;
+      final isSupaAuth = AppConfig.hasSupabase &&
+          Supabase.instance.client.auth.currentSession != null;
+      return isLocalAuth || isSupaAuth;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override

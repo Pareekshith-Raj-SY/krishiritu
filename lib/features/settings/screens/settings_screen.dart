@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_theme.dart';
@@ -125,7 +127,16 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.logout,
               title: 'Sign Out',
               subtitle: 'Return to login',
-              onTap: () => context.go('/login'),
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('is_authenticated', false);
+                if (AppConfig.hasSupabase) {
+                  try {
+                    await Supabase.instance.client.auth.signOut();
+                  } catch (_) {}
+                }
+                if (context.mounted) context.go('/login');
+              },
               color: AppColors.errorRed,
             ),
           ]),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/repositories/crop_repository.dart';
-import '../../../data/models/crop_model.dart';
 
 class CropDetailScreen extends StatelessWidget {
   final String cropId;

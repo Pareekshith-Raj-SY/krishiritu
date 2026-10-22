@@ -107,7 +107,11 @@ class _FarmSetupScreenState extends ConsumerState<FarmSetupScreen> {
               ),
               const SizedBox(height: 12),
               OutlinedButton(
-                onPressed: () => context.go('/home'),
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('is_authenticated', true);
+                  if (context.mounted) context.go('/home');
+                },
                 child: const Text('Skip for now'),
               ),
             ],
@@ -125,6 +129,8 @@ class _FarmSetupScreenState extends ConsumerState<FarmSetupScreen> {
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _saving = true);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_authenticated', true);
     ref.read(farmProvider.notifier).updateFarm(
       name: _nameCtrl.text, district: _district, village: _villageCtrl.text,
       landAreaAcres: double.parse(_areaCtrl.text), soilType: _soil, irrigationMethod: _irrigation,
