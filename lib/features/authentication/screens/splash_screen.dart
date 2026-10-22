@@ -47,85 +47,57 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B3A04),
+      backgroundColor: const Color(0xFF06342A),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background splash image
-          Image.asset(
-            'assets/images/loading_screen.png',
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
+          // Background gradient matching image sky (top) and ground (bottom)
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF80C5F0), // Sky blue matching top of image
+                  Color(0xFF06342A), // Dark green matching bottom of image
+                ],
+                stops: [0.0, 1.0],
+              ),
+            ),
           ),
 
-          // Working animated loading indicator positioned at bottom
+          // Splash image fitted correctly into display without cropping or overlapping
+          Center(
+            child: Image.asset(
+              'assets/images/loading_screen.png',
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+
+          // Sleek, non-intrusive animated loading progress bar at the very bottom
           SafeArea(
             child: Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 36),
+                padding: const EdgeInsets.only(bottom: 16, left: 48, right: 48),
                 child: AnimatedBuilder(
                   animation: _progress,
                   builder: (context, child) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 28,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color.fromRGBO(0, 0, 0, 0.45),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: const Color.fromRGBO(255, 255, 255, 0.2),
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: SizedBox(
+                        height: 4,
+                        child: LinearProgressIndicator(
+                          value: _progress.value,
+                          backgroundColor:
+                              const Color.fromRGBO(255, 255, 255, 0.25),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFF4CAF50),
+                          ),
                         ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color.fromRGBO(0, 0, 0, 0.3),
-                            blurRadius: 16,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3.2,
-                              valueColor: AlwaysStoppedAnimation(
-                                Color(0xFF66BB6A),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Loading...',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: SizedBox(
-                              width: 180,
-                              height: 6,
-                              child: LinearProgressIndicator(
-                                value: _progress.value,
-                                backgroundColor:
-                                    const Color.fromRGBO(255, 255, 255, 0.25),
-                                valueColor: const AlwaysStoppedAnimation(
-                                  Color(0xFF4CAF50),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     );
                   },
