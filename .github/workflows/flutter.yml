@@ -76,5 +76,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.2 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.2" --notes "Release APK with updated splash screen correctly fitted to display" || \
-          gh release upload v1.0.2 build/app/outputs/flutter-apk/app-release.apk --clobber
+          gh release create v1.0.3 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.3" --notes "Release APK with seamless full-bleed single-screen splash" || \
+          gh release upload v1.0.3 build/app/outputs/flutter-apk/app-release.apk --clobber
