@@ -62,17 +62,27 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 4),
 
           // Language
-          _SettingsSection(title: 'Language / ಭಾಷೆ', children: [
+          _SettingsSection(title: 'Language / ಭಾಷೆ / भाषा', children: [
             _SettingsTile(
               icon: Icons.language,
               title: 'App Language',
-              subtitle: locale.languageCode == 'kn' ? 'ಕನ್ನಡ' : 'English',
-              trailing: Switch(
-                value: locale.languageCode == 'kn',
-                activeColor: AppColors.leafGreen,
+              subtitle: locale.languageCode == 'kn'
+                  ? 'ಕನ್ನಡ (Kannada)'
+                  : locale.languageCode == 'hi'
+                      ? 'हिंदी (Hindi)'
+                      : 'English',
+              trailing: DropdownButton<String>(
+                value: locale.languageCode,
+                underline: const SizedBox(),
+                items: const [
+                  DropdownMenuItem(value: 'en', child: Text('English')),
+                  DropdownMenuItem(value: 'kn', child: Text('ಕನ್ನಡ')),
+                  DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
+                ],
                 onChanged: (v) {
-                  ref.read(localeProvider.notifier).state =
-                      v ? const Locale('kn') : const Locale('en');
+                  if (v != null) {
+                    ref.read(localeProvider.notifier).state = Locale(v);
+                  }
                 },
               ),
             ),

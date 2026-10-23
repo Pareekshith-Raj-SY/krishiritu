@@ -33,6 +33,7 @@ class KrishiRituApp extends ConsumerWidget {
       supportedLocales: const [
         Locale('en'),
         Locale('kn'),
+        Locale('hi'),
       ],
       routerConfig: router,
     );
