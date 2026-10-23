@@ -63,6 +63,29 @@ void main() {
       expect(repo.getCropById('banana'), isNull);
     });
 
+    test('searchCrops finds crops by English name, Kannada name, and district', () {
+      final sugar = repo.searchCrops('sugar');
+      expect(sugar.any((c) => c.id == 'sugarcane'), isTrue);
+
+      final ragiKn = repo.searchCrops('ರಾಗಿ');
+      expect(ragiKn.any((c) => c.id == 'ragi'), isTrue);
+
+      final silk = repo.searchCrops('silk');
+      expect(silk.any((c) => c.id == 'sericulture'), isTrue);
+
+      final flower = repo.searchCrops('jasmine');
+      expect(flower.any((c) => c.id == 'jasmine'), isTrue);
+
+      final districtSearch = repo.searchCrops('Ramanagara');
+      expect(districtSearch.any((c) => c.id == 'sericulture'), isTrue);
+
+      final emptySearch = repo.searchCrops('');
+      expect(emptySearch.length, equals(14));
+
+      final noMatch = repo.searchCrops('xyzunknowncrop123');
+      expect(noMatch, isEmpty);
+    });
+
     test('all crops have required fields', () {
       for (final c in repo.getAllCrops()) {
         expect(c.id, isNotEmpty);

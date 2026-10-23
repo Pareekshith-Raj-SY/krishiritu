@@ -160,6 +160,20 @@ class CropRepository {
 
   List<CropModel> getAllCrops() => List.unmodifiable(_karnatakaCrops);
 
+  List<CropModel> searchCrops(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return getAllCrops();
+    return _karnatakaCrops.where((c) {
+      return c.name.toLowerCase().contains(q) ||
+          c.nameKn.toLowerCase().contains(q) ||
+          c.id.toLowerCase().contains(q) ||
+          c.soilTypes.toLowerCase().contains(q) ||
+          c.season.toLowerCase().contains(q) ||
+          c.description.toLowerCase().contains(q) ||
+          c.suitableDistricts.any((d) => d.toLowerCase().contains(q));
+    }).toList();
+  }
+
   List<CropModel> getCropsBySeason(String season) {
     if (season.isEmpty || season == 'All') return getAllCrops();
     final s = season.toLowerCase();

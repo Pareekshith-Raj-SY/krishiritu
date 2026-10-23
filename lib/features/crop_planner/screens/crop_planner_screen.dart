@@ -14,7 +14,10 @@ class CropPlannerScreen extends ConsumerStatefulWidget {
 
 class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
   final _repo = CropRepository();
+  final _searchController = TextEditingController();
   String _season = 'Kharif';
+  String _searchQuery = '';
+  bool _isSearching = false;
   List<CropModel> _crops = [];
   bool _filtered = false;
 
@@ -22,6 +25,12 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
   void initState() {
     super.initState();
     _loadCrops();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _loadCrops() {
@@ -43,16 +52,67 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
     }
   }
 
+  List<CropModel> get _displayedCrops {
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) return _crops;
+
+    final matched = _repo.searchCrops(query);
+    final farm = ref.read(farmProvider);
+    if (farm != null && farm.district.isNotEmpty) {
+      final recommended = _repo.getRecommendedCrops(
+        district: farm.district,
+        soilType: farm.soilType,
+        irrigationMethod: farm.irrigationMethod,
+        season: _season,
+        budgetPerAcre: farm.budgetPerAcre,
+      );
+      final recMap = {for (var r in recommended) r.id: r};
+      final scoredMatches = matched.map((m) => recMap[m.id] ?? m).toList();
+      scoredMatches.sort((a, b) => b.suitabilityScore.compareTo(a.suitabilityScore));
+      return scoredMatches;
+    }
+    return matched;
+  }
+
   @override
   Widget build(BuildContext context) {
     final farm = ref.watch(farmProvider);
+    final displayed = _displayedCrops;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Smart Season Planner'),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: const TextStyle(color: AppColors.forestGreen, fontSize: 16, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                  hintText: 'Search crop (e.g., Ragi, Sugarcane)...',
+                  hintStyle: TextStyle(color: AppColors.textMedium.withOpacity(0.6), fontSize: 14),
+                  border: InputBorder.none,
+                ),
+                onChanged: (v) => setState(() => _searchQuery = v),
+              )
+            : const Text('Smart Season Planner'),
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            tooltip: _isSearching ? 'Close Search' : 'Search Crops',
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  _searchQuery = '';
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -60,7 +120,7 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Column(
               children: [
-                if (farm != null)
+                if (farm != null) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
@@ -77,6 +137,52 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                           style: const TextStyle(color: AppColors.textDark, fontSize: 13, fontWeight: FontWeight.w600)),
                     ]),
                   ),
+                  const SizedBox(height: 10),
+                ],
+                // Quick Search Bar with dedicated Search Icon Button
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.92),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _searchQuery.isNotEmpty ? AppColors.leafGreen : Colors.black.withOpacity(0.08),
+                      width: _searchQuery.isNotEmpty ? 1.5 : 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2)),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.search, color: AppColors.leafGreen, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(fontSize: 14, color: AppColors.textDark),
+                          decoration: const InputDecoration(
+                            hintText: 'Search any crop (Ragi, Sugarcane, Marigold...)',
+                            hintStyle: TextStyle(fontSize: 13, color: AppColors.textMedium),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          onChanged: (v) => setState(() => _searchQuery = v),
+                        ),
+                      ),
+                      if (_searchQuery.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(Icons.clear, size: 18, color: AppColors.textMedium),
+                          tooltip: 'Clear search',
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 10),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -107,7 +213,35 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
               ],
             ),
           ),
-          if (_filtered)
+          if (_searchQuery.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.leafGreen.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_list, size: 15, color: AppColors.forestGreen),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Found ${displayed.length} result${displayed.length == 1 ? '' : 's'} for "$_searchQuery"',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.forestGreen),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                    child: const Text('Reset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.forestGreen)),
+                  ),
+                ],
+              ),
+            )
+          else if (_filtered)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -129,12 +263,41 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
               ]),
             ),
           Expanded(
-            child: _crops.isEmpty
-                ? const Center(child: Text('No crops found for this season.'))
+            child: displayed.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.search_off, size: 52, color: AppColors.textMedium),
+                          const SizedBox(height: 12),
+                          Text(
+                            _searchQuery.isNotEmpty
+                                ? 'No crops found matching "$_searchQuery"'
+                                : 'No crops found for this season.',
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textMedium),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (_searchQuery.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                              icon: const Icon(Icons.clear, size: 18),
+                              label: const Text('Clear search'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
-                    itemCount: _crops.length,
-                    itemBuilder: (_, i) => _CropCard(crop: _crops[i], rank: i + 1, filtered: _filtered),
+                    itemCount: displayed.length,
+                    itemBuilder: (_, i) => _CropCard(crop: displayed[i], rank: i + 1, filtered: _filtered),
                   ),
           ),
           const Padding(
