@@ -11,8 +11,21 @@ class AppConfig {
     return '';
   }
 
-  static String get supabaseUrl => _safeEnv('SUPABASE_URL');
-  static String get supabaseAnonKey => _safeEnv('SUPABASE_ANON_KEY');
+  static String get supabaseUrl {
+    const compileTime = String.fromEnvironment('SUPABASE_URL');
+    if (compileTime.isNotEmpty) return compileTime;
+    final env = _safeEnv('SUPABASE_URL');
+    if (env.isNotEmpty) return env;
+    return 'https://qsnpwvnztfyfmosssked.supabase.co';
+  }
+
+  static String get supabaseAnonKey {
+    const compileTime = String.fromEnvironment('SUPABASE_ANON_KEY');
+    if (compileTime.isNotEmpty) return compileTime;
+    final env = _safeEnv('SUPABASE_ANON_KEY');
+    if (env.isNotEmpty) return env;
+    return 'sb_publishable_1BQ_wOaZufFWXWwmSzoe3Q_FNeo6Fx9';
+  }
   static String get openWeatherKey => _safeEnv('OPENWEATHER_API_KEY');
   static String get anthropicKey => _safeEnv('ANTHROPIC_API_KEY');
   static String get groqApiKey {
