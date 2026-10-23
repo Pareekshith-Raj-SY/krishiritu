@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'core/config/app_config.dart';
+import 'data/services/supabase_service.dart';
 import 'app.dart';
 
 Future<void> main() async {
@@ -17,6 +18,9 @@ Future<void> main() async {
 
   // Init Hive
   await Hive.initFlutter();
+
+  // Initialize cached Supabase state
+  await SupabaseService.init();
 
   // Init Supabase only if valid non-placeholder configuration is provided
   if (AppConfig.hasSupabase) {
