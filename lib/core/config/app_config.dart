@@ -27,7 +27,7 @@ class AppConfig {
     return key.isNotEmpty && !key.contains('your-');
   }
 
-  static const appVersion = '1.0.0';
+  static const appVersion = '1.0.8';
   static const appName = 'KrishiRitu AI';
 
   // Karnataka districts
