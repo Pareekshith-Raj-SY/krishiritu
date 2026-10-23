@@ -80,5 +80,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.8 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.8" --notes "Release APK with password verification for Google Sign-In" || \
-          gh release upload v1.0.8 build/app/outputs/flutter-apk/app-release.apk --clobber
+          gh release create v1.0.9 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.9" --notes "Release APK with strict credential verification for Google and email sign-in" || \
+          gh release upload v1.0.9 build/app/outputs/flutter-apk/app-release.apk --clobber

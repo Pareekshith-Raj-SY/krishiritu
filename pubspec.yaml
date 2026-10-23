@@ -1,6 +1,6 @@
 name: krishiritu
 description: KrishiRitu AI — Smart Farmer Season Guide for Karnataka farmers.
-version: 1.0.8+9
+version: 1.0.9+10
 publish_to: 'none'
 
 environment:

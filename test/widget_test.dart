@@ -4,6 +4,8 @@ import '../lib/data/models/crop_model.dart';
 import '../lib/data/models/farm_model.dart';
 import '../lib/core/utils/format_utils.dart';
 import '../lib/core/utils/date_utils.dart' as appdate;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../lib/data/services/auth_service.dart';
 
 void main() {
   // ─── CropRepository Tests ───────────────────────────────────────────────
@@ -241,6 +243,57 @@ void main() {
 
     test('safeParse handles invalid date', () {
       expect(appdate.AppDateUtils.safeParse('not-a-date'), isNull);
+    });
+  });
+
+  // ─── AuthService Tests ──────────────────────────────────────────────────
+  group('AuthService', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test('pre-seeded account rejects wrong password', () async {
+      final res = await AuthService.signIn(
+        email: 'farmer@gmail.com',
+        password: 'wrongpassword',
+        isGoogleAuth: true,
+      );
+      expect(res.success, isFalse);
+      expect(res.errorMessage, contains('Incorrect password'));
+    });
+
+    test('pre-seeded account accepts correct password', () async {
+      final res = await AuthService.signIn(
+        email: 'farmer@gmail.com',
+        password: 'farmer123',
+        isGoogleAuth: true,
+      );
+      expect(res.success, isTrue);
+      expect(res.name, equals('Karnataka Farmer'));
+    });
+
+    test('registered account strictly validates password on subsequent login', () async {
+      final reg = await AuthService.register(
+        email: 'newfarmer@gmail.com',
+        password: 'mysecretpass',
+        name: 'New Farmer',
+      );
+      expect(reg.success, isTrue);
+
+      final wrong = await AuthService.signIn(
+        email: 'newfarmer@gmail.com',
+        password: 'badpassword',
+        isGoogleAuth: true,
+      );
+      expect(wrong.success, isFalse);
+      expect(wrong.errorMessage, contains('Incorrect password'));
+
+      final right = await AuthService.signIn(
+        email: 'newfarmer@gmail.com',
+        password: 'mysecretpass',
+        isGoogleAuth: true,
+      );
+      expect(right.success, isTrue);
     });
   });
 }

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../data/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,41 +50,19 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _email.text.trim();
     final password = _pass.text.trim();
 
-    try {
-      if (AppConfig.hasSupabase) {
-        try {
-          await Supabase.instance.client.auth.signInWithPassword(
-            email: email,
-            password: password,
-          );
-        } on AuthException catch (e) {
-          final msg = e.message.toLowerCase();
-          final isNetworkError = msg.contains('socketexception') ||
-              msg.contains('failed host lookup') ||
-              msg.contains('network') ||
-              msg.contains('clientexception') ||
-              msg.contains('connection');
+    final result = await AuthService.signIn(
+      email: email,
+      password: password,
+      isGoogleAuth: false,
+    );
 
-          if (!isNetworkError) {
-            if (mounted) _showError(e.message);
-            return;
-          }
-          // Network issue: gracefully proceed in offline mode
-        } catch (_) {
-          // Network or server unreachable: continue locally
-        }
+    if (mounted) {
+      setState(() => _loading = false);
+      if (result.success) {
+        context.go('/home');
+      } else {
+        _showError(result.errorMessage ?? 'Invalid email or password.');
       }
-
-      // Save local authentication session
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_email', email);
-      await prefs.setBool('is_authenticated', true);
-
-      if (mounted) context.go('/home');
-    } catch (_) {
-      if (mounted) _showError('Login failed. Please check your credentials.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -113,86 +92,37 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _completeGoogleSignIn(String email, String password, [String? knownName]) async {
+  Future<void> _completeGoogleSignIn(
+      String email, String password, [String? knownName]) async {
     setState(() => _loading = true);
-    try {
-      if (AppConfig.hasSupabase) {
-        try {
-          await Supabase.instance.client.auth.signInWithPassword(
-            email: email,
-            password: password,
-          );
-        } on AuthException catch (e) {
-          final msg = e.message.toLowerCase();
-          final isNetworkError = msg.contains('socketexception') ||
-              msg.contains('failed host lookup') ||
-              msg.contains('network') ||
-              msg.contains('clientexception') ||
-              msg.contains('connection');
 
-          if (!isNetworkError) {
-            if (msg.contains('invalid login credentials') ||
-                msg.contains('user not found') ||
-                msg.contains('invalid_grant')) {
-              try {
-                await Supabase.instance.client.auth.signUp(
-                  email: email,
-                  password: password,
-                  data: {'full_name': knownName ?? _deriveNameFromEmail(email)},
-                );
-              } catch (_) {}
-            } else {
-              if (mounted) _showError(e.message);
-              return;
-            }
-          }
-        } catch (_) {
-          // Network or server unreachable: continue locally
-        }
-      }
+    final result = await AuthService.signIn(
+      email: email,
+      password: password,
+      isGoogleAuth: true,
+    );
 
-      final prefs = await SharedPreferences.getInstance();
-      final displayName = (knownName != null && knownName.isNotEmpty)
-          ? knownName
-          : _deriveNameFromEmail(email);
-
-      await prefs.setString('user_email', email);
-      await prefs.setString('user_name', displayName);
-      await prefs.setBool('is_authenticated', true);
-
-      if (mounted) {
+    if (mounted) {
+      setState(() => _loading = false);
+      if (result.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Welcome, $displayName! Signed in with Google.'),
+            content: Text('Welcome, ${result.name}! Signed in with Google.'),
             backgroundColor: AppColors.forestGreen,
           ),
         );
         context.go('/home');
+      } else {
+        _showError(
+            result.errorMessage ?? 'Incorrect password. Please try again.');
       }
-    } catch (_) {
-      if (mounted) _showError('Google sign in failed. Please try again.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  String _deriveNameFromEmail(String email) {
-    try {
-      final username = email.split('@').first;
-      final clean = username.replaceAll(RegExp(r'[^a-zA-Z]'), ' ').trim();
-      if (clean.isEmpty) return 'Google User';
-      final parts = clean.split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
-      return parts
-          .map((p) => p[0].toUpperCase() + p.substring(1).toLowerCase())
-          .join(' ');
-    } catch (_) {
-      return 'Google User';
     }
   }
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.errorRed));
+      SnackBar(content: Text(msg), backgroundColor: AppColors.errorRed),
+    );
   }
 
   @override
@@ -209,17 +139,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 const Text('🌿', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
-                const Text('Welcome', style: TextStyle(
-                    fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.forestGreen)),
+                const Text('Welcome',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.forestGreen)),
                 const SizedBox(height: 8),
-                const Text('Sign in to KrishiRitu AI', style: TextStyle(color: AppColors.textMedium)),
+                const Text('Sign in to KrishiRitu AI',
+                    style: TextStyle(color: AppColors.textMedium)),
                 const SizedBox(height: 40),
                 TextFormField(
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                      labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
-                  validator: (v) => v != null && v.contains('@') ? null : 'Enter a valid email',
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email_outlined)),
+                  validator: (v) =>
+                      v != null && v.contains('@') ? null : 'Enter a valid email',
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -233,7 +169,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
-                  validator: (v) => v != null && v.length >= 6 ? null : 'Password too short',
+                  validator: (v) =>
+                      v != null && v.length >= 6 ? null : 'Password too short',
                 ),
                 const SizedBox(height: 12),
                 Align(
@@ -247,14 +184,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 ElevatedButton(
                   onPressed: _loading ? null : _login,
                   child: _loading
-                      ? const SizedBox(width: 24, height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
                       : const Text('Sign In'),
                 ),
                 const SizedBox(height: 20),
                 const Row(
                   children: [
-                    Expanded(child: Divider(color: AppColors.divider, thickness: 1)),
+                    Expanded(
+                        child: Divider(color: AppColors.divider, thickness: 1)),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
@@ -266,7 +207,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    Expanded(child: Divider(color: AppColors.divider, thickness: 1)),
+                    Expanded(
+                        child: Divider(color: AppColors.divider, thickness: 1)),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -477,7 +419,8 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                 decoration: BoxDecoration(
                   color: AppColors.paleGreen.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.leafGreen.withOpacity(0.3)),
+                  border:
+                      Border.all(color: AppColors.leafGreen.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
@@ -487,7 +430,8 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                       foregroundColor: Colors.white,
                       child: Text(
                         _selectedEmail![0].toUpperCase(),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -535,7 +479,8 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                   widget.savedName?.isNotEmpty == true
                       ? widget.savedName!
                       : 'Google User',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 15),
                 ),
                 subtitle: Text(
                   widget.savedEmail!,
@@ -674,7 +619,8 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
             const SizedBox(height: 18),
             Text(
               'To continue, Google will share your name, email address, language preference, and profile picture with KrishiRitu AI.',
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade500, height: 1.3),
+              style: TextStyle(
+                  fontSize: 11, color: Colors.grey.shade500, height: 1.3),
             ),
             const SizedBox(height: 10),
             Center(
