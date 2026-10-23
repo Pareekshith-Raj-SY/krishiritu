@@ -158,12 +158,23 @@ class CropRepository {
     ),
   ];
 
-  List<CropModel> getAllCrops() => List.unmodifiable(_karnatakaCrops);
+  static final Map<String, CropModel> _dynamicCrops = {};
+
+  List<CropModel> getAllCrops() => List.unmodifiable([..._karnatakaCrops, ..._dynamicCrops.values]);
+
+  void addDynamicCrop(CropModel crop) {
+    _dynamicCrops[crop.id] = crop;
+  }
+
+  void clearDynamicCrops() {
+    _dynamicCrops.clear();
+  }
 
   List<CropModel> searchCrops(String query) {
     final q = query.trim().toLowerCase();
-    if (q.isEmpty) return getAllCrops();
-    return _karnatakaCrops.where((c) {
+    final all = getAllCrops();
+    if (q.isEmpty) return all;
+    return all.where((c) {
       return c.name.toLowerCase().contains(q) ||
           c.nameKn.toLowerCase().contains(q) ||
           c.id.toLowerCase().contains(q) ||
@@ -177,7 +188,7 @@ class CropRepository {
   List<CropModel> getCropsBySeason(String season) {
     if (season.isEmpty || season == 'All') return getAllCrops();
     final s = season.toLowerCase();
-    return _karnatakaCrops
+    return getAllCrops()
         .where((c) => c.season.toLowerCase().contains(s))
         .toList();
   }
@@ -189,7 +200,7 @@ class CropRepository {
     required String season,
     double? budgetPerAcre,
   }) {
-    final scored = _karnatakaCrops.map((crop) {
+    final scored = getAllCrops().map((crop) {
       double score = 0;
       if (crop.suitableDistricts.any((d) => d.toLowerCase() == district.toLowerCase())) {
         score += 40;
@@ -221,6 +232,7 @@ class CropRepository {
   }
 
   CropModel? getCropById(String id) {
+    if (_dynamicCrops.containsKey(id)) return _dynamicCrops[id];
     try { return _karnatakaCrops.firstWhere((c) => c.id == id); }
     catch (_) { return null; }
   }

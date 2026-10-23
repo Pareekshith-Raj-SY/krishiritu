@@ -86,6 +86,40 @@ void main() {
       expect(noMatch, isEmpty);
     });
 
+    test('dynamic crops can be added and searched globally', () {
+      repo.clearDynamicCrops();
+      expect(repo.getAllCrops().length, equals(14));
+
+      const vanilla = CropModel(
+        id: 'vanilla',
+        name: 'Vanilla',
+        nameKn: 'ವ್ಯಾನಿಲಾ',
+        season: 'Year-round',
+        soilTypes: 'Well-drained Loamy',
+        sowingMonths: 'April, May',
+        harvestMonths: 'October, December',
+        durationDays: 365,
+        waterNeed: 'high',
+        estimatedCostPerAcre: 50000,
+        estimatedYieldPerAcre: 300,
+        unit: 'kg',
+        irrigationMethods: 'Drip',
+        description: 'Tropical spice orchid cultivated for vanilla beans.',
+        sourceInfo: 'Groq AI World Crop Data',
+        suitableDistricts: ['Kodagu', 'Chikkamagaluru', 'Shivamogga'],
+      );
+
+      repo.addDynamicCrop(vanilla);
+      expect(repo.getAllCrops().length, equals(15));
+      expect(repo.getCropById('vanilla'), isNotNull);
+
+      final searchResult = repo.searchCrops('vanilla');
+      expect(searchResult.any((c) => c.id == 'vanilla'), isTrue);
+
+      repo.clearDynamicCrops();
+      expect(repo.getAllCrops().length, equals(14));
+    });
+
     test('all crops have required fields', () {
       for (final c in repo.getAllCrops()) {
         expect(c.id, isNotEmpty);

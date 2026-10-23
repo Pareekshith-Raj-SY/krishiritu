@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
@@ -14,6 +15,15 @@ class AppConfig {
   static String get supabaseAnonKey => _safeEnv('SUPABASE_ANON_KEY');
   static String get openWeatherKey => _safeEnv('OPENWEATHER_API_KEY');
   static String get anthropicKey => _safeEnv('ANTHROPIC_API_KEY');
+  static String get groqApiKey {
+    const compileTimeKey = String.fromEnvironment('GROQ_API_KEY');
+    if (compileTimeKey.isNotEmpty) return compileTimeKey;
+    final envKey = _safeEnv('GROQ_API_KEY');
+    if (envKey.isNotEmpty && !envKey.contains('your-')) return envKey;
+    return '';
+  }
+
+  static bool get hasGroq => groqApiKey.isNotEmpty && !groqApiKey.contains('your-');
 
   static bool get hasSupabase {
     final url = supabaseUrl.trim().toLowerCase();
