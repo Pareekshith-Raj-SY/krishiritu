@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/config/app_config.dart';
+import '../../../shared/localization/app_localizations.dart';
 import '../providers/farm_provider.dart';
 
 class FarmProfileScreen extends ConsumerStatefulWidget {
@@ -41,11 +42,13 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
-          'Farm Profile',
+          l10n.t('farm_profile'),
           style: GoogleFonts.nunito(
             fontSize: 22,
             fontWeight: FontWeight.w800,
@@ -74,18 +77,18 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sec('Farm Details'),
+                      _sec(l10n.t('farm_details')),
                       TextFormField(
                         controller: _name,
-                        decoration: const InputDecoration(
-                          labelText: 'Farm Name',
-                          prefixIcon: Icon(Icons.agriculture),
+                        decoration: InputDecoration(
+                          labelText: l10n.t('farm_name'),
+                          prefixIcon: const Icon(Icons.agriculture),
                         ),
                       ),
                       const SizedBox(height: 14),
                       DropdownButtonFormField<String>(
                         value: _district,
-                        decoration: const InputDecoration(labelText: 'District'),
+                        decoration: InputDecoration(labelText: l10n.t('district')),
                         items: AppConfig.karnatakaDistricts
                             .map((d) => DropdownMenuItem(value: d, child: Text(d)))
                             .toList(),
@@ -94,13 +97,13 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
                       const SizedBox(height: 14),
                       TextFormField(
                         controller: _village,
-                        decoration: const InputDecoration(labelText: 'Village'),
+                        decoration: InputDecoration(labelText: l10n.t('village')),
                       ),
                       const SizedBox(height: 14),
                       TextFormField(
                         controller: _area,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Land Area (acres)'),
+                        decoration: InputDecoration(labelText: l10n.t('land_area_acres')),
                       ),
                     ],
                   ),
@@ -115,10 +118,10 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sec('Soil & Irrigation'),
+                      _sec(l10n.t('soil_irrigation')),
                       DropdownButtonFormField<String>(
                         value: _soil,
-                        decoration: const InputDecoration(labelText: 'Soil Type'),
+                        decoration: InputDecoration(labelText: l10n.t('soil_type')),
                         items: AppConfig.soilTypes
                             .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                             .toList(),
@@ -127,7 +130,7 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
                       const SizedBox(height: 14),
                       DropdownButtonFormField<String>(
                         value: _irrigation,
-                        decoration: const InputDecoration(labelText: 'Irrigation Method'),
+                        decoration: InputDecoration(labelText: l10n.t('irrigation_method')),
                         items: AppConfig.irrigationMethods
                             .map((m) => DropdownMenuItem(value: m, child: Text(m)))
                             .toList(),
@@ -146,25 +149,25 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sec('Crops & Economics'),
+                      _sec(l10n.t('crops_economics')),
                       TextFormField(
                         initialValue: _currentCrop,
                         onChanged: (v) => _currentCrop = v,
-                        decoration: const InputDecoration(labelText: 'Current Crop'),
+                        decoration: InputDecoration(labelText: l10n.t('current_crop')),
                       ),
                       const SizedBox(height: 14),
                       TextFormField(
                         initialValue: _prevCrop,
                         onChanged: (v) => _prevCrop = v,
-                        decoration: const InputDecoration(labelText: 'Previous Crop'),
+                        decoration: InputDecoration(labelText: l10n.t('previous_crop')),
                       ),
                       const SizedBox(height: 14),
                       TextFormField(
                         controller: _budget,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Budget per Acre (₹)',
-                          prefixIcon: Icon(Icons.currency_rupee),
+                        decoration: InputDecoration(
+                          labelText: l10n.t('budget_per_acre'),
+                          prefixIcon: const Icon(Icons.currency_rupee),
                         ),
                       ),
                     ],
@@ -173,14 +176,14 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _saving ? null : _save,
+                onPressed: _saving ? null : () => _save(l10n),
                 child: _saving
                     ? const SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
-                    : const Text('Save Profile'),
+                    : Text(l10n.t('save_profile')),
               ),
             ],
           ),
@@ -201,7 +204,7 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
     ),
   );
 
-  Future<void> _save() async {
+  Future<void> _save(AppLocalizations l10n) async {
     setState(() => _saving = true);
     await ref.read(farmProvider.notifier).updateFarm(
       name: _name.text,
@@ -218,7 +221,7 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
     if (mounted) {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Farm profile saved!')),
+        SnackBar(content: Text(l10n.t('farm_profile_saved'))),
       );
     }
   }

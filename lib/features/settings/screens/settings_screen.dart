@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/config/app_config.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../shared/localization/app_localizations.dart';
 import '../../../app.dart';
 import '../../farms/providers/farm_provider.dart';
 
@@ -14,11 +15,12 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
     final farm = ref.watch(farmProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Settings & Profile'),
+        title: Text(l10n.t('settings_profile')),
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
@@ -48,9 +50,9 @@ class SettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(farm?.name ?? 'Farmer', style: const TextStyle(
+                Text(farm?.name ?? l10n.t('farmer'), style: const TextStyle(
                     color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
-                Text(farm?.district ?? 'Set up your farm profile',
+                Text(farm?.district ?? l10n.t('setup_farm_profile'),
                     style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 14)),
               ])),
               IconButton(
@@ -65,7 +67,7 @@ class SettingsScreen extends ConsumerWidget {
           _SettingsSection(title: 'Language / ಭಾಷೆ / भाषा', children: [
             _SettingsTile(
               icon: Icons.language,
-              title: 'App Language',
+              title: l10n.t('app_language'),
               subtitle: locale.languageCode == 'kn'
                   ? 'ಕನ್ನಡ (Kannada)'
                   : locale.languageCode == 'hi'
@@ -89,63 +91,63 @@ class SettingsScreen extends ConsumerWidget {
           ]),
 
           // Farm
-          _SettingsSection(title: 'Farm', children: [
+          _SettingsSection(title: l10n.t('farm_section'), children: [
             _SettingsTile(
               icon: Icons.agriculture,
-              title: 'Farm Profile',
-              subtitle: 'Update farm details, soil, and crop',
+              title: l10n.t('farm_profile'),
+              subtitle: l10n.t('farm_profile_sub'),
               onTap: () => context.push('/farm-profile'),
             ),
             _SettingsTile(
               icon: Icons.history,
-              title: 'Season Memory',
-              subtitle: 'View and add season records',
+              title: l10n.t('season_memory'),
+              subtitle: l10n.t('season_memory_sub'),
               onTap: () => context.push('/history'),
             ),
           ]),
 
           // Features
-          _SettingsSection(title: 'Features', children: [
+          _SettingsSection(title: l10n.t('features_section'), children: [
             _SettingsTile(
               icon: Icons.cloud,
-              title: 'Weather API',
-              subtitle: AppConfig.hasWeather ? 'Configured ✓' : 'Add key to .env',
+              title: l10n.t('weather_api'),
+              subtitle: AppConfig.hasWeather ? l10n.t('configured') : l10n.t('add_key_env'),
               trailing: Icon(AppConfig.hasWeather ? Icons.check_circle : Icons.warning_amber,
                   color: AppConfig.hasWeather ? AppColors.leafGreen : AppColors.warmAmber),
             ),
             _SettingsTile(
               icon: Icons.auto_awesome,
-              title: 'AI Assistant',
-              subtitle: AppConfig.hasAI ? 'Configured ✓' : 'Add key to .env',
+              title: l10n.t('ai_assistant'),
+              subtitle: AppConfig.hasAI ? l10n.t('configured') : l10n.t('add_key_env'),
               trailing: Icon(AppConfig.hasAI ? Icons.check_circle : Icons.warning_amber,
                   color: AppConfig.hasAI ? AppColors.leafGreen : AppColors.warmAmber),
             ),
             _SettingsTile(
               icon: Icons.storage,
-              title: 'Supabase Sync',
-              subtitle: AppConfig.hasSupabase ? 'Connected ✓' : 'Add credentials to .env',
+              title: l10n.t('supabase_sync'),
+              subtitle: AppConfig.hasSupabase ? l10n.t('connected') : l10n.t('add_creds_env'),
               trailing: Icon(AppConfig.hasSupabase ? Icons.check_circle : Icons.warning_amber,
                   color: AppConfig.hasSupabase ? AppColors.leafGreen : AppColors.warmAmber),
             ),
           ]),
 
           // About
-          _SettingsSection(title: 'About', children: [
+          _SettingsSection(title: l10n.t('about_section'), children: [
             _SettingsTile(
               icon: Icons.info_outline,
-              title: 'App Version',
+              title: l10n.t('app_version'),
               subtitle: 'KrishiRitu AI v${AppConfig.appVersion}',
             ),
             _SettingsTile(
               icon: Icons.verified_user_outlined,
-              title: 'Data Disclaimer',
-              subtitle: 'Crop data is illustrative. Verify with local KVK.',
-              onTap: () => _showDisclaimer(context),
+              title: l10n.t('data_disclaimer'),
+              subtitle: l10n.t('data_disclaimer_sub'),
+              onTap: () => _showDisclaimer(context, l10n),
             ),
             _SettingsTile(
               icon: Icons.logout,
-              title: 'Sign Out',
-              subtitle: 'Return to login',
+              title: l10n.t('sign_out'),
+              subtitle: l10n.t('return_to_login'),
               onTap: () async {
                 await AuthService.signOut();
                 if (context.mounted) context.go('/login');
@@ -159,11 +161,11 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showDisclaimer(BuildContext context) {
+  void _showDisclaimer(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Data Disclaimer'),
+        title: Text(l10n.t('data_disclaimer')),
         content: const Text(
           'KrishiRitu AI provides crop recommendations and planning tools based on '
           'publicly available agricultural extension data from KSDA, ICAR, and UAS publications.\n\n'
@@ -173,7 +175,7 @@ class SettingsScreen extends ConsumerWidget {
           'The app does not guarantee crop outcomes, market prices, or weather predictions.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Understood')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.t('understood'))),
         ],
       ),
     );

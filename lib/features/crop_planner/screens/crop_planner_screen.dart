@@ -5,6 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/crop_model.dart';
 import '../../../data/repositories/crop_repository.dart';
 import '../../../data/services/groq_crop_service.dart';
+import '../../../shared/localization/app_localizations.dart';
+import '../../../app.dart';
 import '../../farms/providers/farm_provider.dart';
 
 class CropPlannerScreen extends ConsumerStatefulWidget {
@@ -46,8 +48,10 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
       setState(() {
         _filtered = true;
         _crops = _repo.getRecommendedCrops(
-          district: farm.district, soilType: farm.soilType,
-          irrigationMethod: farm.irrigationMethod, season: _season,
+          district: farm.district,
+          soilType: farm.soilType,
+          irrigationMethod: farm.irrigationMethod,
+          season: _season,
           budgetPerAcre: farm.budgetPerAcre,
         );
       });
@@ -63,7 +67,6 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
     final clean = query.trim();
     if (clean.length < 2 || _isLoadingAi) return;
 
-    // Check if crop is already in the repository
     final existing = _repo.searchCrops(clean);
     if (existing.any((c) =>
         c.name.toLowerCase() == clean.toLowerCase() ||
@@ -127,9 +130,28 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
     return matched;
   }
 
+  String _seasonLabel(String s, AppLocalizations l10n) {
+    switch (s) {
+      case 'Kharif':
+        return l10n.t('kharif');
+      case 'Rabi':
+        return l10n.t('rabi');
+      case 'Summer':
+        return l10n.t('summer');
+      case 'Year-round':
+        return l10n.t('year_round');
+      case 'All':
+        return l10n.t('all');
+      default:
+        return s;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final farm = ref.watch(farmProvider);
+    final locale = ref.watch(localeProvider);
+    final l10n = AppLocalizations.of(context);
     final displayed = _displayedCrops;
 
     return Scaffold(
@@ -141,21 +163,21 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                 autofocus: true,
                 style: const TextStyle(color: AppColors.forestGreen, fontSize: 16, fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
-                  hintText: 'Search any crop in the world...',
+                  hintText: l10n.t('search_crop_hint'),
                   hintStyle: TextStyle(color: AppColors.textMedium.withOpacity(0.6), fontSize: 14),
                   border: InputBorder.none,
                 ),
                 onSubmitted: (v) => _searchWithGroq(v),
                 onChanged: (v) => setState(() => _searchQuery = v),
               )
-            : const Text('Smart Season Planner'),
+            : Text(l10n.t('smart_season_planner')),
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
-            tooltip: _isSearching ? 'Close Search' : 'Search Crops',
+            tooltip: _isSearching ? l10n.t('close_search') : l10n.t('search_crops'),
             onPressed: () {
               setState(() {
                 _isSearching = !_isSearching;
@@ -188,13 +210,15 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                     child: Row(children: [
                       const Icon(Icons.location_on, color: AppColors.forestGreen, size: 16),
                       const SizedBox(width: 6),
-                      Text('${farm.district} · ${farm.soilType} · ${farm.irrigationMethod}',
-                          style: const TextStyle(color: AppColors.textDark, fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text(
+                        '${farm.district} · ${farm.soilType} · ${farm.irrigationMethod}',
+                        style: const TextStyle(color: AppColors.textDark, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
                     ]),
                   ),
                   const SizedBox(height: 10),
                 ],
-                // Quick Search Bar with dedicated Search Icon Button
+                // Quick Search Bar
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                   decoration: BoxDecoration(
@@ -212,7 +236,7 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.search, color: AppColors.leafGreen, size: 22),
-                        tooltip: 'Search any crop',
+                        tooltip: l10n.t('search_crops'),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {
@@ -226,12 +250,12 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                         child: TextField(
                           controller: _searchController,
                           style: const TextStyle(fontSize: 14, color: AppColors.textDark),
-                          decoration: const InputDecoration(
-                            hintText: 'Search any crop in the world (e.g. Wheat, Vanilla, Ragi)...',
-                            hintStyle: TextStyle(fontSize: 12.5, color: AppColors.textMedium),
+                          decoration: InputDecoration(
+                            hintText: l10n.t('search_crop_hint'),
+                            hintStyle: const TextStyle(fontSize: 12.5, color: AppColors.textMedium),
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 10),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
                           ),
                           onSubmitted: (v) => _searchWithGroq(v),
                           onChanged: (v) => setState(() => _searchQuery = v),
@@ -246,7 +270,7 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                       else if (_searchQuery.isNotEmpty)
                         IconButton(
                           icon: const Icon(Icons.clear, size: 18, color: AppColors.textMedium),
-                          tooltip: 'Clear search',
+                          tooltip: l10n.t('clear_search'),
                           onPressed: () {
                             _searchController.clear();
                             setState(() {
@@ -258,35 +282,6 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                     ],
                   ),
                 ),
-                // World Crop Groq AI Search Prompt Banner
-                if (_searchQuery.trim().length >= 2 && !_isLoadingAi && !displayed.any((c) => c.name.toLowerCase().contains(_searchQuery.toLowerCase()))) ...[
-                  const SizedBox(height: 8),
-                  InkWell(
-                    onTap: () => _searchWithGroq(_searchQuery),
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.forestGreen.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.leafGreen.withOpacity(0.4)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.travel_explore, size: 18, color: AppColors.forestGreen),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Not in local list? Tap to ask Groq AI for "$_searchQuery"',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.forestGreen),
-                            ),
-                          ),
-                          const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.forestGreen),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
                 const SizedBox(height: 10),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -294,7 +289,10 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                     children: ['Kharif', 'Rabi', 'Summer', 'Year-round', 'All'].map((s) {
                       final sel = _season == s;
                       return GestureDetector(
-                        onTap: () { setState(() => _season = s); _loadCrops(); },
+                        onTap: () {
+                          setState(() => _season = s);
+                          _loadCrops();
+                        },
                         child: Container(
                           margin: const EdgeInsets.only(right: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -305,10 +303,14 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                               BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
                             ],
                           ),
-                          child: Text(s, style: TextStyle(
+                          child: Text(
+                            _seasonLabel(s, l10n),
+                            style: TextStyle(
                               color: sel ? Colors.white : AppColors.textDark,
                               fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
-                              fontSize: 13)),
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                       );
                     }).toList(),
@@ -317,90 +319,7 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
               ],
             ),
           ),
-          if (_isLoadingAi)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.leafGreen.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Row(
-                children: [
-                  SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.forestGreen),
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Groq AI is analyzing global agronomy data...',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.forestGreen),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else if (_aiStatusMessage != null)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, size: 16, color: AppColors.earthBrown),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _aiStatusMessage!,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.earthBrown),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 14, color: AppColors.earthBrown),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () => setState(() => _aiStatusMessage = null),
-                  ),
-                ],
-              ),
-            )
-          else if (_searchQuery.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.leafGreen.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.filter_list, size: 15, color: AppColors.forestGreen),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Found ${displayed.length} result${displayed.length == 1 ? '' : 's'} for "$_searchQuery"',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.forestGreen),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      _searchController.clear();
-                      setState(() {
-                        _searchQuery = '';
-                        _aiStatusMessage = null;
-                      });
-                    },
-                    child: const Text('Reset', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.forestGreen)),
-                  ),
-                ],
-              ),
-            )
-          else if (_filtered)
+          if (_filtered && _searchQuery.isEmpty)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -411,13 +330,19 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
               child: Row(children: [
                 const Icon(Icons.auto_awesome, size: 16, color: AppColors.leafGreen),
                 const SizedBox(width: 6),
-                const Expanded(child: Text('Ranked by suitability for your farm profile.',
-                    style: TextStyle(fontSize: 12, color: AppColors.forestGreen, fontWeight: FontWeight.w600))),
+                Expanded(
+                  child: Text(
+                    l10n.t('ranked_by_suitability'),
+                    style: const TextStyle(fontSize: 12, color: AppColors.forestGreen, fontWeight: FontWeight.w600),
+                  ),
+                ),
                 TextButton(
                   onPressed: () => context.push('/farm-profile'),
                   style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero, minimumSize: const Size(60, 24)),
-                  child: const Text('Update Farm', style: TextStyle(fontSize: 12)),
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(60, 24),
+                  ),
+                  child: Text(l10n.t('update_farm'), style: const TextStyle(fontSize: 12)),
                 ),
               ]),
             ),
@@ -433,38 +358,11 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                           const SizedBox(height: 12),
                           Text(
                             _searchQuery.isNotEmpty
-                                ? 'No local crops found for "$_searchQuery".'
-                                : 'No crops found for this season.',
+                                ? 'No crops found for "$_searchQuery".'
+                                : l10n.t('no_crops_found'),
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textMedium),
                             textAlign: TextAlign.center,
                           ),
-                          if (_searchQuery.isNotEmpty) ...[
-                            const SizedBox(height: 14),
-                            ElevatedButton.icon(
-                              onPressed: _isLoadingAi ? null : () => _searchWithGroq(_searchQuery),
-                              icon: _isLoadingAi
-                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : const Icon(Icons.auto_awesome),
-                              label: Text('Search "$_searchQuery" with Groq AI'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.forestGreen,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _searchQuery = '';
-                                  _aiStatusMessage = null;
-                                });
-                              },
-                              icon: const Icon(Icons.clear, size: 18),
-                              label: const Text('Clear search'),
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -472,14 +370,20 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
                     itemCount: displayed.length,
-                    itemBuilder: (_, i) => _CropCard(crop: displayed[i], rank: i + 1, filtered: _filtered),
+                    itemBuilder: (_, i) => _CropCard(
+                      crop: displayed[i],
+                      rank: i + 1,
+                      filtered: _filtered,
+                      l10n: l10n,
+                      langCode: locale.languageCode,
+                    ),
                   ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(12, 4, 12, 12),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
             child: Text(
-              '* Agronomy data from KSDA 2023 publications & Groq World Crop AI. Verify with local agricultural office.',
-              style: TextStyle(fontSize: 11, color: AppColors.textMedium),
+              l10n.t('ksda_disclaimer'),
+              style: const TextStyle(fontSize: 11, color: AppColors.textMedium),
               textAlign: TextAlign.center,
             ),
           ),
@@ -493,11 +397,82 @@ class _CropCard extends StatelessWidget {
   final CropModel crop;
   final int rank;
   final bool filtered;
-  const _CropCard({required this.crop, required this.rank, required this.filtered});
+  final AppLocalizations l10n;
+  final String langCode;
+
+  const _CropCard({
+    required this.crop,
+    required this.rank,
+    required this.filtered,
+    required this.l10n,
+    required this.langCode,
+  });
 
   Color get _waterColor => crop.waterNeed == 'low'
       ? AppColors.leafGreen
       : crop.waterNeed == 'medium' ? AppColors.warmAmber : AppColors.skyBlue;
+
+  String _waterLabel() {
+    switch (crop.waterNeed.toLowerCase()) {
+      case 'low':
+        return l10n.t('water_low');
+      case 'medium':
+        return l10n.t('water_medium');
+      case 'high':
+        return l10n.t('water_high');
+      default:
+        return crop.waterNeed.toUpperCase();
+    }
+  }
+
+  String _primaryName() {
+    if (langCode == 'kn' && crop.nameKn.isNotEmpty) {
+      return crop.nameKn;
+    }
+    if (langCode == 'hi') {
+      const hiMap = {
+        'ragi': 'रागी (मडुआ)',
+        'paddy': 'धान (चावल)',
+        'maize': 'मक्का',
+        'jowar': 'ज्वार',
+        'groundnut': 'मूंगफली',
+        'tur_dal': 'अरहर (तूर दाल)',
+        'cotton': 'कपास',
+        'sugarcane': 'गन्ना',
+        'sericulture': 'रेशम कीट पालन',
+        'marigold': 'गेंदा फूल',
+        'jasmine': 'चमेली',
+        'chrysanthemum': 'गुलदाउदी',
+        'sunflower': 'सूरजमुखी',
+        'bengal_gram': 'चना',
+      };
+      return hiMap[crop.id] ?? crop.name;
+    }
+    return crop.name;
+  }
+
+  String _secondaryName() {
+    if (langCode == 'kn') {
+      return crop.name;
+    }
+    if (langCode == 'hi') {
+      return crop.name;
+    }
+    return crop.nameKn;
+  }
+
+  String _seasonLabel() {
+    switch (crop.season.toLowerCase()) {
+      case 'kharif':
+        return l10n.t('kharif');
+      case 'rabi':
+        return l10n.t('rabi');
+      case 'summer':
+        return l10n.t('summer');
+      default:
+        return crop.season;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -525,10 +500,16 @@ class _CropCard extends StatelessWidget {
                 ),
               Text(_getCropEmoji(crop.id), style: const TextStyle(fontSize: 18)),
               const SizedBox(width: 6),
-              Expanded(child: Text(crop.name, style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w700))),
-              Text(crop.nameKn, style: const TextStyle(
-                  fontSize: 14, color: AppColors.textMedium)),
+              Expanded(
+                child: Text(
+                  _primaryName(),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                _secondaryName(),
+                style: const TextStyle(fontSize: 14, color: AppColors.textMedium),
+              ),
             ]),
             const SizedBox(height: 8),
             if (filtered)
@@ -542,25 +523,26 @@ class _CropCard extends StatelessWidget {
               ),
             if (filtered) ...[
               const SizedBox(height: 4),
-              Text('Suitability: ${crop.suitabilityScore.toInt()}%',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textMedium)),
+              Text(
+                '${l10n.t('suitability')}: ${crop.suitabilityScore.toInt()}%',
+                style: const TextStyle(fontSize: 12, color: AppColors.textMedium),
+              ),
             ],
             const SizedBox(height: 10),
             Row(children: [
               _chip('🗓️ ${crop.durationDays}d', AppColors.paleGreen),
               const SizedBox(width: 8),
-              _chip('💧 ${crop.waterNeed.toUpperCase()}',
-                  _waterColor.withOpacity(0.15)),
+              _chip('💧 ${_waterLabel()}', _waterColor.withOpacity(0.15)),
               const SizedBox(width: 8),
-              _chip('🌱 ${crop.season}', AppColors.warmAmber.withOpacity(0.12)),
+              _chip('🌱 ${_seasonLabel()}', AppColors.warmAmber.withOpacity(0.12)),
             ]),
             const SizedBox(height: 8),
             Row(children: [
-              Expanded(child: _statBox('Sow', crop.sowingMonths)),
+              Expanded(child: _statBox(l10n.t('sow'), crop.sowingMonths)),
               const SizedBox(width: 8),
-              Expanded(child: _statBox('Cost/Acre', '₹${crop.estimatedCostPerAcre.toStringAsFixed(0)}')),
+              Expanded(child: _statBox(l10n.t('cost_acre'), '₹${crop.estimatedCostPerAcre.toStringAsFixed(0)}')),
               const SizedBox(width: 8),
-              Expanded(child: _statBox('Yield', '${crop.estimatedYieldPerAcre.toStringAsFixed(0)} ${crop.unit}')),
+              Expanded(child: _statBox(l10n.t('yield'), '${crop.estimatedYieldPerAcre.toStringAsFixed(0)} ${crop.unit}')),
             ]),
           ]),
         ),
