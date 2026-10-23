@@ -17,7 +17,7 @@ class SeasonHistoryScreen extends ConsumerWidget {
   const SeasonHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final expenses = ref.watch(expensesProvider);
     final harvests = ref.watch(harvestsProvider);
     final farm = ref.watch(farmProvider);
@@ -25,25 +25,30 @@ class SeasonHistoryScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: AppColors.scaffoldBg,
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: const Text('Season Memory'),
-          backgroundColor: AppColors.forestGreen,
+          backgroundColor: Colors.transparent,
+          foregroundColor: AppColors.forestGreen,
+          elevation: 0,
           bottom: const TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white60,
-            indicatorColor: Colors.white,
+            labelColor: AppColors.forestGreen,
+            unselectedLabelColor: AppColors.textMedium,
+            indicatorColor: AppColors.forestGreen,
             tabs: [
               Tab(text: 'Expenses'),
               Tab(text: 'Harvests'),
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _showAddDialog(context, ref),
-          icon: const Icon(Icons.add),
-          label: const Text('Add Record'),
-          backgroundColor: AppColors.leafGreen,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 70),
+          child: FloatingActionButton.extended(
+            onPressed: () => _showAddDialog(context, ref),
+            icon: const Icon(Icons.add),
+            label: const Text('Add Record'),
+            backgroundColor: AppColors.leafGreen,
+          ),
         ),
         body: TabBarView(
           children: [
@@ -59,12 +64,12 @@ class SeasonHistoryScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => _AddRecordSheet(onAdded: () {
-        ref.invalidate(expensesProvider);
-        ref.invalidate(harvestsProvider);
-      }),
+      builder: (_) => _AddRecordSheet(
+        onAdded: () {
+          ref.invalidate(expensesProvider);
+          ref.invalidate(harvestsProvider);
+        },
+      ),
     );
   }
 }
@@ -83,9 +88,9 @@ class _ExpensesTab extends StatelessWidget {
           return const Center(child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('📋', style: TextStyle(fontSize: 56)),
+              Text('💰', style: TextStyle(fontSize: 56)),
               SizedBox(height: 16),
-              Text('No expense records yet', style: TextStyle(
+              Text('No expenses logged yet', style: TextStyle(
                   fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textMedium)),
               SizedBox(height: 8),
               Text('Tap + Add Record to start tracking',
@@ -96,8 +101,15 @@ class _ExpensesTab extends StatelessWidget {
         final total = list.fold(0.0, (sum, e) => sum + e.amount);
         return Column(children: [
           Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             padding: const EdgeInsets.all(16),
-            color: AppColors.errorRed.withOpacity(0.08),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.92),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
+              ],
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -110,11 +122,12 @@ class _ExpensesTab extends StatelessWidget {
           ),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 90),
               itemCount: list.length,
               itemBuilder: (_, i) {
                 final e = list[i];
                 return Card(
+                  color: Colors.white.withOpacity(0.92),
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     leading: Container(
@@ -170,8 +183,15 @@ class _HarvestsTab extends StatelessWidget {
         final totalRevenue = list.fold(0.0, (sum, h) => sum + h.totalRevenue);
         return Column(children: [
           Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             padding: const EdgeInsets.all(16),
-            color: AppColors.leafGreen.withOpacity(0.08),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.92),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
+              ],
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -184,11 +204,12 @@ class _HarvestsTab extends StatelessWidget {
           ),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 90),
               itemCount: list.length,
               itemBuilder: (_, i) {
                 final h = list[i];
                 return Card(
+                  color: Colors.white.withOpacity(0.92),
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     leading: Container(

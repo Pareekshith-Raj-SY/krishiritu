@@ -3,46 +3,56 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../app.dart';
-import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/config/app_config.dart';
+import '../../../app.dart';
 import '../../farms/providers/farm_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
     final farm = ref.watch(farmProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
-      appBar: AppBar(title: const Text('Settings & Profile'), backgroundColor: AppColors.forestGreen),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('Settings & Profile'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         child: Column(children: [
           // Profile header
           Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
-                colors: [AppColors.forestGreen, AppColors.leafGreen],
+                colors: [AppColors.forestGreen.withOpacity(0.88), AppColors.leafGreen.withOpacity(0.88)],
                 begin: Alignment.topLeft, end: Alignment.bottomRight,
               ),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 3)),
+              ],
             ),
             child: Row(children: [
               Container(
-                width: 64, height: 64,
+                width: 60, height: 60,
                 decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                child: const Center(child: Text('👨‍🌾', style: TextStyle(fontSize: 36))),
+                child: const Center(child: Text('👨‍🌾', style: TextStyle(fontSize: 32))),
               ),
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(farm?.name ?? 'Farmer', style: const TextStyle(
                     color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                 Text(farm?.district ?? 'Set up your farm profile',
-                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
+                    style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 14)),
               ])),
               IconButton(
                 icon: const Icon(Icons.edit, color: Colors.white),
@@ -50,7 +60,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ]),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
 
           // Language
           _SettingsSection(title: 'Language / ಭಾಷೆ', children: [
@@ -140,7 +150,7 @@ class SettingsScreen extends ConsumerWidget {
               color: AppColors.errorRed,
             ),
           ]),
-          const SizedBox(height: 80),
+          const SizedBox(height: 90),
         ]),
       ),
     );
@@ -176,14 +186,24 @@ class _SettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
         child: Text(title, style: const TextStyle(
-            fontSize: 12, fontWeight: FontWeight.w700,
-            color: AppColors.textLight, letterSpacing: 1.0)),
+            fontSize: 12, fontWeight: FontWeight.w800,
+            color: AppColors.forestGreen, letterSpacing: 1.0)),
       ),
       Container(
-        color: Colors.white,
-        child: Column(children: children),
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.92),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Column(children: children),
+        ),
       ),
     ]);
   }

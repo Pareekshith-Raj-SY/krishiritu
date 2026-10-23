@@ -30,7 +30,7 @@ class AppTheme {
         surface: AppColors.cardBg,
         error: AppColors.errorRed,
       ),
-      scaffoldBackgroundColor: AppColors.scaffoldBg,
+      scaffoldBackgroundColor: Colors.transparent,
       textTheme: GoogleFonts.nunitoTextTheme().copyWith(
         displayLarge: GoogleFonts.nunito(
           fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.textDark),
@@ -48,15 +48,15 @@ class AppTheme {
           fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.cardBg),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.forestGreen,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: GoogleFonts.nunito(
-          fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+          fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.forestGreen),
       ),
       cardTheme: CardThemeData(
-        color: AppColors.cardBg,
+        color: Colors.white.withOpacity(0.92),
         elevation: 2,
         shadowColor: Colors.black12,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -83,7 +83,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.white.withOpacity(0.92),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.divider),
@@ -105,11 +105,11 @@ class AppTheme {
         hintStyle: GoogleFonts.nunito(color: AppColors.textLight),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         selectedItemColor: AppColors.leafGreen,
         unselectedItemColor: AppColors.textLight,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.paleGreen,

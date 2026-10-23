@@ -16,15 +16,22 @@ class NotificationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Tasks & Notifications'),
-        backgroundColor: AppColors.forestGreen,
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
+        elevation: 0,
       ),
       body: Column(children: [
         Container(
-          color: AppColors.paleGreen,
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.92),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.leafGreen.withOpacity(0.3)),
+          ),
           child: const Row(children: [
             Icon(Icons.info_outline, size: 15, color: AppColors.leafGreen),
             SizedBox(width: 6),
@@ -37,7 +44,7 @@ class NotificationsScreen extends StatelessWidget {
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
             itemCount: _tasks.length,
             itemBuilder: (_, i) => _TaskCard(task: _tasks[i]),
           ),
@@ -63,6 +70,7 @@ class _TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white.withOpacity(0.92),
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
         padding: const EdgeInsets.all(14),

@@ -28,19 +28,25 @@ class DashboardScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 160,
             pinned: true,
-            backgroundColor: AppColors.forestGreen,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.forestGreen, AppColors.leafGreen],
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                    colors: [
+                      Colors.black.withOpacity(0.45),
+                      Colors.black.withOpacity(0.15),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
                 ),
                 child: SafeArea(
@@ -53,8 +59,11 @@ class DashboardScreen extends ConsumerWidget {
                           const Text('🌿', style: TextStyle(fontSize: 28)),
                           const SizedBox(width: 8),
                           const Text('KrishiRitu AI',
-                              style: TextStyle(color: Colors.white, fontSize: 18,
-                                  fontWeight: FontWeight.w700)),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  shadows: [Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1))])),
                           const Spacer(),
                           IconButton(
                             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
@@ -63,11 +72,15 @@ class DashboardScreen extends ConsumerWidget {
                         ]),
                         const SizedBox(height: 8),
                         Text(_greeting(), style: const TextStyle(
-                            color: Colors.white70, fontSize: 14)),
+                            color: Colors.white, fontSize: 14,
+                            shadows: [Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1))])),
                         Text(
                           farm != null ? '${farm.name} · ${farm.district}' : 'Welcome, Farmer!',
-                          style: const TextStyle(color: Colors.white,
-                              fontSize: 20, fontWeight: FontWeight.w800),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              shadows: [Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1))]),
                         ),
                       ],
                     ),
@@ -93,7 +106,7 @@ class DashboardScreen extends ConsumerWidget {
                   _sectionTitle('Explore Features'),
                   const SizedBox(height: 10),
                   _featureGrid(context),
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 90),
                 ],
               ),
             ),
@@ -105,9 +118,9 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _seasonCard(BuildContext context) {
     return Card(
-      color: AppColors.warmAmber.withOpacity(0.12),
+      color: Colors.white.withOpacity(0.92),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.warmAmber, width: 1)),
+          side: const BorderSide(color: AppColors.warmAmber, width: 1.5)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(children: [
@@ -127,7 +140,8 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   Widget _sectionTitle(String t) => Text(t, style: const TextStyle(
-      fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark));
+      fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.forestGreen,
+      shadows: [Shadow(color: Colors.white, blurRadius: 3)]));
 
   Widget _quickActions(BuildContext context) {
     final actions = [
@@ -141,6 +155,7 @@ class DashboardScreen extends ConsumerWidget {
         child: GestureDetector(
           onTap: () => context.push(a.$3),
           child: Card(
+            color: Colors.white.withOpacity(0.92),
             margin: const EdgeInsets.symmetric(horizontal: 4),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -160,6 +175,7 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _farmSummaryCard(BuildContext context, farm) {
     return Card(
+      color: Colors.white.withOpacity(0.92),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -196,12 +212,12 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _featureGrid(BuildContext context) {
     final features = [
-      ('🌦️', 'Weather & Risks', '/weather', AppColors.skyBlue.withOpacity(0.1)),
-      ('🔬', 'Crop Health', '/crop-health', AppColors.leafGreen.withOpacity(0.1)),
-      ('📊', 'What-If Sim', '/simulator', AppColors.warmAmber.withOpacity(0.1)),
-      ('📖', 'Season Memory', '/history', AppColors.earthBrown.withOpacity(0.1)),
-      ('🔔', 'Tasks', '/notifications', AppColors.errorRed.withOpacity(0.1)),
-      ('⚙️', 'Settings', '/settings', AppColors.textLight.withOpacity(0.1)),
+      ('🌦️', 'Weather & Risks', '/weather', AppColors.skyBlue.withOpacity(0.12)),
+      ('🔬', 'Crop Health', '/crop-health', AppColors.leafGreen.withOpacity(0.12)),
+      ('📊', 'What-If Sim', '/simulator', AppColors.warmAmber.withOpacity(0.12)),
+      ('📖', 'Season Memory', '/history', AppColors.earthBrown.withOpacity(0.12)),
+      ('🔔', 'Tasks', '/notifications', AppColors.errorRed.withOpacity(0.12)),
+      ('⚙️', 'Settings', '/settings', AppColors.textLight.withOpacity(0.12)),
     ];
     return GridView.count(
       crossAxisCount: 3,
@@ -214,14 +230,18 @@ class DashboardScreen extends ConsumerWidget {
         onTap: () => context.push(f.$3),
         child: Container(
           decoration: BoxDecoration(
-            color: f.$4, borderRadius: BorderRadius.circular(14),
+            color: Colors.white.withOpacity(0.92),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: Colors.black.withOpacity(0.06)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2)),
+            ],
           ),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Text(f.$1, style: const TextStyle(fontSize: 28)),
             const SizedBox(height: 6),
             Text(f.$2, textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textDark)),
           ]),
         ),
       )).toList(),

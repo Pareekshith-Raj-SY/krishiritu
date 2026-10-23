@@ -13,14 +13,21 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
-      appBar: AppBar(title: const Text('Crop Health & Weed ID'), backgroundColor: AppColors.forestGreen),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('Crop Health & Weed ID'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           if (_showDisclaimer) _disclaimer(),
           const SizedBox(height: 16),
-          Card(child: Padding(
+          Card(
+            color: Colors.white.withOpacity(0.92),
+            child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(children: [
               const Text('🔬', style: TextStyle(fontSize: 64)),
@@ -46,10 +53,10 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
           )),
           const SizedBox(height: 16),
           const Text('Common Crop Problems in Karnataka', style: TextStyle(
-              fontSize: 16, fontWeight: FontWeight.w700)),
+              fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.forestGreen)),
           const SizedBox(height: 10),
           ..._issues.map((i) => _issueCard(i)),
-          const SizedBox(height: 80),
+          const SizedBox(height: 90),
         ]),
       ),
     );
@@ -71,6 +78,7 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
   ];
 
   Widget _issueCard(Map<String, String> issue) => Card(
+    color: Colors.white.withOpacity(0.92),
     margin: const EdgeInsets.only(bottom: 10),
     child: Padding(
       padding: const EdgeInsets.all(14),
@@ -98,9 +106,9 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
   Widget _disclaimer() => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: AppColors.warmAmber.withOpacity(0.1),
+      color: Colors.white.withOpacity(0.92),
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.warmAmber.withOpacity(0.4)),
+      border: Border.all(color: AppColors.warmAmber.withOpacity(0.5)),
     ),
     child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text('⚠️', style: TextStyle(fontSize: 20)),

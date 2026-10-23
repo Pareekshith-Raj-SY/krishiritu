@@ -11,20 +11,22 @@ class BudgetScreen extends ConsumerStatefulWidget {
 
 class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   final _seeds = TextEditingController(text: '2000');
-  final _fertilizer = TextEditingController(text: '3000');
+  final _fertilizer = TextEditingController(text: '4500');
   final _pesticide = TextEditingController(text: '1500');
-  final _labour = TextEditingController(text: '4000');
+  final _labour = TextEditingController(text: '5000');
   final _irrigation = TextEditingController(text: '1000');
-  final _other = TextEditingController(text: '500');
-  final _yieldKg = TextEditingController(text: '800');
-  final _pricePerKg = TextEditingController(text: '22');
-  final _acres = TextEditingController(text: '1');
+  final _other = TextEditingController(text: '1000');
+  final _acres = TextEditingController(text: '2');
+  final _yieldKg = TextEditingController(text: '1200');
+  final _pricePerKg = TextEditingController(text: '35');
+
   bool _calculated = false;
 
   double _v(TextEditingController c) => double.tryParse(c.text) ?? 0;
 
-  double get _totalCost => (_v(_seeds) + _v(_fertilizer) + _v(_pesticide) +
-      _v(_labour) + _v(_irrigation) + _v(_other)) * _v(_acres);
+  double get _costPerAcre => _v(_seeds) + _v(_fertilizer) + _v(_pesticide) +
+      _v(_labour) + _v(_irrigation) + _v(_other);
+  double get _totalCost => _costPerAcre * _v(_acres);
   double get _revenue => _v(_yieldKg) * _v(_pricePerKg) * _v(_acres);
   double get _profit => _revenue - _totalCost;
   double get _breakEven => _v(_yieldKg) > 0 ? _totalCost / (_v(_yieldKg) * _v(_acres)) : 0;
@@ -33,22 +35,32 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   Widget build(BuildContext context) {
     final farm = ref.watch(farmProvider);
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
-      appBar: AppBar(title: const Text('Budget & Profit Explorer'), backgroundColor: AppColors.forestGreen),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('Budget & Profit Explorer'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           if (farm != null)
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.paleGreen,
-                  borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.92),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.leafGreen.withOpacity(0.3)),
+              ),
               child: Text('Farm: ${farm.name} · ${farm.landAreaAcres} acres · ${farm.district}',
                   style: const TextStyle(fontSize: 13, color: AppColors.forestGreen,
                       fontWeight: FontWeight.w600)),
             ),
           const SizedBox(height: 16),
-          Card(child: Padding(
+          Card(
+            color: Colors.white.withOpacity(0.92),
+            child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('📋 Input Costs (per acre, ₹)', style: TextStyle(
@@ -69,7 +81,9 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             ]),
           )),
           const SizedBox(height: 12),
-          Card(child: Padding(
+          Card(
+            color: Colors.white.withOpacity(0.92),
+            child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('💰 Revenue Assumptions', style: TextStyle(
@@ -87,7 +101,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           if (_calculated) ...[
             const SizedBox(height: 16),
             Card(
-              color: _profit >= 0 ? AppColors.paleGreen : const Color(0xFFFFF3E0),
+              color: Colors.white.withOpacity(0.95),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(children: [
@@ -113,7 +127,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 80),
+          const SizedBox(height: 90),
         ]),
       ),
     );

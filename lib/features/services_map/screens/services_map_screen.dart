@@ -31,22 +31,36 @@ class _ServicesMapScreenState extends State<ServicesMapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
-      appBar: AppBar(title: const Text('Nearby Farm Services'), backgroundColor: AppColors.forestGreen),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('Nearby Farm Services'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
+        elevation: 0,
+      ),
       body: Column(children: [
         Container(
-          color: AppColors.forestGreen,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Column(children: [
-            const Row(children: [
-              Icon(Icons.info_outline, color: Colors.white70, size: 16),
-              SizedBox(width: 6),
-              Expanded(child: Text(
-                'Sample data for Mysuru. Configure location permissions for live results.',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              )),
-            ]),
-            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.88),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
+                ],
+              ),
+              child: const Row(children: [
+                Icon(Icons.info_outline, color: AppColors.forestGreen, size: 16),
+                SizedBox(width: 6),
+                Expanded(child: Text(
+                  'Sample data for Mysuru. Configure location permissions for live results.',
+                  style: TextStyle(color: AppColors.textDark, fontSize: 12),
+                )),
+              ]),
+            ),
+            const SizedBox(height: 10),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -59,12 +73,15 @@ class _ServicesMapScreenState extends State<ServicesMapScreen> {
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
-                        color: sel ? Colors.white : Colors.white.withOpacity(0.2),
+                        color: sel ? AppColors.forestGreen : Colors.white.withOpacity(0.88),
                         borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
+                        ],
                       ),
                       child: Text(t, style: TextStyle(
-                          color: sel ? AppColors.forestGreen : Colors.white, fontSize: 12,
-                          fontWeight: sel ? FontWeight.w700 : FontWeight.w400)),
+                          color: sel ? Colors.white : AppColors.textDark, fontSize: 12,
+                          fontWeight: sel ? FontWeight.w700 : FontWeight.w500)),
                     ),
                   );
                 }).toList(),
@@ -76,7 +93,7 @@ class _ServicesMapScreenState extends State<ServicesMapScreen> {
           child: _filtered.isEmpty
               ? const Center(child: Text('No services found'))
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
                   itemCount: _filtered.length,
                   itemBuilder: (_, i) => _ServiceCard(service: _filtered[i]),
                 ),
@@ -93,6 +110,7 @@ class _ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white.withOpacity(0.92),
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
         padding: const EdgeInsets.all(14),

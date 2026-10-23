@@ -9,40 +9,48 @@ class ScenarioSimulatorScreen extends StatefulWidget {
 
 class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
   String _crop = 'Ragi';
-  double _acres = 1.0;
-  double _baseCost = 12000;
-  double _yield = 800;
-  double _price = 22;
-  double _rainfallDelay = 0;
-  double _costIncrease = 0;
-  double _yieldReduction = 0;
+  double _acres = 2.0;
+  double _rainfallDelay = 0; // days delayed
+  double _costIncrease = 0; // percentage
+  double _yieldReduction = 0; // percentage
+  double _price = 35; // ₹/kg
+  double _baseCost = 14000; // per acre
+  double _yield = 1000; // kg/acre
   bool _simulated = false;
 
-  double get _adjCost => _baseCost * (1 + _costIncrease / 100);
-  double get _adjYield => _yield * (1 - _yieldReduction / 100) * (1 - _rainfallDelay / 200);
-  double get _revenue => _adjYield * _price * _acres;
-  double get _totalCost => _adjCost * _acres;
-  double get _profit => _revenue - _totalCost;
-  double get _breakEven => _totalCost / (_adjYield * _acres);
+  double get _adjustedCost => _baseCost * (1 + _costIncrease / 100) * _acres;
+  double get _delayPenalty => (_rainfallDelay / 30) * 0.15; // 15% drop per month delay
+  double get _effectiveYield => _yield * (1 - _yieldReduction / 100 - _delayPenalty).clamp(0.2, 1.5) * _acres;
+  double get _revenue => _effectiveYield * _price;
+  double get _profit => _revenue - _adjustedCost;
+  double get _totalCost => _adjustedCost;
+  double get _breakEven => _effectiveYield > 0 ? _totalCost / _effectiveYield : 0;
 
-  static const _crops = {
-    'Ragi': {'cost': 12000.0, 'yield': 800.0, 'price': 22.0},
-    'Paddy': {'cost': 22000.0, 'yield': 1800.0, 'price': 21.0},
-    'Maize': {'cost': 18000.0, 'yield': 2200.0, 'price': 15.0},
-    'Jowar': {'cost': 10000.0, 'yield': 700.0, 'price': 25.0},
-    'Groundnut': {'cost': 16000.0, 'yield': 900.0, 'price': 52.0},
-    'Cotton': {'cost': 28000.0, 'yield': 800.0, 'price': 68.0},
+  final Map<String, Map<String, double>> _crops = {
+    'Ragi': {'cost': 14000, 'yield': 1000, 'price': 35},
+    'Paddy': {'cost': 22000, 'yield': 2000, 'price': 22},
+    'Maize': {'cost': 16000, 'yield': 1800, 'price': 20},
+    'Tur Dal': {'cost': 13000, 'yield': 500, 'price': 70},
+    'Groundnut': {'cost': 18000, 'yield': 800, 'price': 60},
+    'Cotton': {'cost': 25000, 'yield': 700, 'price': 70},
   };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
-      appBar: AppBar(title: const Text('What-If Simulator'), backgroundColor: AppColors.forestGreen),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('What-If Simulator'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Card(child: Padding(
+          Card(
+            color: Colors.white.withOpacity(0.92),
+            child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('📊 Scenario Parameters', style: TextStyle(
@@ -71,7 +79,9 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
             ]),
           )),
           const SizedBox(height: 12),
-          Card(child: Padding(
+          Card(
+            color: Colors.white.withOpacity(0.92),
+            child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('⚡ What-If Adjustments', style: TextStyle(
@@ -100,7 +110,7 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
           if (_simulated) ...[
             const SizedBox(height: 16),
             Card(
-              color: _profit >= 0 ? AppColors.paleGreen : const Color(0xFFFFF3E0),
+              color: Colors.white.withOpacity(0.95),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(children: [
@@ -128,7 +138,7 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 80),
+          const SizedBox(height: 90),
         ]),
       ),
     );

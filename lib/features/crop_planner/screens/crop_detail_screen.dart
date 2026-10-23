@@ -10,28 +10,45 @@ class CropDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final crop = CropRepository().getCropById(cropId);
     if (crop == null) {
-      return Scaffold(appBar: AppBar(title: const Text('Crop Detail')),
-          body: const Center(child: Text('Crop not found')));
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(title: const Text('Crop Detail')),
+        body: const Center(child: Text('Crop not found')),
+      );
     }
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 180,
             pinned: true,
-            backgroundColor: AppColors.forestGreen,
+            backgroundColor: AppColors.forestGreen.withOpacity(0.85),
+            foregroundColor: Colors.white,
+            elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(crop.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+              title: Text(crop.name, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
               background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(colors: [AppColors.forestGreen, AppColors.leafGreen],
-                      begin: Alignment.topLeft, end: Alignment.bottomRight)),
-                child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Text('🌾', style: TextStyle(fontSize: 72)),
-                  Text(crop.nameKn, style: const TextStyle(
-                      color: Colors.white70, fontSize: 18)),
-                ])),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.forestGreen.withOpacity(0.8),
+                      AppColors.leafGreen.withOpacity(0.7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 20),
+                      const Text('🌾', style: TextStyle(fontSize: 56)),
+                      Text(crop.nameKn, style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -58,19 +75,26 @@ class CropDetailScreen extends StatelessWidget {
                   _row('Suitable Districts', crop.suitableDistricts.take(5).join(', ')),
                 ]),
                 const SizedBox(height: 12),
-                Card(child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('ℹ️ About this Crop', style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 10),
-                    Text(crop.description, style: const TextStyle(
-                        fontSize: 14, color: AppColors.textMedium, height: 1.6)),
-                  ]),
-                )),
+                Card(
+                  color: Colors.white.withOpacity(0.92),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('ℹ️ About this Crop', style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 10),
+                      Text(crop.description, style: const TextStyle(
+                          fontSize: 14, color: AppColors.textMedium, height: 1.6)),
+                    ]),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Card(
-                  color: AppColors.paleGreen,
+                  color: Colors.white.withOpacity(0.92),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: AppColors.leafGreen.withOpacity(0.3)),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -88,7 +112,7 @@ class CropDetailScreen extends StatelessWidget {
                     ]),
                   ),
                 ),
-                const SizedBox(height: 80),
+                const SizedBox(height: 90),
               ]),
             ),
           ),
@@ -98,6 +122,7 @@ class CropDetailScreen extends StatelessWidget {
   }
 
   Widget _infoCard(String title, List<Widget> rows) => Card(
+    color: Colors.white.withOpacity(0.92),
     child: Padding(
       padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -47,30 +47,34 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
   Widget build(BuildContext context) {
     final farm = ref.watch(farmProvider);
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Smart Season Planner'),
-        backgroundColor: AppColors.forestGreen,
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
+        elevation: 0,
       ),
       body: Column(
         children: [
           Container(
-            color: AppColors.forestGreen,
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Column(
               children: [
                 if (farm != null)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withOpacity(0.88),
                       borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
+                      ],
                     ),
                     child: Row(children: [
-                      const Icon(Icons.location_on, color: Colors.white70, size: 16),
+                      const Icon(Icons.location_on, color: AppColors.forestGreen, size: 16),
                       const SizedBox(width: 6),
                       Text('${farm.district} · ${farm.soilType} · ${farm.irrigationMethod}',
-                          style: const TextStyle(color: Colors.white, fontSize: 13)),
+                          style: const TextStyle(color: AppColors.textDark, fontSize: 13, fontWeight: FontWeight.w600)),
                     ]),
                   ),
                 const SizedBox(height: 10),
@@ -85,12 +89,15 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                           margin: const EdgeInsets.only(right: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: sel ? Colors.white : Colors.white.withOpacity(0.2),
+                            color: sel ? AppColors.forestGreen : Colors.white.withOpacity(0.88),
                             borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
+                            ],
                           ),
                           child: Text(s, style: TextStyle(
-                              color: sel ? AppColors.forestGreen : Colors.white,
-                              fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
+                              color: sel ? Colors.white : AppColors.textDark,
+                              fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                               fontSize: 13)),
                         ),
                       );
@@ -102,13 +109,17 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
           ),
           if (_filtered)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: AppColors.paleGreen,
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.92),
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Row(children: [
                 const Icon(Icons.auto_awesome, size: 16, color: AppColors.leafGreen),
                 const SizedBox(width: 6),
                 const Expanded(child: Text('Ranked by suitability for your farm profile.',
-                    style: TextStyle(fontSize: 12, color: AppColors.forestGreen))),
+                    style: TextStyle(fontSize: 12, color: AppColors.forestGreen, fontWeight: FontWeight.w600))),
                 TextButton(
                   onPressed: () => context.push('/farm-profile'),
                   style: TextButton.styleFrom(
@@ -121,16 +132,16 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
             child: _crops.isEmpty
                 ? const Center(child: Text('No crops found for this season.'))
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
                     itemCount: _crops.length,
                     itemBuilder: (_, i) => _CropCard(crop: _crops[i], rank: i + 1, filtered: _filtered),
                   ),
           ),
           const Padding(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.fromLTRB(12, 4, 12, 12),
             child: Text(
               '* Sample data from KSDA 2023 publications. Verify with local agricultural office.',
-              style: TextStyle(fontSize: 11, color: AppColors.textLight),
+              style: TextStyle(fontSize: 11, color: AppColors.textMedium),
               textAlign: TextAlign.center,
             ),
           ),
@@ -153,6 +164,7 @@ class _CropCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white.withOpacity(0.92),
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -225,7 +237,7 @@ class _CropCard extends StatelessWidget {
   Widget _statBox(String label, String val) => Container(
     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
     decoration: BoxDecoration(
-      color: AppColors.scaffoldBg, borderRadius: BorderRadius.circular(8)),
+      color: Colors.black.withOpacity(0.04), borderRadius: BorderRadius.circular(8)),
     child: Column(children: [
       Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textMedium)),
       Text(val, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),

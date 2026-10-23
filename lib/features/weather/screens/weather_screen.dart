@@ -7,11 +7,16 @@ class WeatherScreen extends ConsumerWidget {
   const WeatherScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final farm = ref.watch(farmProvider);
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
-      appBar: AppBar(title: const Text('Weather & Seasonal Risk'), backgroundColor: AppColors.forestGreen),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('Weather & Seasonal Risk'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(children: [
@@ -20,7 +25,7 @@ class WeatherScreen extends ConsumerWidget {
           _seasonalRisk(farm?.district ?? 'Karnataka'),
           const SizedBox(height: 16),
           _riskCalendar(),
-          const SizedBox(height: 80),
+          const SizedBox(height: 90),
         ]),
       ),
     );
@@ -29,9 +34,9 @@ class WeatherScreen extends ConsumerWidget {
   Widget _apiNotice() => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: AppColors.skyBlue.withOpacity(0.1),
+      color: Colors.white.withOpacity(0.92),
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.skyBlue.withOpacity(0.3)),
+      border: Border.all(color: AppColors.skyBlue.withOpacity(0.4)),
     ),
     child: Row(children: [
       const Text('🌤️', style: TextStyle(fontSize: 28)),
@@ -47,7 +52,9 @@ class WeatherScreen extends ConsumerWidget {
   Widget _seasonalRisk(String district) {
     final month = DateTime.now().month;
     final risks = _getRisks(month);
-    return Card(child: Padding(
+    return Card(
+      color: Colors.white.withOpacity(0.92),
+      child: Padding(
       padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('📍 Seasonal Risks — $district', style: const TextStyle(
@@ -108,7 +115,9 @@ class WeatherScreen extends ConsumerWidget {
     );
   }
 
-  Widget _riskCalendar() => Card(child: Padding(
+  Widget _riskCalendar() => Card(
+    color: Colors.white.withOpacity(0.92),
+    child: Padding(
     padding: const EdgeInsets.all(16),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text('📅 Karnataka Crop Risk Calendar', style: TextStyle(

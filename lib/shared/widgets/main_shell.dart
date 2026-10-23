@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme/app_theme.dart';
+import 'app_background.dart';
 
 class MainShell extends ConsumerWidget {
   final Widget child;
@@ -29,16 +31,45 @@ class MainShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
     final idx = _currentIndex(location);
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: idx,
-        onTap: (i) => context.go(_tabs[i].path),
-        items: _tabs.map((t) => BottomNavigationBarItem(
-          icon: Icon(t.icon),
-          activeIcon: Icon(t.active),
-          label: t.label,
-        )).toList(),
+
+    return AppBackground(
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        body: child,
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.92),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BottomNavigationBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedItemColor: AppColors.leafGreen,
+                unselectedItemColor: AppColors.textLight,
+                currentIndex: idx,
+                onTap: (i) => context.go(_tabs[i].path),
+                items: _tabs.map((t) => BottomNavigationBarItem(
+                  icon: Icon(t.icon),
+                  activeIcon: Icon(t.active),
+                  label: t.label,
+                )).toList(),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

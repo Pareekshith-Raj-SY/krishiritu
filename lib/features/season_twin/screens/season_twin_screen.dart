@@ -13,15 +13,15 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
   String? _selectedCrop;
   DateTime _sowDate = DateTime.now();
 
-  List<Map<String, String>> _buildTaskCalendar(String crop, DateTime sow) {
+  List<Map<String, String>> _buildTaskCalendar(String crop, DateTime sowDate) {
     return [
-      {'week': 'Week 1–2', 'task': 'Land preparation and soil testing', 'icon': '🚜'},
-      {'week': 'Week 3', 'task': 'Seed treatment and sowing of $crop', 'icon': '🌱'},
-      {'week': 'Week 4–6', 'task': 'First irrigation if no rain; weed control', 'icon': '💧'},
-      {'week': 'Week 6–8', 'task': 'Apply basal fertilizer; monitor for pests', 'icon': '🌿'},
-      {'week': 'Week 8–10', 'task': 'Second irrigation; top-dress nitrogen', 'icon': '💧'},
-      {'week': 'Week 10–12', 'task': 'Pest and disease scouting; apply if needed', 'icon': '🔍'},
-      {'week': 'Week 14–16', 'task': 'Pre-harvest inspection; arrange market', 'icon': '📊'},
+      {'week': 'Week 1–2', 'task': 'Land preparation, basal fertilizer, sowing of $crop', 'icon': '🚜'},
+      {'week': 'Week 3–4', 'task': 'First weeding, gap filling, thinning', 'icon': '🌱'},
+      {'week': 'Week 5–6', 'task': 'First top dressing (Urea/Potash), irrigation monitoring', 'icon': '💧'},
+      {'week': 'Week 7–8', 'task': 'Pest/disease scouting — look out for shoot fly / stem borer', 'icon': '🔬'},
+      {'week': 'Week 9–10', 'task': 'Second top dressing at flowering stage', 'icon': '🌸'},
+      {'week': 'Week 11–13', 'task': 'Grain filling / pod formation — critical water stage', 'icon': '🌾'},
+      {'week': 'Week 14–15', 'task': 'Pre-harvest inspection, stop irrigation', 'icon': '☀️'},
       {'week': 'Week 16+', 'task': 'Harvest, dry, and store $crop', 'icon': '🌾'},
     ];
   }
@@ -30,14 +30,21 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
   Widget build(BuildContext context) {
     final farm = ref.watch(farmProvider);
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
-      appBar: AppBar(title: const Text('Farm Season Twin'), backgroundColor: AppColors.forestGreen),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('Farm Season Twin'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.forestGreen,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _profileCard(farm),
           const SizedBox(height: 16),
-          Card(child: Padding(
+          Card(
+            color: Colors.white.withOpacity(0.92),
+            child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('🌾 Select Crop for Season Plan', style: TextStyle(
@@ -74,7 +81,9 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
           )),
           if (_selectedCrop != null) ...[
             const SizedBox(height: 16),
-            Card(child: Padding(
+            Card(
+              color: Colors.white.withOpacity(0.92),
+              child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('📅 Task Calendar — $_selectedCrop',
@@ -90,9 +99,9 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.warmAmber.withOpacity(0.1),
+                color: Colors.white.withOpacity(0.92),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.warmAmber.withOpacity(0.3)),
+                border: Border.all(color: AppColors.warmAmber.withOpacity(0.5)),
               ),
               child: const Text(
                 '⚠️ This calendar is a general guide based on typical crop duration. '
@@ -102,7 +111,7 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 80),
+          const SizedBox(height: 90),
         ]),
       ),
     );
@@ -110,7 +119,7 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
 
   Widget _profileCard(farm) {
     return Card(
-      color: AppColors.forestGreen,
+      color: AppColors.forestGreen.withOpacity(0.88),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
