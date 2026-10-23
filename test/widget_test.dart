@@ -273,6 +273,26 @@ void main() {
       expect(res.name, equals('Karnataka Farmer'));
     });
 
+    testWidgets('pareekshithrajsy@gmail.com rejects wrong password', (tester) async {
+      final res = await AuthService.signIn(
+        email: 'pareekshithrajsy@gmail.com',
+        password: 'wrongpassword',
+        isGoogleAuth: true,
+      );
+      expect(res.success, isFalse);
+      expect(res.errorMessage, contains('Incorrect password'));
+    });
+
+    testWidgets('unregistered account rejects login instead of bypassing', (tester) async {
+      final res = await AuthService.signIn(
+        email: 'notreal@gmail.com',
+        password: 'anypassword',
+        isGoogleAuth: true,
+      );
+      expect(res.success, isFalse);
+      expect(res.errorMessage, contains('No account found'));
+    });
+
     testWidgets('registered account strictly validates password on subsequent login', (tester) async {
       final reg = await AuthService.register(
         email: 'newfarmer@gmail.com',

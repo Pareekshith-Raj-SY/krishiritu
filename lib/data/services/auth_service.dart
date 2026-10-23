@@ -54,7 +54,7 @@ class AuthService {
       return AuthResult.error('Password must be at least 6 characters.');
     }
 
-    // 1. Supabase integration when configured and initialized
+    // 1. Supabase registration when configured and initialized
     if (_hasLiveSupabase) {
       try {
         await Supabase.instance.client.auth.signUp(
@@ -90,6 +90,7 @@ class AuthService {
 
   /// Authenticate an account using email and password.
   /// Strictly checks password correctness against Supabase and the credential vault.
+  /// Will NEVER allow an incorrect password to log in.
   static Future<AuthResult> signIn({
     required String email,
     required String password,
@@ -160,21 +161,9 @@ class AuthService {
       return AuthResult.ok(email: cleanEmail, name: name);
     }
 
-    // 3. For first-time Google Sign-In with a new email:
-    if (isGoogleAuth) {
-      final derivedName = _deriveName(cleanEmail);
-      vault[cleanEmail] = {
-        'password': cleanPass,
-        'name': derivedName,
-        'created_at': DateTime.now().toIso8601String(),
-      };
-      await prefs.setString(_vaultKey, jsonEncode(vault));
-      await _saveSession(prefs, cleanEmail, derivedName);
-      return AuthResult.ok(email: cleanEmail, name: derivedName);
-    }
-
+    // 3. Account not found - strictly reject! Never bypass password verification!
     return AuthResult.error(
-        'Account not found. Please create an account or verify your email.');
+        'No account found for $cleanEmail. Please create an account or verify your email.');
   }
 
   static Future<Map<String, dynamic>> _getVault(SharedPreferences prefs) async {
@@ -187,6 +176,12 @@ class AuthService {
     }
 
     // Pre-seed default accounts with known passwords
+    if (!vault.containsKey('pareekshithrajsy@gmail.com')) {
+      vault['pareekshithrajsy@gmail.com'] = {
+        'password': 'farmer123',
+        'name': 'Pareekshith Raj',
+      };
+    }
     if (!vault.containsKey('farmer@gmail.com')) {
       vault['farmer@gmail.com'] = {
         'password': 'farmer123',

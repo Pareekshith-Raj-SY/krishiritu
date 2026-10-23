@@ -73,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
 
-    final credentials = await showModalBottomSheet<Map<String, String>>(
+    final result = await showModalBottomSheet<AuthResult>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -83,39 +83,14 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
 
-    if (credentials != null) {
-      final email = credentials['email']?.trim() ?? '';
-      final password = credentials['password']?.trim() ?? '';
-      if (email.isNotEmpty && password.isNotEmpty) {
-        await _completeGoogleSignIn(email, password, savedName);
-      }
-    }
-  }
-
-  Future<void> _completeGoogleSignIn(
-      String email, String password, [String? knownName]) async {
-    setState(() => _loading = true);
-
-    final result = await AuthService.signIn(
-      email: email,
-      password: password,
-      isGoogleAuth: true,
-    );
-
-    if (mounted) {
-      setState(() => _loading = false);
-      if (result.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Welcome, ${result.name}! Signed in with Google.'),
-            backgroundColor: AppColors.forestGreen,
-          ),
-        );
-        context.go('/home');
-      } else {
-        _showError(
-            result.errorMessage ?? 'Incorrect password. Please try again.');
-      }
+    if (result != null && result.success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Welcome, ${result.name}! Signed in with Google.'),
+          backgroundColor: AppColors.forestGreen,
+        ),
+      );
+      context.go('/home');
     }
   }
 
@@ -310,6 +285,9 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
   bool _obscurePass = true;
   String? _selectedEmail;
   bool _showCustomInput = false;
+  bool _isVerifying = false;
+  String? _inlineError;
+  bool _showCreateOption = false;
 
   @override
   void initState() {
@@ -330,19 +308,68 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
     setState(() {
       _selectedEmail = email;
       _passCtrl.clear();
+      _inlineError = null;
+      _showCreateOption = false;
     });
   }
 
-  void _submitSignIn() {
+  Future<void> _submitSignIn() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final email = _selectedEmail ?? _emailCtrl.text.trim();
+    final email = (_selectedEmail ?? _emailCtrl.text).trim().toLowerCase();
     final password = _passCtrl.text.trim();
 
-    Navigator.of(context).pop({
-      'email': email,
-      'password': password,
+    setState(() {
+      _isVerifying = true;
+      _inlineError = null;
+      _showCreateOption = false;
     });
+
+    final result = await AuthService.signIn(
+      email: email,
+      password: password,
+      isGoogleAuth: true,
+    );
+
+    if (!mounted) return;
+
+    if (result.success) {
+      Navigator.of(context).pop(result);
+    } else {
+      setState(() {
+        _isVerifying = false;
+        _inlineError = result.errorMessage ?? 'Incorrect password. Please try again.';
+        _showCreateOption = _inlineError!.contains('No account found');
+      });
+    }
+  }
+
+  Future<void> _createAccountWithGoogle() async {
+    final email = (_selectedEmail ?? _emailCtrl.text).trim().toLowerCase();
+    final password = _passCtrl.text.trim();
+
+    setState(() {
+      _isVerifying = true;
+      _inlineError = null;
+    });
+
+    final name = email.split('@').first;
+    final result = await AuthService.register(
+      email: email,
+      password: password,
+      name: name,
+    );
+
+    if (!mounted) return;
+
+    if (result.success) {
+      Navigator.of(context).pop(result);
+    } else {
+      setState(() {
+        _isVerifying = false;
+        _inlineError = result.errorMessage ?? 'Registration failed.';
+      });
+    }
   }
 
   @override
@@ -411,11 +438,55 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
             const SizedBox(height: 16),
             const Divider(),
 
+            // Error alert banner if verification failed
+            if (_inlineError != null) ...[
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.errorRed.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.errorRed.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: AppColors.errorRed, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _inlineError!,
+                        style: const TextStyle(
+                          color: AppColors.errorRed,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_showCreateOption) ...[
+                const SizedBox(height: 6),
+                OutlinedButton(
+                  onPressed: _isVerifying ? null : _createAccountWithGoogle,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(42),
+                    foregroundColor: AppColors.forestGreen,
+                    side: const BorderSide(color: AppColors.forestGreen),
+                  ),
+                  child: const Text('Create account with this Google email & password'),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ],
+
             // If account is selected, show chosen account pill with "Change" option
             if (_selectedEmail != null) ...[
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: AppColors.paleGreen.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(12),
@@ -450,6 +521,8 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                       onPressed: () => setState(() {
                         _selectedEmail = null;
                         _passCtrl.clear();
+                        _inlineError = null;
+                        _showCreateOption = false;
                       }),
                       style: TextButton.styleFrom(
                         visualDensity: VisualDensity.compact,
@@ -511,6 +584,8 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                   _selectedEmail = null;
                   _emailCtrl.clear();
                   _passCtrl.clear();
+                  _inlineError = null;
+                  _showCreateOption = false;
                 }),
               ),
             ],
@@ -592,12 +667,19 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                     ),
                     const SizedBox(height: 18),
                     ElevatedButton(
-                      onPressed: _submitSignIn,
+                      onPressed: _isVerifying ? null : _submitSignIn,
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
                         backgroundColor: AppColors.forestGreen,
                       ),
-                      child: const Text('Sign in with Google'),
+                      child: _isVerifying
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text('Sign in with Google'),
                     ),
                     if (hasSaved && _showCustomInput && _selectedEmail == null) ...[
                       const SizedBox(height: 8),
@@ -606,6 +688,8 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                           onPressed: () => setState(() {
                             _showCustomInput = false;
                             _selectedEmail = null;
+                            _inlineError = null;
+                            _showCreateOption = false;
                           }),
                           child: const Text('Back to saved accounts'),
                         ),
