@@ -249,10 +249,11 @@ void main() {
   // ─── AuthService Tests ──────────────────────────────────────────────────
   group('AuthService', () {
     setUp(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('pre-seeded account rejects wrong password', () async {
+    testWidgets('pre-seeded account rejects wrong password', (tester) async {
       final res = await AuthService.signIn(
         email: 'farmer@gmail.com',
         password: 'wrongpassword',
@@ -262,7 +263,7 @@ void main() {
       expect(res.errorMessage, contains('Incorrect password'));
     });
 
-    test('pre-seeded account accepts correct password', () async {
+    testWidgets('pre-seeded account accepts correct password', (tester) async {
       final res = await AuthService.signIn(
         email: 'farmer@gmail.com',
         password: 'farmer123',
@@ -272,7 +273,7 @@ void main() {
       expect(res.name, equals('Karnataka Farmer'));
     });
 
-    test('registered account strictly validates password on subsequent login', () async {
+    testWidgets('registered account strictly validates password on subsequent login', (tester) async {
       final reg = await AuthService.register(
         email: 'newfarmer@gmail.com',
         password: 'mysecretpass',

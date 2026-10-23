@@ -1,10 +1,19 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
-  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
-  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
-  static String get openWeatherKey => dotenv.env['OPENWEATHER_API_KEY'] ?? '';
-  static String get anthropicKey => dotenv.env['ANTHROPIC_API_KEY'] ?? '';
+  static String _safeEnv(String key) {
+    try {
+      if (dotenv.isInitialized) {
+        return dotenv.env[key] ?? '';
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  static String get supabaseUrl => _safeEnv('SUPABASE_URL');
+  static String get supabaseAnonKey => _safeEnv('SUPABASE_ANON_KEY');
+  static String get openWeatherKey => _safeEnv('OPENWEATHER_API_KEY');
+  static String get anthropicKey => _safeEnv('ANTHROPIC_API_KEY');
 
   static bool get hasSupabase {
     final url = supabaseUrl.trim().toLowerCase();
@@ -27,7 +36,7 @@ class AppConfig {
     return key.isNotEmpty && !key.contains('your-');
   }
 
-  static const appVersion = '1.0.9';
+  static const appVersion = '1.0.10';
   static const appName = 'KrishiRitu AI';
 
   // Karnataka districts

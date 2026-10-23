@@ -29,6 +29,14 @@ class AuthService {
   static const _activeNameKey = 'user_name';
   static const _authKey = 'is_authenticated';
 
+  static bool get _hasLiveSupabase {
+    try {
+      return AppConfig.hasSupabase && Supabase.instance.client != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Register a new account with email, password, and full name.
   static Future<AuthResult> register({
     required String email,
@@ -46,8 +54,8 @@ class AuthService {
       return AuthResult.error('Password must be at least 6 characters.');
     }
 
-    // 1. Supabase integration when configured
-    if (AppConfig.hasSupabase) {
+    // 1. Supabase integration when configured and initialized
+    if (_hasLiveSupabase) {
       try {
         await Supabase.instance.client.auth.signUp(
           email: cleanEmail,
@@ -103,8 +111,8 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     final vault = await _getVault(prefs);
 
-    // 1. Check with Supabase if active
-    if (AppConfig.hasSupabase) {
+    // 1. Check with Supabase if active and initialized
+    if (_hasLiveSupabase) {
       try {
         final res = await Supabase.instance.client.auth.signInWithPassword(
           email: cleanEmail,
@@ -130,7 +138,6 @@ class AuthService {
             msg.contains('connection');
 
         if (!isNetwork) {
-          // If Supabase rejected credentials due to wrong password:
           if (msg.contains('invalid login credentials') ||
               msg.contains('invalid_grant') ||
               msg.contains('invalid password') ||
@@ -166,7 +173,8 @@ class AuthService {
       return AuthResult.ok(email: cleanEmail, name: derivedName);
     }
 
-    return AuthResult.error('Account not found. Please create an account or verify your email.');
+    return AuthResult.error(
+        'Account not found. Please create an account or verify your email.');
   }
 
   static Future<Map<String, dynamic>> _getVault(SharedPreferences prefs) async {
