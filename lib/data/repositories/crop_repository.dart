@@ -1,4 +1,5 @@
 import '../models/crop_model.dart';
+import '../services/supabase_service.dart';
 
 class CropRepository {
   static final List<CropModel> _karnatakaCrops = [
@@ -168,6 +169,15 @@ class CropRepository {
 
   void clearDynamicCrops() {
     _dynamicCrops.clear();
+  }
+
+  Future<void> syncFromSupabase() async {
+    try {
+      final remote = await SupabaseService.loadCrops();
+      for (final c in remote) {
+        addDynamicCrop(c);
+      }
+    } catch (_) {}
   }
 
   List<CropModel> searchCrops(String query) {

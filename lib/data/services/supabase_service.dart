@@ -1,12 +1,24 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/config/app_config.dart';
 import '../models/farm_model.dart';
+import '../models/crop_model.dart';
 
 class SupabaseService {
   static SupabaseClient? get _client =>
       AppConfig.hasSupabase ? Supabase.instance.client : null;
 
   static String? get userId => _client?.auth.currentUser?.id;
+
+  // Live crop catalog from Supabase
+  static Future<List<CropModel>> loadCrops() async {
+    if (_client == null) return [];
+    try {
+      final data = await _client!.from('crops').select();
+      return (data as List).map((c) => CropModel.fromMap(c)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
 
   // Farm operations
   static Future<FarmModel?> loadFarm() async {

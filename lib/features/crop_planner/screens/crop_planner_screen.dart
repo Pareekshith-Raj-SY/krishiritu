@@ -29,6 +29,9 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
   void initState() {
     super.initState();
     _loadCrops();
+    _repo.syncFromSupabase().then((_) {
+      if (mounted) _loadCrops();
+    });
   }
 
   @override
