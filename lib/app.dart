@@ -4,12 +4,16 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'shared/localization/app_localizations.dart';
+import 'shared/widgets/app_background.dart';
 
 class KrishiRituApp extends ConsumerWidget {
   const KrishiRituApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Warm up the dashboard background texture in GPU memory for instantaneous transitions
+    precacheImage(AppBackground.imageProvider, context);
+
     final router = ref.watch(appRouterProvider);
     final locale = ref.watch(localeProvider);
 

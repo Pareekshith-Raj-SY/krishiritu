@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/app_config.dart';
+import '../../../shared/widgets/app_background.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -61,6 +62,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         }
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Warm up and decode the dashboard background during the 3-second splash animation
+    // so that it renders instantaneously with 0ms latency when entering the dashboard
+    precacheImage(AppBackground.imageProvider, context);
   }
 
   Future<bool> _checkAuth() async {

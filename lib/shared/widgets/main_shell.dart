@@ -11,7 +11,7 @@ class MainShell extends ConsumerWidget {
   static const _tabs = [
     (icon: Icons.home_outlined, active: Icons.home, label: 'Home', path: '/home'),
     (icon: Icons.agriculture_outlined, active: Icons.agriculture, label: 'My Farm', path: '/farm-profile'),
-    (icon: Icons.calendar_month_outlined, active: Icons.calendar_month, label: 'Season Plan', path: '/crop-planner'),
+    (icon: Icons.calendar_month_outlined, active: Icons.calendar_month, label: 'Plan', path: '/crop-planner'),
     (icon: Icons.explore_outlined, active: Icons.explore, label: 'Explore', path: '/weather'),
     (icon: Icons.person_outline, active: Icons.person, label: 'Profile', path: '/settings'),
   ];
@@ -52,7 +52,7 @@ class MainShell extends ConsumerWidget {
           child: Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.92),
+              color: Colors.white.withOpacity(0.88),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -67,13 +67,16 @@ class MainShell extends ConsumerWidget {
               child: BottomNavigationBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                selectedItemColor: AppColors.leafGreen,
-                unselectedItemColor: AppColors.textLight,
+                type: BottomNavigationBarType.fixed,
+                selectedFontSize: 11,
+                unselectedFontSize: 11,
+                selectedItemColor: AppColors.forestGreen,
+                unselectedItemColor: AppColors.textMedium,
                 currentIndex: idx,
                 onTap: (i) => context.go(_tabs[i].path),
                 items: _tabs.map((t) => BottomNavigationBarItem(
-                  icon: Icon(t.icon),
-                  activeIcon: Icon(t.active),
+                  icon: Icon(t.icon, size: 22),
+                  activeIcon: Icon(t.active, size: 22),
                   label: t.label,
                 )).toList(),
               ),

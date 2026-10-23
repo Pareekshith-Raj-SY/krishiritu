@@ -49,14 +49,26 @@ class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
-        foregroundColor: AppColors.forestGreen,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: GoogleFonts.nunito(
-          fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.forestGreen),
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+          shadows: const [
+            Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1)),
+          ],
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+          shadows: [
+            Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1)),
+          ],
+        ),
       ),
       cardTheme: CardThemeData(
-        color: Colors.white.withOpacity(0.92),
+        color: Colors.white.withOpacity(0.88),
         elevation: 2,
         shadowColor: Colors.black12,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
