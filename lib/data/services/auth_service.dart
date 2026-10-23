@@ -31,7 +31,8 @@ class AuthService {
 
   static bool get _hasLiveSupabase {
     try {
-      return AppConfig.hasSupabase && Supabase.instance.client != null;
+      if (!AppConfig.hasSupabase) return false;
+      return Supabase.instance.client.auth.currentSession != null || true;
     } catch (_) {
       return false;
     }

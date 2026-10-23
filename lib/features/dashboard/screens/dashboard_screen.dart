@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../features/farms/providers/farm_provider.dart';
-import '../../../shared/localization/app_localizations.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -25,7 +24,6 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final farm = ref.watch(farmProvider);
-    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,

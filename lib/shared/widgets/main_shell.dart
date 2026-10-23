@@ -17,13 +17,23 @@ class MainShell extends ConsumerWidget {
   ];
 
   int _currentIndex(String location) {
-    if (location.startsWith('/home')) return 0;
-    if (location.startsWith('/farm-profile')) return 1;
-    if (location.startsWith('/crop') || location.startsWith('/season') || location.startsWith('/simulator')) return 2;
+    if (location.startsWith('/home')) {
+      return 0;
+    }
+    if (location.startsWith('/farm-profile')) {
+      return 1;
+    }
+    if (location.startsWith('/crop') || location.startsWith('/season') || location.startsWith('/simulator')) {
+      return 2;
+    }
     if (location.startsWith('/weather') || location.startsWith('/budget') ||
-        location.startsWith('/services') || location.startsWith('/crop-health')) return 3;
+        location.startsWith('/services') || location.startsWith('/crop-health')) {
+      return 3;
+    }
     if (location.startsWith('/settings') || location.startsWith('/notifications') ||
-        location.startsWith('/history')) return 4;
+        location.startsWith('/history')) {
+      return 4;
+    }
     return 0;
   }
 

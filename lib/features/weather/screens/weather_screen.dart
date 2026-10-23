@@ -7,7 +7,7 @@ class WeatherScreen extends ConsumerWidget {
   const WeatherScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final farm = ref.watch(farmProvider);
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -69,20 +69,26 @@ class WeatherScreen extends ConsumerWidget {
   }
 
   List<Map<String, String>> _getRisks(int month) {
-    if (month >= 6 && month <= 9) return [
-      {'icon': '🌧️', 'risk': 'Heavy Monsoon Rainfall', 'level': 'High', 'action': 'Ensure field drainage; delay sowing if waterlogged'},
-      {'icon': '🍄', 'risk': 'Fungal Diseases (Blast, Blight)', 'level': 'High', 'action': 'Monitor crop; apply fungicide preventively'},
-      {'icon': '🐛', 'risk': 'Stem Borer Activity', 'level': 'Medium', 'action': 'Deploy pheromone traps; scout weekly'},
-    ];
-    if (month >= 10 && month <= 11) return [
-      {'icon': '🌾', 'risk': 'Kharif Harvest Period', 'level': 'Low', 'action': 'Plan harvest; arrange drying and storage space'},
-      {'icon': '💨', 'risk': 'North-East Monsoon', 'level': 'Medium', 'action': 'Watch for unseasonal rains during harvest'},
-      {'icon': '🌱', 'risk': 'Rabi Sowing Window', 'level': 'Low', 'action': 'Prepare land; procure Rabi seed varieties'},
-    ];
-    if (month >= 12 || month <= 2) return [
-      {'icon': '❄️', 'risk': 'Cold Nights (< 10°C in north Karnataka)', 'level': 'Medium', 'action': 'Protect nursery beds; delay transplanting during cold spells'},
-      {'icon': '💧', 'risk': 'Irrigation Dependency', 'level': 'High', 'action': 'Ensure water availability; use drip for efficiency'},
-    ];
+    if (month >= 6 && month <= 9) {
+      return [
+        {'icon': '🌧️', 'risk': 'Heavy Monsoon Rainfall', 'level': 'High', 'action': 'Ensure field drainage; delay sowing if waterlogged'},
+        {'icon': '🍄', 'risk': 'Fungal Diseases (Blast, Blight)', 'level': 'High', 'action': 'Monitor crop; apply fungicide preventively'},
+        {'icon': '🐛', 'risk': 'Stem Borer Activity', 'level': 'Medium', 'action': 'Deploy pheromone traps; scout weekly'},
+      ];
+    }
+    if (month >= 10 && month <= 11) {
+      return [
+        {'icon': '🌾', 'risk': 'Kharif Harvest Period', 'level': 'Low', 'action': 'Plan harvest; arrange drying and storage space'},
+        {'icon': '💨', 'risk': 'North-East Monsoon', 'level': 'Medium', 'action': 'Watch for unseasonal rains during harvest'},
+        {'icon': '🌱', 'risk': 'Rabi Sowing Window', 'level': 'Low', 'action': 'Prepare land; procure Rabi seed varieties'},
+      ];
+    }
+    if (month >= 12 || month <= 2) {
+      return [
+        {'icon': '❄️', 'risk': 'Cold Nights (< 10°C in north Karnataka)', 'level': 'Medium', 'action': 'Protect nursery beds; delay transplanting during cold spells'},
+        {'icon': '💧', 'risk': 'Irrigation Dependency', 'level': 'High', 'action': 'Ensure water availability; use drip for efficiency'},
+      ];
+    }
     return [
       {'icon': '☀️', 'risk': 'Heat Stress', 'level': 'High', 'action': 'Irrigate in evening; use mulching to retain moisture'},
       {'icon': '💧', 'risk': 'Water Scarcity', 'level': 'High', 'action': 'Only rainfed crops; conserve water strictly'},

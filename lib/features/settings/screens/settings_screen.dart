@@ -12,7 +12,7 @@ class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
     final farm = ref.watch(farmProvider);
 

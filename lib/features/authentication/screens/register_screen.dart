@@ -29,25 +29,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
 
-    try {
-      final res = await AuthService.signUp(
-        email: _email.text.trim(),
-        password: _pass.text,
-        fullName: _name.text.trim(),
-      );
+    final name = _name.text.trim();
+    final email = _email.text.trim();
+    final password = _pass.text.trim();
 
-      if (!mounted) return;
+    final result = await AuthService.register(
+      email: email,
+      password: password,
+      name: name,
+    );
+
+    if (mounted) {
       setState(() => _loading = false);
-
-      if (res.user != null) {
+      if (result.success) {
         context.go('/farm-setup');
       } else {
-        _showErr(res.errorMessage ?? 'Registration failed. Please try again.');
+        _showErr(result.errorMessage ?? 'Registration failed. Try again.');
       }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      _showErr('An unexpected error occurred: $e');
     }
   }
 

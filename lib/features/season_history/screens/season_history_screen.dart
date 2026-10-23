@@ -17,10 +17,9 @@ class SeasonHistoryScreen extends ConsumerWidget {
   const SeasonHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final expenses = ref.watch(expensesProvider);
     final harvests = ref.watch(harvestsProvider);
-    final farm = ref.watch(farmProvider);
 
     return DefaultTabController(
       length: 2,
