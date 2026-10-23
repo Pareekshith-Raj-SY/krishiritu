@@ -14,6 +14,53 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
   DateTime _sowDate = DateTime.now();
 
   List<Map<String, String>> _buildTaskCalendar(String crop, DateTime sowDate) {
+    if (crop.contains('Sugarcane')) {
+      return [
+        {'week': 'Month 1', 'task': 'Land preparation, furrow making, sett treatment with fungicide, planting', 'icon': '🚜'},
+        {'week': 'Month 2', 'task': 'First weeding, gap filling, first earthing up & shoot borer scouting', 'icon': '🌱'},
+        {'week': 'Month 3–4', 'task': 'Top dressing (Urea/Potash), second earthing up, trash mulching', 'icon': '🌿'},
+        {'week': 'Month 5–8', 'task': 'Grand growth phase — regular irrigation every 8-10 days, propping & detrashing', 'icon': '🎋'},
+        {'week': 'Month 9–11', 'task': 'Sucrose accumulation & ripening — taper down irrigation, stop nitrogen', 'icon': '💧'},
+        {'week': 'Month 12–14', 'task': 'Brix refractometer check (18-20%), harvest cane close to ground, mill delivery', 'icon': '🏭'},
+      ];
+    }
+    if (crop.contains('Sericulture')) {
+      return [
+        {'week': 'Week 1–2', 'task': 'Mulberry garden pruning, FYM application, irrigation, rearing room 2% bleach disinfection', 'icon': '🚜'},
+        {'week': 'Week 3–4', 'task': 'Procure disease-free Chawki (2nd instar) silkworm larvae; set up rearing beds', 'icon': '🐛'},
+        {'week': 'Week 5–6', 'task': '3rd & 4th instar feeding with fresh mulberry leaves, bed cleaning, Vijetha dusting', 'icon': '🍃'},
+        {'week': 'Week 7', 'task': '5th instar voracious feeding stage; ensure good ventilation and Uzi fly netting', 'icon': '🔬'},
+        {'week': 'Week 8', 'task': 'Mounting mature worms on Chandrike spinning frames; 3-4 days cocoon spinning', 'icon': '🧵'},
+        {'week': 'Week 9+', 'task': 'Harvest cocoons, deflossing, sorting, transport to Govt Cocoon Market (Ramanagara)', 'icon': '💰'},
+      ];
+    }
+    if (crop.contains('Marigold')) {
+      return [
+        {'week': 'Week 1–2', 'task': 'Raised bed preparation, FYM incorporation, seedling transplanting in evening', 'icon': '🚜'},
+        {'week': 'Week 3–4', 'task': 'Gap filling, weeding, terminal shoot pinching (apical bud removal for bushy growth)', 'icon': '✂️'},
+        {'week': 'Week 5–6', 'task': 'Drip fertigation / top dressing, bud borer inspection, neem oil 3% spray', 'icon': '💧'},
+        {'week': 'Week 7–8', 'task': 'Flower bud swelling stage, micronutrient foliar spray, soil moisture management', 'icon': '🌱'},
+        {'week': 'Week 9–12', 'task': 'Peak flower harvest early morning every 3-4 days for festival market (Dasara/Diwali)', 'icon': '🌼'},
+        {'week': 'Week 13+', 'task': 'Post-harvest irrigation, second flush harvesting or field clearance', 'icon': '🧺'},
+      ];
+    }
+    if (crop.contains('Jasmine')) {
+      return [
+        {'week': 'Week 1–2', 'task': 'Annual pruning of previous wood, basal FYM and fertilizer application around basin', 'icon': '✂️'},
+        {'week': 'Week 3–4', 'task': 'New vegetative flush initiation; irrigate every 5-7 days; weed basin area', 'icon': '🌱'},
+        {'week': 'Week 5–6', 'task': 'Flower bud initiation; prophylactic spray against blossom midge and spider mites', 'icon': '🔬'},
+        {'week': 'Week 7+', 'task': 'Daily morning manual plucking of mature unopened white buds for mandi / garlands', 'icon': '🌸'},
+      ];
+    }
+    if (crop.contains('Chrysanthemum')) {
+      return [
+        {'week': 'Week 1–2', 'task': 'Raised bed preparation, root sucker transplanting, immediate light irrigation', 'icon': '🚜'},
+        {'week': 'Week 3–4', 'task': 'First pinching of main terminal shoot to stimulate profuse branch development', 'icon': '✂️'},
+        {'week': 'Week 5–7', 'task': 'Second pinching, plant staking, prophylactic spray for aphids and rust', 'icon': '🌿'},
+        {'week': 'Week 8–10', 'task': 'Bud emergence stage; balanced fertigation; ensure well-drained bed conditions', 'icon': '💧'},
+        {'week': 'Week 11–16', 'task': 'Harvest fully opened flowers with stalks early morning; crate packaging for APMC', 'icon': '🌻'},
+      ];
+    }
     return [
       {'week': 'Week 1–2', 'task': 'Land preparation, basal fertilizer, sowing of $crop', 'icon': '🚜'},
       {'week': 'Week 3–4', 'task': 'First weeding, gap filling, thinning', 'icon': '🌱'},
@@ -54,8 +101,22 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
                 value: _selectedCrop,
                 hint: const Text('Choose a crop'),
                 decoration: const InputDecoration(labelText: 'Crop'),
-                items: ['Ragi','Paddy','Maize','Jowar','Groundnut','Tur Dal','Cotton','Sunflower']
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                items: [
+                  'Ragi',
+                  'Paddy',
+                  'Maize',
+                  'Jowar',
+                  'Groundnut',
+                  'Tur Dal',
+                  'Cotton',
+                  'Sugarcane',
+                  'Sericulture (Mulberry)',
+                  'Marigold (Flower)',
+                  'Jasmine (Flower)',
+                  'Chrysanthemum (Flower)',
+                  'Sunflower',
+                  'Bengal Gram',
+                ].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                 onChanged: (v) => setState(() => _selectedCrop = v),
               ),
               const SizedBox(height: 14),

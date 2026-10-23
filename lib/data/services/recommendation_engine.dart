@@ -65,6 +65,26 @@ class RecommendationEngine {
         risks.add('Requires assured water supply throughout season');
         risks.add('Stem borer and blast disease monitoring essential');
       }
+      if (crop.id == 'sugarcane') {
+        risks.add('High water and fertilizer requirement throughout growth cycle');
+        risks.add('Red rot and early shoot borer surveillance recommended');
+      }
+      if (crop.id == 'sericulture') {
+        risks.add('Strict temperature and hygiene control required in rearing house');
+        risks.add('Uzi fly netting and grasserie disease prevention essential');
+      }
+      if (crop.id == 'marigold') {
+        risks.add('Market price fluctuations around festive peaks; harvest on schedule');
+        risks.add('Monitor bud borer and Alternaria leaf spot during rainy intervals');
+      }
+      if (crop.id == 'jasmine') {
+        risks.add('Requires daily early morning labor for flower plucking');
+        risks.add('Watch for blossom midge and red spider mite damage');
+      }
+      if (crop.id == 'chrysanthemum') {
+        risks.add('Vulnerable to collar rot and wilt if drainage is poor');
+        risks.add('Regular pinching and aphid control needed for flower density');
+      }
       if (crop.durationDays > 150) {
         risks.add('Long-duration crop — plan for late-season water and input needs');
       }

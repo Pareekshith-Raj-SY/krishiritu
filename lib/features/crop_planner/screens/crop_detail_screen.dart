@@ -44,7 +44,7 @@ class CropDetailScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
-                      const Text('🌾', style: TextStyle(fontSize: 56)),
+                      Text(_getCropEmoji(crop.id), style: const TextStyle(fontSize: 56)),
                       Text(crop.nameKn, style: const TextStyle(color: Colors.white70, fontSize: 16)),
                     ],
                   ),
@@ -141,4 +141,24 @@ class CropDetailScreen extends StatelessWidget {
       Expanded(child: Text(v, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
     ]),
   );
+
+  static String _getCropEmoji(String id) {
+    switch (id) {
+      case 'ragi': return '🌾';
+      case 'paddy': return '🌾';
+      case 'maize': return '🌽';
+      case 'jowar': return '🌾';
+      case 'groundnut': return '🥜';
+      case 'tur_dal': return '🌱';
+      case 'cotton': return '☁️';
+      case 'sugarcane': return '🎋';
+      case 'sericulture': return '🐛';
+      case 'marigold': return '🌼';
+      case 'jasmine': return '🌸';
+      case 'chrysanthemum': return '🌻';
+      case 'sunflower': return '🌻';
+      case 'bengal_gram': return '🫘';
+      default: return '🌱';
+    }
+  }
 }

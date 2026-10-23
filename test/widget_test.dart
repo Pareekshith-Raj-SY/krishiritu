@@ -12,8 +12,8 @@ void main() {
   group('CropRepository', () {
     final repo = CropRepository();
 
-    test('returns 10 Karnataka crops', () {
-      expect(repo.getAllCrops().length, equals(10));
+    test('returns 14 Karnataka crops', () {
+      expect(repo.getAllCrops().length, equals(14));
     });
 
     test('getCropById finds ragi', () {
@@ -22,6 +22,41 @@ void main() {
       expect(c!.name, contains('Ragi'));
       expect(c.waterNeed, equals('low'));
       expect(c.season, equals('Kharif'));
+    });
+
+    test('getCropById finds sericulture and flowers', () {
+      final seri = repo.getCropById('sericulture');
+      expect(seri, isNotNull);
+      expect(seri!.name, contains('Sericulture'));
+      expect(seri.season, contains('Kharif'));
+
+      final marigold = repo.getCropById('marigold');
+      expect(marigold, isNotNull);
+      expect(marigold!.name, contains('Marigold'));
+
+      final jasmine = repo.getCropById('jasmine');
+      expect(jasmine, isNotNull);
+      expect(jasmine!.name, contains('Jasmine'));
+
+      final chrys = repo.getCropById('chrysanthemum');
+      expect(chrys, isNotNull);
+      expect(chrys!.name, contains('Chrysanthemum'));
+    });
+
+    test('kharif filter includes sugarcane, sericulture, and flowers', () {
+      final kharif = repo.getCropsBySeason('Kharif');
+      final ids = kharif.map((c) => c.id).toSet();
+      expect(ids.contains('ragi'), isTrue);
+      expect(ids.contains('paddy'), isTrue);
+      expect(ids.contains('maize'), isTrue);
+      expect(ids.contains('groundnut'), isTrue);
+      expect(ids.contains('tur_dal'), isTrue);
+      expect(ids.contains('cotton'), isTrue);
+      expect(ids.contains('sugarcane'), isTrue);
+      expect(ids.contains('sericulture'), isTrue);
+      expect(ids.contains('marigold'), isTrue);
+      expect(ids.contains('jasmine'), isTrue);
+      expect(ids.contains('chrysanthemum'), isTrue);
     });
 
     test('getCropById returns null for unknown', () {

@@ -81,14 +81,58 @@ class CropRepository {
     ),
     const CropModel(
       id: 'sugarcane', name: 'Sugarcane', nameKn: 'ಕಬ್ಬು',
-      season: 'Year-round', soilTypes: 'Alluvial, Black Cotton Soil, Clay Loam',
-      sowingMonths: 'October, November, February', harvestMonths: 'October-March (12-14 months after planting)',
+      season: 'Kharif, Year-round', soilTypes: 'Alluvial, Black Cotton Soil, Clay Loam, Deep Loamy',
+      sowingMonths: 'June, July (Adsali Kharif); October, November, February', harvestMonths: 'October-March (12-14 months after planting)',
       durationDays: 365, waterNeed: 'high',
       estimatedCostPerAcre: 45000, estimatedYieldPerAcre: 35000, unit: 'kg',
       irrigationMethods: 'Canal, Drip, Borewell',
-      description: 'Sugarcane is a major commercial crop with assured factory purchase in Mandya, Belgaum, and Mysuru belt. Requires year-round irrigation and high inputs. Drip irrigation can reduce water use by 30-40%.',
+      description: 'Sugarcane is a major commercial cash crop with assured factory purchase agreements in Mandya, Belagavi, Mysuru, and Bagalkot belts. Kharif Adsali planting delivers highest tonnage. Requires assured irrigation; drip irrigation saves 35-40% water.',
       sourceInfo: 'KSDA Crop Calendar 2023; UASR Mandya Sugarcane Guide 2022',
-      suitableDistricts: ['Mandya','Mysuru','Belagavi','Vijayapura','Bagalkot','Hassan','Shivamogga','Davanagere'],
+      suitableDistricts: ['Mandya','Mysuru','Belagavi','Vijayapura','Bagalkot','Hassan','Shivamogga','Davanagere','Ballari','Kalaburagi'],
+    ),
+    const CropModel(
+      id: 'sericulture', name: 'Sericulture (Mulberry Silk)', nameKn: 'ರೇಷ್ಮೆ ಕೃಷಿ',
+      season: 'Kharif, Year-round', soilTypes: 'Red Sandy Loam, Red Loam, Clay Loam',
+      sowingMonths: 'June, July, August (Monsoon mulberry planting; monthly batches)', harvestMonths: 'Year-round (every 25-30 days per batch)',
+      durationDays: 365, waterNeed: 'medium',
+      estimatedCostPerAcre: 35000, estimatedYieldPerAcre: 600, unit: 'kg cocoons',
+      irrigationMethods: 'Borewell, Drip, Well',
+      description: 'Sericulture is one of Karnataka\'s most profitable allied agricultural ventures. Ramanagara is Asia\'s largest cocoon market, with extensive farming in Mandya, Kolar, Chikballapur, and Mysuru. Mulberry variety V-1 with Bivoltine hybrid silkworms provides steady monthly cash flow.',
+      sourceInfo: 'Central Silk Board Bengaluru; Karnataka Department of Sericulture 2023 Guide',
+      suitableDistricts: ['Ramanagara','Mandya','Kolar','Chikballapur','Mysuru','Chamarajanagara','Tumakuru','Hassan','Bengaluru Rural'],
+    ),
+    const CropModel(
+      id: 'marigold', name: 'Marigold (Chendu Hoo)', nameKn: 'ಚೆಂಡು ಹೂ',
+      season: 'Kharif, Summer', soilTypes: 'Red Sandy Loam, Loamy, Alluvial',
+      sowingMonths: 'June, July, August', harvestMonths: 'September, October, November',
+      durationDays: 85, waterNeed: 'medium',
+      estimatedCostPerAcre: 22000, estimatedYieldPerAcre: 4000, unit: 'kg',
+      irrigationMethods: 'Drip, Borewell, Furrow',
+      description: 'Marigold is a leading commercial Kharif flower crop in Karnataka, especially in Gundlupet (Chamarajanagara), Haveri, Davanagere, Kolar, and Mysuru. High demand during Dasara and Deepavali festivals. Fast yielding with first harvest within 50 days of planting.',
+      sourceInfo: 'UHS Bagalkot Floriculture Calendar 2023; Karnataka Directorate of Horticulture',
+      suitableDistricts: ['Chamarajanagara','Mysuru','Haveri','Davanagere','Kolar','Chikballapur','Chitradurga','Tumakuru','Bengaluru Rural','Ballari'],
+    ),
+    const CropModel(
+      id: 'jasmine', name: 'Jasmine (Mysore Mallige)', nameKn: 'ಮಲ್ಲಿಗೆ',
+      season: 'Kharif, Year-round', soilTypes: 'Red Loam, Sandy Loam, Well-drained Clay Loam',
+      sowingMonths: 'June, July, August', harvestMonths: 'March to October (Daily morning plucking)',
+      durationDays: 300, waterNeed: 'medium',
+      estimatedCostPerAcre: 40000, estimatedYieldPerAcre: 2500, unit: 'kg',
+      irrigationMethods: 'Drip, Borewell, Well',
+      description: 'Jasmine (Mysore Mallige) is a prestigious GI-tagged commercial flower of Karnataka. Cultivated extensively in Mysuru, Mandya, Udupi, and Hassan. A perennial crop with 10-15 years productive lifespan offering daily morning cash revenue.',
+      sourceInfo: 'UHS Bagalkot Commercial Flowers Package 2023; Karnataka Horticulture Department',
+      suitableDistricts: ['Mysuru','Mandya','Hassan','Udupi','Dakshina Kannada','Shivamogga','Chikkamagaluru','Tumakuru','Bengaluru Rural'],
+    ),
+    const CropModel(
+      id: 'chrysanthemum', name: 'Chrysanthemum (Sevanthige)', nameKn: 'ಶಾವಂತಿಗೆ',
+      season: 'Kharif, Rabi', soilTypes: 'Red Sandy Loam, Well-drained Loamy, Alluvial',
+      sowingMonths: 'June, July, August', harvestMonths: 'October, November, December',
+      durationDays: 120, waterNeed: 'medium',
+      estimatedCostPerAcre: 30000, estimatedYieldPerAcre: 3500, unit: 'kg',
+      irrigationMethods: 'Drip, Borewell, Sprinkler',
+      description: 'Chrysanthemum (Sevanthige) is Karnataka\'s top-selling festival and wedding loose flower. Extensively cultivated in Tumakuru, Kolar, Chikballapur, and Belagavi. Responds exceptionally well to drip fertigation and pinching techniques.',
+      sourceInfo: 'IIHR Bengaluru Floriculture Guide; UHS Bagalkot 2023 recommendations',
+      suitableDistricts: ['Tumakuru','Kolar','Chikballapur','Belagavi','Haveri','Dharwad','Bengaluru Rural','Chitradurga','Mysuru'],
     ),
     const CropModel(
       id: 'sunflower', name: 'Sunflower', nameKn: 'ಸೂರ್ಯಕಾಂತಿ',
@@ -118,8 +162,9 @@ class CropRepository {
 
   List<CropModel> getCropsBySeason(String season) {
     if (season.isEmpty || season == 'All') return getAllCrops();
+    final s = season.toLowerCase();
     return _karnatakaCrops
-        .where((c) => c.season.toLowerCase().contains(season.toLowerCase()))
+        .where((c) => c.season.toLowerCase().contains(s))
         .toList();
   }
 
@@ -137,7 +182,7 @@ class CropRepository {
       } else {
         score += 10;
       }
-      if (crop.season.toLowerCase().contains(season.toLowerCase()) || crop.season == 'Year-round') {
+      if (crop.season.toLowerCase().contains(season.toLowerCase()) || crop.season.toLowerCase().contains('year-round')) {
         score += 25;
       }
       if (crop.soilTypes.toLowerCase().contains(soilType.toLowerCase())) {

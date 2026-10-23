@@ -185,6 +185,8 @@ class _CropCard extends StatelessWidget {
                   child: Text('#$rank', style: const TextStyle(
                       fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white)),
                 ),
+              Text(_getCropEmoji(crop.id), style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 6),
               Expanded(child: Text(crop.name, style: const TextStyle(
                   fontSize: 16, fontWeight: FontWeight.w700))),
               Text(crop.nameKn, style: const TextStyle(
@@ -243,4 +245,24 @@ class _CropCard extends StatelessWidget {
       Text(val, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
     ]),
   );
+
+  static String _getCropEmoji(String id) {
+    switch (id) {
+      case 'ragi': return '🌾';
+      case 'paddy': return '🌾';
+      case 'maize': return '🌽';
+      case 'jowar': return '🌾';
+      case 'groundnut': return '🥜';
+      case 'tur_dal': return '🌱';
+      case 'cotton': return '☁️';
+      case 'sugarcane': return '🎋';
+      case 'sericulture': return '🐛';
+      case 'marigold': return '🌼';
+      case 'jasmine': return '🌸';
+      case 'chrysanthemum': return '🌻';
+      case 'sunflower': return '🌻';
+      case 'bengal_gram': return '🫘';
+      default: return '🌱';
+    }
+  }
 }

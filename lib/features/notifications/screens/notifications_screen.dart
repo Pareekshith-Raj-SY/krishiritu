@@ -5,12 +5,15 @@ class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   static const _tasks = [
-    {'icon': '🌱', 'title': 'Kharif Sowing Window Open', 'desc': 'June–July is ideal for Ragi, Maize, and Groundnut in your district.', 'date': 'Jun 2025', 'type': 'season'},
+    {'icon': '🌱', 'title': 'Kharif Sowing Window Open', 'desc': 'June–July is ideal for Ragi, Paddy, Maize, Groundnut, Sugarcane, Sericulture, and Flower crops.', 'date': 'Jun 2025', 'type': 'season'},
+    {'icon': '🐛', 'title': 'Sericulture Batch Prep', 'desc': 'Complete rearing house disinfection with 2% bleach solution and check Uzi fly nets.', 'date': 'This week', 'type': 'task'},
+    {'icon': '🌼', 'title': 'Marigold & Flower Pinching', 'desc': 'Pinch terminal shoots 25-30 days after transplanting to stimulate branching for Dasara/Diwali harvest.', 'date': 'Week 4', 'type': 'task'},
+    {'icon': '🎋', 'title': 'Sugarcane Earthing Up Alert', 'desc': 'Perform first earthing up and detrash lower dried leaves to conserve soil moisture.', 'date': 'Month 2', 'type': 'task'},
     {'icon': '💧', 'title': 'First Irrigation Due', 'desc': 'If no significant rainfall in the past 10 days, irrigate your crop.', 'date': 'This week', 'type': 'task'},
-    {'icon': '🔍', 'title': 'Pest Scouting Reminder', 'desc': 'Week 6–8 is critical for stem borer monitoring in Paddy and Maize.', 'date': 'This week', 'type': 'task'},
-    {'icon': '📊', 'title': 'Rabi Season Preparation', 'desc': 'Start planning Rabi crops (Jowar, Bengal Gram) for October–November sowing.', 'date': 'Oct 2025', 'type': 'season'},
-    {'icon': '🌾', 'title': 'Harvest Approaching', 'desc': 'Based on your sowing date, harvest window may begin soon. Arrange drying space.', 'date': 'Upcoming', 'type': 'harvest'},
-    {'icon': '💰', 'title': 'MSP Notification', 'desc': 'Government MSP for Ragi is ₹3,846/quintal for 2024-25. Verify at nearest APMC.', 'date': 'Info', 'type': 'info'},
+    {'icon': '🔍', 'title': 'Pest Scouting Reminder', 'desc': 'Week 6–8 is critical for stem borer in Paddy/Maize and bud borer in Flowers.', 'date': 'This week', 'type': 'task'},
+    {'icon': '📊', 'title': 'Rabi Season Preparation', 'desc': 'Start planning Rabi crops (Jowar, Bengal Gram, Chrysanthemum) for October–November sowing.', 'date': 'Oct 2025', 'type': 'season'},
+    {'icon': '🌾', 'title': 'Harvest Approaching', 'desc': 'Based on your sowing date, harvest window may begin soon. Arrange drying and market crates.', 'date': 'Upcoming', 'type': 'harvest'},
+    {'icon': '💰', 'title': 'MSP & Market Rate Alert', 'desc': 'Government MSP for Ragi is ₹3,846/quintal. Check live cocoon prices at Ramanagara APMC.', 'date': 'Info', 'type': 'info'},
   ];
 
   @override

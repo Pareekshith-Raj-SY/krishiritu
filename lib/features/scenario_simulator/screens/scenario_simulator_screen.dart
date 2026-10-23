@@ -33,7 +33,30 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
     'Tur Dal': {'cost': 13000, 'yield': 500, 'price': 70},
     'Groundnut': {'cost': 18000, 'yield': 800, 'price': 60},
     'Cotton': {'cost': 25000, 'yield': 700, 'price': 70},
+    'Sugarcane': {'cost': 45000, 'yield': 35000, 'price': 3.5},
+    'Sericulture (Silk)': {'cost': 35000, 'yield': 600, 'price': 450},
+    'Marigold (Flower)': {'cost': 22000, 'yield': 4000, 'price': 30},
+    'Jasmine (Flower)': {'cost': 40000, 'yield': 2500, 'price': 200},
+    'Chrysanthemum (Flower)': {'cost': 30000, 'yield': 3500, 'price': 60},
+    'Jowar': {'cost': 10000, 'yield': 700, 'price': 32},
+    'Sunflower': {'cost': 14000, 'yield': 550, 'price': 55},
+    'Bengal Gram': {'cost': 11000, 'yield': 600, 'price': 55},
   };
+
+  double get _minPrice {
+    final base = _crops[_crop]?['price'] ?? 30.0;
+    if (base < 5) return 1;
+    if (base > 100) return 50;
+    return 5;
+  }
+
+  double get _maxPrice {
+    final base = _crops[_crop]?['price'] ?? 30.0;
+    if (base < 10) return 20;
+    if (base > 200) return 800;
+    if (base > 80) return 300;
+    return 150;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,8 +119,8 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
               _sliderRow('Yield Reduction', '-${_yieldReduction.toInt()}%',
                   _yieldReduction, 0, 50, (v) { _yieldReduction = v; _simulated = false; },
                   'Pest, disease, or water shortage impact'),
-              _sliderRow('Market Price (₹/kg)', '₹${_price.toStringAsFixed(0)}',
-                  _price, 5, 100, (v) { _price = v; _simulated = false; },
+              _sliderRow('Market Price (₹/kg)', '₹${_price.toStringAsFixed(_price < 10 ? 1 : 0)}',
+                  _price.clamp(_minPrice, _maxPrice), _minPrice, _maxPrice, (v) { _price = v; _simulated = false; },
                   'Adjust expected selling price'),
             ]),
           )),
