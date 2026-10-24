@@ -161,10 +161,21 @@ class CropRepository {
 
   static final Map<String, CropModel> _dynamicCrops = {};
 
-  List<CropModel> getAllCrops() => List.unmodifiable([..._karnatakaCrops, ..._dynamicCrops.values]);
+  /// Returns all available crops with strict ID-based deduplication
+  /// to ensure no crop is ever repeated.
+  List<CropModel> getAllCrops() {
+    final Map<String, CropModel> uniqueCrops = {};
+    for (final c in _karnatakaCrops) {
+      uniqueCrops[c.id.toLowerCase().trim()] = c;
+    }
+    for (final c in _dynamicCrops.values) {
+      uniqueCrops[c.id.toLowerCase().trim()] = c;
+    }
+    return List.unmodifiable(uniqueCrops.values);
+  }
 
   void addDynamicCrop(CropModel crop) {
-    _dynamicCrops[crop.id] = crop;
+    _dynamicCrops[crop.id.toLowerCase().trim()] = crop;
   }
 
   void clearDynamicCrops() {
@@ -242,8 +253,15 @@ class CropRepository {
   }
 
   CropModel? getCropById(String id) {
-    if (_dynamicCrops.containsKey(id)) return _dynamicCrops[id];
-    try { return _karnatakaCrops.firstWhere((c) => c.id == id); }
-    catch (_) { return null; }
+    final cleanId = id.toLowerCase().trim();
+    if (_dynamicCrops.containsKey(cleanId)) return _dynamicCrops[cleanId];
+    for (final c in _dynamicCrops.values) {
+      if (c.id.toLowerCase().trim() == cleanId) return c;
+    }
+    try {
+      return _karnatakaCrops.firstWhere((c) => c.id.toLowerCase().trim() == cleanId);
+    } catch (_) {
+      return null;
+    }
   }
 }

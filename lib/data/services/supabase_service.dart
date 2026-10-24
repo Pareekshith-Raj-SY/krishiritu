@@ -68,6 +68,42 @@ class SupabaseService {
     return [];
   }
 
+  /// Live remote search in Supabase crops table
+  static Future<List<CropModel>> searchCrops(String query) async {
+    final clean = query.trim().replaceAll('*', '').replaceAll('%', '');
+    if (clean.isEmpty) return [];
+
+    if (_client != null) {
+      try {
+        final data = await _client!
+            .from('crops')
+            .select()
+            .or('name.ilike.%$clean%,name_kn.ilike.%$clean%,id.ilike.%$clean%');
+        return (data as List).map((c) => CropModel.fromMap(c)).toList();
+      } catch (_) {}
+    }
+
+    if (AppConfig.hasSupabase) {
+      try {
+        final filter = Uri.encodeComponent('(name.ilike.*$clean*,name_kn.ilike.*$clean*,id.ilike.*$clean*)');
+        final res = await http.get(
+          Uri.parse('${AppConfig.supabaseUrl}/rest/v1/crops?or=$filter'),
+          headers: {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Authorization': 'Bearer ${AppConfig.supabaseAnonKey}',
+          },
+        ).timeout(const Duration(seconds: 6));
+
+        if (res.statusCode == 200) {
+          final List list = jsonDecode(res.body);
+          return list.map((c) => CropModel.fromMap(c as Map<String, dynamic>)).toList();
+        }
+      } catch (_) {}
+    }
+
+    return [];
+  }
+
   // Farm operations
   static Future<FarmModel?> loadFarm() async {
     final uid = userId;

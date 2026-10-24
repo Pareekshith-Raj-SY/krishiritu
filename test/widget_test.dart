@@ -7,6 +7,7 @@ import '../lib/core/utils/format_utils.dart';
 import '../lib/core/utils/date_utils.dart' as appdate;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../lib/data/services/auth_service.dart';
+import '../lib/data/services/groq_crop_service.dart';
 import '../lib/shared/localization/app_localizations.dart';
 
 void main() {
@@ -86,6 +87,57 @@ void main() {
 
       final noMatch = repo.searchCrops('xyzunknowncrop123');
       expect(noMatch, isEmpty);
+    });
+
+    test('deduplicates duplicate crop additions with same id so each crop appears only once', () {
+      repo.clearDynamicCrops();
+      expect(repo.getAllCrops().length, equals(14));
+
+      // Simulate re-adding existing crop (e.g. from Supabase sync)
+      final existingRagi = repo.getCropById('ragi')!;
+      repo.addDynamicCrop(existingRagi);
+      repo.addDynamicCrop(existingRagi.copyWith(suitabilityScore: 99));
+
+      // Length must remain 14, NEVER 15 or 28!
+      expect(repo.getAllCrops().length, equals(14));
+
+      final allIds = repo.getAllCrops().map((c) => c.id.toLowerCase()).toList();
+      final uniqueIds = allIds.toSet();
+      expect(allIds.length, equals(uniqueIds.length));
+
+      repo.clearDynamicCrops();
+    });
+
+    test('GroqCropService finds wheat, tomato and exotic crops without reaching limits', () async {
+      final groq = GroqCropService();
+
+      // Search wheat (from built-in catalog, zero API calls, zero limits)
+      final wheat = await groq.searchWorldCrop('wheat');
+      expect(wheat, isNotNull);
+      expect(wheat!.name.toLowerCase(), contains('wheat'));
+      expect(wheat.nameKn, equals('ಗೋಧಿ'));
+
+      // Search tomato (Kannada query)
+      final tomato = await groq.searchWorldCrop('ಟೊಮೇಟೊ');
+      expect(tomato, isNotNull);
+      expect(tomato!.id, equals('tomato'));
+
+      // Search arbitrary exotic crop (rate-limit safe fallback engine)
+      final quinoa = await groq.searchWorldCrop('Quinoa');
+      expect(quinoa, isNotNull);
+      expect(quinoa!.name, contains('Quinoa'));
+      expect(quinoa.durationDays, greaterThan(0));
+
+      // Verify repo was updated and search finds them
+      expect(repo.getCropById('wheat'), isNotNull);
+      expect(repo.getCropById('tomato'), isNotNull);
+
+      // Verify no duplicates after multiple searches
+      final all = repo.getAllCrops();
+      final ids = all.map((c) => c.id.toLowerCase()).toList();
+      expect(ids.length, equals(ids.toSet().length));
+
+      repo.clearDynamicCrops();
     });
 
     test('dynamic crops can be added and searched globally', () {

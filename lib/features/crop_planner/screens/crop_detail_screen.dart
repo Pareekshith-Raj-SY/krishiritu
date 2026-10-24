@@ -144,7 +144,8 @@ class CropDetailScreen extends StatelessWidget {
   );
 
   static String _getCropEmoji(String id) {
-    switch (id) {
+    final clean = id.toLowerCase().trim();
+    switch (clean) {
       case 'ragi': return '🌾';
       case 'paddy': return '🌾';
       case 'maize': return '🌽';
@@ -159,6 +160,31 @@ class CropDetailScreen extends StatelessWidget {
       case 'chrysanthemum': return '🌻';
       case 'sunflower': return '🌻';
       case 'bengal_gram': return '🫘';
+      case 'wheat': return '🌾';
+      case 'tomato': return '🍅';
+      case 'onion': return '🧅';
+      case 'potato': return '🥔';
+      case 'chilli': return '🌶️';
+      case 'coffee': return '☕';
+      case 'arecanut': return '🌴';
+      case 'coconut': return '🥥';
+      case 'cardamom': return '🌿';
+      case 'ginger': return '🫚';
+      case 'garlic': return '🧄';
+      case 'black_pepper': return '🧂';
+      case 'banana': return '🍌';
+      case 'mango': return '🥭';
+      case 'pomegranate': return '🍎';
+      case 'soybean': return '🌱';
+      case 'mustard': return '🌾';
+      case 'barley': return '🌾';
+      case 'green_gram': return '🫘';
+      case 'black_gram': return '🫘';
+      case 'turmeric': return '🌿';
+      case 'dragon_fruit': return '🐉';
+      case 'vanilla': return '🍦';
+      case 'watermelon': return '🍉';
+      case 'papaya': return '🍈';
       default: return '🌱';
     }
   }

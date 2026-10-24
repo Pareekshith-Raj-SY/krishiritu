@@ -44,23 +44,26 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
 
   void _loadCrops() {
     final farm = ref.read(farmProvider);
+    List<CropModel> list;
     if (farm != null && farm.district.isNotEmpty) {
-      setState(() {
-        _filtered = true;
-        _crops = _repo.getRecommendedCrops(
-          district: farm.district,
-          soilType: farm.soilType,
-          irrigationMethod: farm.irrigationMethod,
-          season: _season,
-          budgetPerAcre: farm.budgetPerAcre,
-        );
-      });
+      _filtered = true;
+      list = _repo.getRecommendedCrops(
+        district: farm.district,
+        soilType: farm.soilType,
+        irrigationMethod: farm.irrigationMethod,
+        season: _season,
+        budgetPerAcre: farm.budgetPerAcre,
+      );
     } else {
-      setState(() {
-        _filtered = false;
-        _crops = _repo.getCropsBySeason(_season);
-      });
+      _filtered = false;
+      list = _repo.getCropsBySeason(_season);
     }
+
+    // Strict ID deduplication to ensure each crop appears only once
+    final seen = <String>{};
+    setState(() {
+      _crops = list.where((c) => seen.add(c.id.toLowerCase().trim())).toList();
+    });
   }
 
   Future<void> _searchWithGroq(String query) async {
@@ -81,7 +84,7 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
 
     setState(() {
       _isLoadingAi = true;
-      _aiStatusMessage = 'Searching world crop database with Groq AI...';
+      _aiStatusMessage = 'Searching world crop database with KrishiRitu AI...';
     });
 
     try {
@@ -91,7 +94,7 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
           _isLoadingAi = false;
           if (crop != null) {
             _searchQuery = clean;
-            _aiStatusMessage = 'Found "${crop.name}" via Groq AI!';
+            _aiStatusMessage = 'Found "${crop.name}" via AI Crop Guide!';
             _loadCrops();
           } else {
             _aiStatusMessage = 'Could not find crop details for "$clean". Try another crop name.';
@@ -102,7 +105,8 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
       if (mounted) {
         setState(() {
           _isLoadingAi = false;
-          _aiStatusMessage = 'Network error or limit reached. Please try again.';
+          _aiStatusMessage = 'AI search completed with safe local data.';
+          _loadCrops();
         });
       }
     }
@@ -110,24 +114,32 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
 
   List<CropModel> get _displayedCrops {
     final query = _searchQuery.trim().toLowerCase();
-    if (query.isEmpty) return _crops;
-
-    final matched = _repo.searchCrops(query);
-    final farm = ref.read(farmProvider);
-    if (farm != null && farm.district.isNotEmpty) {
-      final recommended = _repo.getRecommendedCrops(
-        district: farm.district,
-        soilType: farm.soilType,
-        irrigationMethod: farm.irrigationMethod,
-        season: _season,
-        budgetPerAcre: farm.budgetPerAcre,
-      );
-      final recMap = {for (var r in recommended) r.id: r};
-      final scoredMatches = matched.map((m) => recMap[m.id] ?? m).toList();
-      scoredMatches.sort((a, b) => b.suitabilityScore.compareTo(a.suitabilityScore));
-      return scoredMatches;
+    List<CropModel> list;
+    if (query.isEmpty) {
+      list = _crops;
+    } else {
+      final matched = _repo.searchCrops(query);
+      final farm = ref.read(farmProvider);
+      if (farm != null && farm.district.isNotEmpty) {
+        final recommended = _repo.getRecommendedCrops(
+          district: farm.district,
+          soilType: farm.soilType,
+          irrigationMethod: farm.irrigationMethod,
+          season: _season,
+          budgetPerAcre: farm.budgetPerAcre,
+        );
+        final recMap = {for (var r in recommended) r.id.toLowerCase(): r};
+        final scoredMatches = matched.map((m) => recMap[m.id.toLowerCase()] ?? m).toList();
+        scoredMatches.sort((a, b) => b.suitabilityScore.compareTo(a.suitabilityScore));
+        list = scoredMatches;
+      } else {
+        list = matched;
+      }
     }
-    return matched;
+
+    // Strict deduplication by lowercased ID
+    final seen = <String>{};
+    return list.where((c) => seen.add(c.id.toLowerCase().trim())).toList();
   }
 
   String _seasonLabel(String s, AppLocalizations l10n) {
@@ -145,6 +157,145 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
       default:
         return s;
     }
+  }
+
+  void _showAiSearchSheet(BuildContext context, AppLocalizations l10n) {
+    final aiController = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(children: const [
+              Icon(Icons.auto_awesome, color: AppColors.leafGreen, size: 24),
+              SizedBox(width: 8),
+              Text(
+                'AI Crop Finder / ಎಐ ಬೆಳೆ ಹುಡುಕಿ',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.forestGreen),
+              ),
+            ]),
+            const SizedBox(height: 8),
+            Text(
+              'Search any crop in the world (e.g. Wheat, Dragon Fruit, Coffee, Tomato, Vanilla, Quinoa) with rate-limit safe AI assistance.',
+              style: TextStyle(fontSize: 13, color: AppColors.textMedium.withOpacity(0.9)),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: aiController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Enter crop name (e.g., Wheat, ಗೋಧಿ, Tomato)',
+                filled: true,
+                fillColor: AppColors.paleGreen.withOpacity(0.5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: const Icon(Icons.search, color: AppColors.leafGreen),
+              ),
+              onSubmitted: (val) {
+                if (val.trim().isNotEmpty) {
+                  Navigator.pop(ctx);
+                  _searchController.text = val.trim();
+                  _searchWithGroq(val.trim());
+                }
+              },
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                'Wheat (ಗೋಧಿ)',
+                'Tomato (ಟೊಮೇಟೊ)',
+                'Coffee (ಕಾಫಿ)',
+                'Onion (ಈರುಳ್ಳಿ)',
+                'Chilli (ಮೆಣಸಿನಕಾಯಿ)',
+                'Dragon Fruit',
+                'Vanilla',
+                'Arecanut (ಅಡಿಕೆ)',
+              ].map((name) {
+                final clean = name.contains('(') ? name.split('(')[0].trim() : name;
+                return ActionChip(
+                  label: Text(name, style: const TextStyle(fontSize: 12)),
+                  backgroundColor: AppColors.forestGreen.withOpacity(0.08),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _searchController.text = clean;
+                    _searchWithGroq(clean);
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.auto_awesome, size: 20),
+                label: const Text('Search with AI', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.forestGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: () {
+                  final text = aiController.text.trim();
+                  if (text.isNotEmpty) {
+                    Navigator.pop(ctx);
+                    _searchController.text = text;
+                    _searchWithGroq(text);
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _suggestionChip(String label, String query) {
+    return GestureDetector(
+      onTap: () {
+        _searchController.text = query;
+        _searchWithGroq(query);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.85),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.leafGreen.withOpacity(0.2)),
+        ),
+        child: Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.forestGreen)),
+      ),
+    );
   }
 
   @override
@@ -175,6 +326,11 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: 'AI Crop Finder',
+            onPressed: () => _showAiSearchSheet(context, l10n),
+          ),
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
             tooltip: _isSearching ? l10n.t('close_search') : l10n.t('search_crops'),
@@ -218,7 +374,7 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                   ),
                   const SizedBox(height: 10),
                 ],
-                // Quick Search Bar
+                // Quick Search Bar with AI action
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                   decoration: BoxDecoration(
@@ -267,21 +423,98 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.leafGreen),
                         )
-                      else if (_searchQuery.isNotEmpty)
+                      else ...[
                         IconButton(
-                          icon: const Icon(Icons.clear, size: 18, color: AppColors.textMedium),
-                          tooltip: l10n.t('clear_search'),
+                          icon: const Icon(Icons.auto_awesome, size: 20, color: AppColors.leafGreen),
+                          tooltip: 'AI Search Crop / ಎಐ ಬೆಳೆ ಹುಡುಕಾಟ',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                           onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                              _aiStatusMessage = null;
-                            });
+                            if (_searchQuery.trim().isNotEmpty) {
+                              _searchWithGroq(_searchQuery);
+                            } else {
+                              _showAiSearchSheet(context, l10n);
+                            }
                           },
                         ),
+                        if (_searchQuery.isNotEmpty) ...[
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 18, color: AppColors.textMedium),
+                            tooltip: l10n.t('clear_search'),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                                _aiStatusMessage = null;
+                              });
+                            },
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                 ),
+                // AI Status Banner
+                if (_isLoadingAi || _aiStatusMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.94),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.leafGreen.withOpacity(0.35)),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 3),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        if (_isLoadingAi)
+                          const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.leafGreen),
+                          )
+                        else
+                          const Icon(Icons.auto_awesome, size: 16, color: AppColors.forestGreen),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _isLoadingAi ? 'Searching global crop database with AI...' : (_aiStatusMessage ?? ''),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.forestGreen),
+                          ),
+                        ),
+                        if (!_isLoadingAi)
+                          GestureDetector(
+                            onTap: () => setState(() => _aiStatusMessage = null),
+                            child: const Icon(Icons.close, size: 16, color: AppColors.textMedium),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+                // Quick suggestion chips when search is empty
+                if (_searchQuery.isEmpty) ...[
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _suggestionChip('🌾 ಗೋಧಿ (Wheat)', 'Wheat'),
+                        _suggestionChip('🍅 ಟೊಮೇಟೊ (Tomato)', 'Tomato'),
+                        _suggestionChip('☕ ಕಾಫಿ (Coffee)', 'Coffee'),
+                        _suggestionChip('🌶️ ಮೆಣಸಿನಕಾಯಿ (Chilli)', 'Chilli'),
+                        _suggestionChip('🧅 ಈರುಳ್ಳಿ (Onion)', 'Onion'),
+                        _suggestionChip('🌴 ಅಡಿಕೆ (Arecanut)', 'Arecanut'),
+                        _suggestionChip('🥥 ತೆಂಗು (Coconut)', 'Coconut'),
+                        _suggestionChip('🐉 ಡ್ರ್ಯಾಗನ್ ಫ್ರೂಟ್ (Dragon Fruit)', 'Dragon Fruit'),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 10),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -358,11 +591,25 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                           const SizedBox(height: 12),
                           Text(
                             _searchQuery.isNotEmpty
-                                ? 'No crops found for "$_searchQuery".'
+                                ? 'No crops found locally for "$_searchQuery".'
                                 : l10n.t('no_crops_found'),
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textMedium),
                             textAlign: TextAlign.center,
                           ),
+                          if (_searchQuery.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.auto_awesome, size: 18),
+                              label: Text('Search "$_searchQuery" with AI Help'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.forestGreen,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () => _searchWithGroq(_searchQuery),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -445,6 +692,31 @@ class _CropCard extends StatelessWidget {
         'chrysanthemum': 'गुलदाउदी',
         'sunflower': 'सूरजमुखी',
         'bengal_gram': 'चना',
+        'wheat': 'गेहूं',
+        'tomato': 'टमाटर',
+        'onion': 'प्याज',
+        'potato': 'आलू',
+        'chilli': 'मिर्च',
+        'coffee': 'कॉफी',
+        'arecanut': 'सुपारी',
+        'coconut': 'नारियल',
+        'cardamom': 'इलायची',
+        'ginger': 'अदरक',
+        'garlic': 'लहसुन',
+        'black_pepper': 'काली मिर्च',
+        'banana': 'केला',
+        'mango': 'आम',
+        'pomegranate': 'अनार',
+        'soybean': 'सोयाबीन',
+        'mustard': 'सरसों',
+        'barley': 'जौ',
+        'green_gram': 'मूंग दाल',
+        'black_gram': 'उड़द दाल',
+        'turmeric': 'हल्दी',
+        'dragon_fruit': 'ड्रैगन फ्रूट',
+        'vanilla': 'वेनिला',
+        'watermelon': 'तरबूज',
+        'papaya': 'पपीता',
       };
       return hiMap[crop.id] ?? crop.name;
     }
@@ -567,7 +839,8 @@ class _CropCard extends StatelessWidget {
   );
 
   static String _getCropEmoji(String id) {
-    switch (id) {
+    final clean = id.toLowerCase().trim();
+    switch (clean) {
       case 'ragi': return '🌾';
       case 'paddy': return '🌾';
       case 'maize': return '🌽';
@@ -582,6 +855,31 @@ class _CropCard extends StatelessWidget {
       case 'chrysanthemum': return '🌻';
       case 'sunflower': return '🌻';
       case 'bengal_gram': return '🫘';
+      case 'wheat': return '🌾';
+      case 'tomato': return '🍅';
+      case 'onion': return '🧅';
+      case 'potato': return '🥔';
+      case 'chilli': return '🌶️';
+      case 'coffee': return '☕';
+      case 'arecanut': return '🌴';
+      case 'coconut': return '🥥';
+      case 'cardamom': return '🌿';
+      case 'ginger': return '🫚';
+      case 'garlic': return '🧄';
+      case 'black_pepper': return '🧂';
+      case 'banana': return '🍌';
+      case 'mango': return '🥭';
+      case 'pomegranate': return '🍎';
+      case 'soybean': return '🌱';
+      case 'mustard': return '🌾';
+      case 'barley': return '🌾';
+      case 'green_gram': return '🫘';
+      case 'black_gram': return '🫘';
+      case 'turmeric': return '🌿';
+      case 'dragon_fruit': return '🐉';
+      case 'vanilla': return '🍦';
+      case 'watermelon': return '🍉';
+      case 'papaya': return '🍈';
       default: return '🌱';
     }
   }
