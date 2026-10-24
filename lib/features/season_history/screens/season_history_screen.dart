@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/expense_model.dart';
 import '../../../data/repositories/farm_repository.dart';
+import '../../../shared/localization/app_localizations.dart';
 import '../../farms/providers/farm_provider.dart';
 
 final expensesProvider = FutureProvider<List<ExpenseModel>>((ref) async {
@@ -20,23 +21,24 @@ class SeasonHistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final expenses = ref.watch(expensesProvider);
     final harvests = ref.watch(harvestsProvider);
+    final l10n = AppLocalizations.of(context);
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Season Memory'),
+          title: Text(l10n.t('season_memory')),
           backgroundColor: Colors.transparent,
           foregroundColor: AppColors.forestGreen,
           elevation: 0,
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: AppColors.forestGreen,
             unselectedLabelColor: AppColors.textMedium,
             indicatorColor: AppColors.forestGreen,
             tabs: [
-              Tab(text: 'Expenses'),
-              Tab(text: 'Harvests'),
+              Tab(text: l10n.t('expenses')),
+              Tab(text: l10n.t('harvests')),
             ],
           ),
         ),
@@ -45,7 +47,7 @@ class SeasonHistoryScreen extends ConsumerWidget {
           child: FloatingActionButton.extended(
             onPressed: () => _showAddDialog(context, ref),
             icon: const Icon(Icons.add),
-            label: const Text('Add Record'),
+            label: Text(l10n.t('add_record')),
             backgroundColor: AppColors.leafGreen,
           ),
         ),
@@ -79,21 +81,22 @@ class _ExpensesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return expenses.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (list) {
         if (list.isEmpty) {
-          return const Center(child: Column(
+          return Center(child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('💰', style: TextStyle(fontSize: 56)),
-              SizedBox(height: 16),
-              Text('No expenses logged yet', style: TextStyle(
+              const Text('💰', style: TextStyle(fontSize: 56)),
+              const SizedBox(height: 16),
+              Text(l10n.t('no_expenses_logged'), style: const TextStyle(
                   fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textMedium)),
-              SizedBox(height: 8),
-              Text('Tap + Add Record to start tracking',
-                  style: TextStyle(color: AppColors.textLight)),
+              const SizedBox(height: 8),
+              Text(l10n.t('tap_add_record_expense'),
+                  style: const TextStyle(color: AppColors.textLight)),
             ],
           ));
         }
@@ -112,7 +115,7 @@ class _ExpensesTab extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total Expenses', style: TextStyle(fontWeight: FontWeight.w600)),
+                Text(l10n.t('total_expenses'), style: const TextStyle(fontWeight: FontWeight.w600)),
                 Text('₹${total.toStringAsFixed(0)}',
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800,
                         color: AppColors.errorRed)),
@@ -137,10 +140,10 @@ class _ExpensesTab extends StatelessWidget {
                       child: const Icon(Icons.receipt_long_outlined,
                           color: AppColors.errorRed, size: 20),
                     ),
-                    title: Text(e.description.isNotEmpty ? e.description : e.category,
+                    title: Text(e.description.isNotEmpty ? e.description : l10n.translateExpenseCategory(e.category),
                         style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Text(
-                        '${e.category} · ${e.date.day}/${e.date.month}/${e.date.year}'),
+                        '${l10n.translateExpenseCategory(e.category)} · ${e.date.day}/${e.date.month}/${e.date.year}'),
                     trailing: Text('₹${e.amount.toStringAsFixed(0)}',
                         style: const TextStyle(fontWeight: FontWeight.w700,
                             color: AppColors.errorRed, fontSize: 15)),
@@ -161,21 +164,22 @@ class _HarvestsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return harvests.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (list) {
         if (list.isEmpty) {
-          return const Center(child: Column(
+          return Center(child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('🌾', style: TextStyle(fontSize: 56)),
-              SizedBox(height: 16),
-              Text('No harvest records yet', style: TextStyle(
+              const Text('🌾', style: TextStyle(fontSize: 56)),
+              const SizedBox(height: 16),
+              Text(l10n.t('no_harvests_logged'), style: const TextStyle(
                   fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textMedium)),
-              SizedBox(height: 8),
-              Text('Tap + Add Record to log your harvest',
-                  style: TextStyle(color: AppColors.textLight)),
+              const SizedBox(height: 8),
+              Text(l10n.t('tap_add_record_harvest'),
+                  style: const TextStyle(color: AppColors.textLight)),
             ],
           ));
         }
@@ -194,7 +198,7 @@ class _HarvestsTab extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total Revenue', style: TextStyle(fontWeight: FontWeight.w600)),
+                Text(l10n.t('total_revenue'), style: const TextStyle(fontWeight: FontWeight.w600)),
                 Text('₹${totalRevenue.toStringAsFixed(0)}',
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800,
                         color: AppColors.forestGreen)),
@@ -218,10 +222,10 @@ class _HarvestsTab extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10)),
                       child: const Icon(Icons.grass, color: AppColors.leafGreen, size: 20),
                     ),
-                    title: Text(h.cropName,
+                    title: Text(l10n.translateCrop(h.cropName),
                         style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Text(
-                        '${h.quantityKg.toStringAsFixed(0)} kg · ₹${h.pricePerKg}/kg · '
+                        '${h.quantityKg.toStringAsFixed(0)} ${l10n.t('kg')} · ₹${h.pricePerKg}/${l10n.t('kg')} · '
                         '${h.harvestDate.day}/${h.harvestDate.month}/${h.harvestDate.year}'),
                     trailing: Text('₹${h.totalRevenue.toStringAsFixed(0)}',
                         style: const TextStyle(fontWeight: FontWeight.w700,
@@ -257,13 +261,14 @@ class _AddRecordSheetState extends State<_AddRecordSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.only(
           left: 20, right: 20, top: 20,
           bottom: MediaQuery.of(context).viewInsets.bottom + 20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          const Text('Add Record', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(l10n.t('add_record'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
           const Spacer(),
           IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
         ]),
@@ -276,7 +281,7 @@ class _AddRecordSheetState extends State<_AddRecordSheet> {
                 color: _isExpense ? AppColors.errorRed : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text('Expense', textAlign: TextAlign.center, style: TextStyle(
+              child: Text(l10n.t('expense'), textAlign: TextAlign.center, style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: _isExpense ? Colors.white : AppColors.textMedium)),
             ),
@@ -289,7 +294,7 @@ class _AddRecordSheetState extends State<_AddRecordSheet> {
                 color: !_isExpense ? AppColors.leafGreen : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text('Harvest', textAlign: TextAlign.center, style: TextStyle(
+              child: Text(l10n.t('harvest'), textAlign: TextAlign.center, style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: !_isExpense ? Colors.white : AppColors.textMedium)),
             ),
@@ -299,27 +304,27 @@ class _AddRecordSheetState extends State<_AddRecordSheet> {
         if (_isExpense) ...[
           DropdownButtonFormField<String>(
             value: _category,
-            decoration: const InputDecoration(labelText: 'Category'),
+            decoration: InputDecoration(labelText: l10n.t('category')),
             items: ExpenseModel.categories
-                .map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                .map((c) => DropdownMenuItem(value: c, child: Text(l10n.translateExpenseCategory(c)))).toList(),
             onChanged: (v) => setState(() => _category = v!),
           ),
           const SizedBox(height: 12),
           TextFormField(controller: _descCtrl,
-              decoration: const InputDecoration(labelText: 'Description')),
+              decoration: InputDecoration(labelText: l10n.t('description'))),
           const SizedBox(height: 12),
           TextFormField(controller: _amtCtrl, keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Amount (₹)', prefixIcon: Icon(Icons.currency_rupee))),
+              decoration: InputDecoration(labelText: l10n.t('amount_rs'), prefixIcon: const Icon(Icons.currency_rupee))),
         ] else ...[
           TextFormField(controller: _cropCtrl,
-              decoration: const InputDecoration(labelText: 'Crop Name')),
+              decoration: InputDecoration(labelText: l10n.t('crop_name'))),
           const SizedBox(height: 12),
           Row(children: [
             Expanded(child: TextFormField(controller: _qtyCtrl, keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Quantity (kg)'))),
+                decoration: InputDecoration(labelText: l10n.t('quantity_kg')))),
             const SizedBox(width: 12),
             Expanded(child: TextFormField(controller: _priceCtrl, keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Price (₹/kg)'))),
+                decoration: InputDecoration(labelText: l10n.t('price_rs_kg')))),
           ]),
         ],
         const SizedBox(height: 20),
@@ -328,7 +333,7 @@ class _AddRecordSheetState extends State<_AddRecordSheet> {
           child: _saving
               ? const SizedBox(width: 20, height: 20,
                   child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : const Text('Save Record'),
+              : Text(l10n.t('save_record')),
         ),
       ]),
     );

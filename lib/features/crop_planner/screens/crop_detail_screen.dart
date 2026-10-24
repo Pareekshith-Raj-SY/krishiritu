@@ -29,7 +29,7 @@ class CropDetailScreen extends StatelessWidget {
             foregroundColor: Colors.white,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(crop.name, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
+              title: Text(l10n.translateCrop(crop.name), style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -58,21 +58,21 @@ class CropDetailScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                _infoCard('🗓️ Seasonal Calendar', [
-                  _row('Season', crop.season),
-                  _row('Sowing Months', crop.sowingMonths),
-                  _row('Harvest Months', crop.harvestMonths),
-                  _row('Duration', '${crop.durationDays} days'),
+                _infoCard(l10n.t('seasonal_calendar'), [
+                  _row(l10n.t('current_season'), crop.season),
+                  _row(l10n.t('sowing_months'), crop.sowingMonths),
+                  _row(l10n.t('harvest_months'), crop.harvestMonths),
+                  _row(l10n.t('duration'), '${crop.durationDays} ${l10n.t('days')}'),
                 ]),
                 const SizedBox(height: 12),
-                _infoCard('🌱 Growing Requirements', [
+                _infoCard(l10n.t('growing_requirements'), [
                   _row(l10n.t('soil_type'), l10n.translateSoilList(crop.soilTypes)),
                   _row(l10n.t('water_need'), crop.waterNeed.toUpperCase()),
                   _row(l10n.t('irrigation'), l10n.translateIrrigationList(crop.irrigationMethods)),
                 ]),
                 const SizedBox(height: 12),
-                _infoCard('💰 Economics (Estimates per Acre)', [
-                  _row('Input Cost', '₹${crop.estimatedCostPerAcre.toStringAsFixed(0)}'),
+                _infoCard(l10n.t('economics_estimates'), [
+                  _row(l10n.t('input_cost'), '₹${crop.estimatedCostPerAcre.toStringAsFixed(0)}'),
                   _row(l10n.t('yield'), '${crop.estimatedYieldPerAcre} ${crop.unit}'),
                   _row(l10n.t('suitable_districts'), crop.suitableDistricts.take(5).map((d) => l10n.translateDistrict(d)).join(', ')),
                 ]),
@@ -82,7 +82,7 @@ class CropDetailScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('ℹ️ About this Crop', style: TextStyle(
+                      Text(l10n.t('about_crop'), style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 10),
                       Text(crop.description, style: const TextStyle(
@@ -100,16 +100,15 @@ class CropDetailScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('📚 Data Source', style: TextStyle(
+                      Text(l10n.t('data_source'), style: const TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.forestGreen)),
                       const SizedBox(height: 6),
                       Text(crop.sourceInfo, style: const TextStyle(
                           fontSize: 12, color: AppColors.textMedium)),
                       const SizedBox(height: 8),
-                      const Text(
-                        '⚠️ These are illustrative estimates. Actual results depend on weather, '
-                        'market prices, and local conditions. Consult your nearest KVK or agricultural office.',
-                        style: TextStyle(fontSize: 11, color: AppColors.textMedium, height: 1.5),
+                      Text(
+                        l10n.t('crop_detail_disclaimer'),
+                        style: const TextStyle(fontSize: 11, color: AppColors.textMedium, height: 1.5),
                       ),
                     ]),
                   ),

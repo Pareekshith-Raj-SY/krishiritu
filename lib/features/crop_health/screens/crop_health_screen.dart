@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/localization/app_localizations.dart';
 
 class CropHealthScreen extends StatefulWidget {
   const CropHealthScreen({super.key});
@@ -12,10 +13,11 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Crop Health & Weed ID'),
+        title: Text(l10n.t('crop_health_title')),
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
@@ -23,7 +25,7 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (_showDisclaimer) _disclaimer(),
+          if (_showDisclaimer) _disclaimer(l10n),
           const SizedBox(height: 16),
           Card(
             color: Colors.white.withOpacity(0.92),
@@ -32,30 +34,30 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
             child: Column(children: [
               const Text('🔬', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
-              const Text('Upload a crop or weed photo', style: TextStyle(
+              Text(l10n.t('upload_photo_prompt'), style: const TextStyle(
                   fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.forestGreen)),
               const SizedBox(height: 8),
-              const Text('Get a possible identification and care guidance.',
-                  style: TextStyle(color: AppColors.textMedium), textAlign: TextAlign.center),
+              Text(l10n.t('upload_photo_sub'),
+                  style: const TextStyle(color: AppColors.textMedium), textAlign: TextAlign.center),
               const SizedBox(height: 20),
               ElevatedButton.icon(
-                onPressed: _notAvailable,
+                onPressed: () => _notAvailable(l10n),
                 icon: const Icon(Icons.camera_alt_outlined),
-                label: const Text('Take Photo'),
+                label: Text(l10n.t('take_photo')),
               ),
               const SizedBox(height: 10),
               OutlinedButton.icon(
-                onPressed: _notAvailable,
+                onPressed: () => _notAvailable(l10n),
                 icon: const Icon(Icons.photo_library_outlined),
-                label: const Text('Upload from Gallery'),
+                label: Text(l10n.t('upload_gallery')),
               ),
             ]),
           )),
           const SizedBox(height: 16),
-          const Text('Common Crop Problems in Karnataka', style: TextStyle(
+          Text(l10n.t('common_problems'), style: const TextStyle(
               fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.forestGreen)),
           const SizedBox(height: 10),
-          ..._issues.map((i) => _issueCard(i)),
+          ..._issues.map((i) => _issueCard(i, l10n)),
           const SizedBox(height: 90),
         ]),
       ),
@@ -92,7 +94,7 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
      'action': 'Remove before flowering. Do not allow seed set. Manual removal is effective in small areas.'},
   ];
 
-  Widget _issueCard(Map<String, String> issue) => Card(
+  Widget _issueCard(Map<String, String> issue, AppLocalizations l10n) => Card(
     color: Colors.white.withOpacity(0.92),
     margin: const EdgeInsets.only(bottom: 10),
     child: Padding(
@@ -102,23 +104,23 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
           Text(issue['icon']!, style: const TextStyle(fontSize: 24)),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(issue['title']!, style: const TextStyle(
+            Text(l10n.translateCropHealthTitle(issue['title']!), style: const TextStyle(
                 fontWeight: FontWeight.w700, fontSize: 14)),
-            Text('Affects: ${issue['crop']}', style: const TextStyle(
+            Text('${l10n.t('affects')}: ${l10n.translateCrop(issue['crop']!)}', style: const TextStyle(
                 fontSize: 12, color: AppColors.textMedium)),
           ])),
         ]),
         const SizedBox(height: 8),
-        const Text('Symptoms:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        Text(issue['symptoms']!, style: const TextStyle(fontSize: 13, color: AppColors.textMedium)),
+        Text(l10n.t('symptoms'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        Text(l10n.translateCropHealthSymptoms(issue['symptoms']!), style: const TextStyle(fontSize: 13, color: AppColors.textMedium)),
         const SizedBox(height: 6),
-        const Text('Suggested Action:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        Text(issue['action']!, style: const TextStyle(fontSize: 13, color: AppColors.textMedium)),
+        Text(l10n.t('suggested_action'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        Text(l10n.translateCropHealthAction(issue['action']!), style: const TextStyle(fontSize: 13, color: AppColors.textMedium)),
       ]),
     ),
   );
 
-  Widget _disclaimer() => Container(
+  Widget _disclaimer(AppLocalizations l10n) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
       color: Colors.white.withOpacity(0.92),
@@ -129,14 +131,12 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
       const Text('⚠️', style: TextStyle(fontSize: 20)),
       const SizedBox(width: 10),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Important Disclaimer', style: TextStyle(
+        Text(l10n.t('important_disclaimer'), style: const TextStyle(
             fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.earthBrown)),
         const SizedBox(height: 4),
-        const Text(
-          'Photo-based identification is not a confirmed diagnosis. '
-          'Always confirm with your local agricultural extension officer or KVK before applying any treatment. '
-          'Do not apply pesticides without verified, crop-specific guidance.',
-          style: TextStyle(fontSize: 12, color: AppColors.earthBrown, height: 1.5),
+        Text(
+          l10n.t('crop_health_disclaimer'),
+          style: const TextStyle(fontSize: 12, color: AppColors.earthBrown, height: 1.5),
         ),
       ])),
       IconButton(
@@ -148,14 +148,12 @@ class _CropHealthScreenState extends State<CropHealthScreen> {
     ]),
   );
 
-  void _notAvailable() => showDialog(
+  void _notAvailable(AppLocalizations l10n) => showDialog(
     context: context,
     builder: (_) => AlertDialog(
-      title: const Text('Feature Coming Soon'),
-      content: const Text(
-          'Photo-based crop identification requires an AI image analysis service to be configured. '
-          'This feature will be available once the service is set up in your .env file.'),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+      title: Text(l10n.t('feature_coming_soon')),
+      content: Text(l10n.t('feature_coming_soon_desc')),
+      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.t('ok')))],
     ),
   );
 }

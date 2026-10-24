@@ -96,13 +96,13 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
             child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('🌾 Select Crop for Season Plan', style: TextStyle(
+              Text(l10n.t('select_crop_season_plan'), style: const TextStyle(
                   fontSize: 15, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: _selectedCrop,
-                hint: const Text('Choose a crop'),
-                decoration: const InputDecoration(labelText: 'Crop'),
+                hint: Text(l10n.t('choose_crop')),
+                decoration: InputDecoration(labelText: l10n.t('crop_name')),
                 items: [
                   'Ragi',
                   'Paddy',
@@ -118,13 +118,13 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
                   'Chrysanthemum (Flower)',
                   'Sunflower',
                   'Bengal Gram',
-                ].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                ].map((c) => DropdownMenuItem(value: c, child: Text(l10n.translateCrop(c)))).toList(),
                 onChanged: (v) => setState(() => _selectedCrop = v),
               ),
               const SizedBox(height: 14),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Planned Sowing Date', style: TextStyle(fontSize: 14)),
+                title: Text(l10n.t('planned_sowing_date'), style: const TextStyle(fontSize: 14)),
                 subtitle: Text('${_sowDate.day}/${_sowDate.month}/${_sowDate.year}',
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                 trailing: IconButton(
@@ -149,13 +149,13 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
               child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('📅 Task Calendar — $_selectedCrop',
+                Text('${l10n.t('task_calendar_crop')} — ${l10n.translateCrop(_selectedCrop!)}',
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text('Planned sow: ${_sowDate.day}/${_sowDate.month}/${_sowDate.year}',
+                Text('${l10n.t('planned_sow')}: ${_sowDate.day}/${_sowDate.month}/${_sowDate.year}',
                     style: const TextStyle(fontSize: 12, color: AppColors.textMedium)),
                 const Divider(height: 20),
-                ..._buildTaskCalendar(_selectedCrop!, _sowDate).map((t) => _taskRow(t)),
+                ..._buildTaskCalendar(_selectedCrop!, _sowDate).map((t) => _taskRow(t, l10n)),
               ]),
             )),
             const SizedBox(height: 12),
@@ -166,11 +166,9 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.warmAmber.withOpacity(0.5)),
               ),
-              child: const Text(
-                '⚠️ This calendar is a general guide based on typical crop duration. '
-                'Adjust dates based on local weather conditions and advice from your '
-                'nearest Krishi Vigyan Kendra (KVK).',
-                style: TextStyle(fontSize: 12, color: AppColors.earthBrown, height: 1.5),
+              child: Text(
+                l10n.t('season_twin_disclaimer'),
+                style: const TextStyle(fontSize: 12, color: AppColors.earthBrown, height: 1.5),
               ),
             ),
           ],
@@ -186,7 +184,7 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('🏡 Farm Digital Profile', style: TextStyle(
+          Text(l10n.t('farm_digital_profile'), style: const TextStyle(
               color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
           if (farm != null) ...[
@@ -195,8 +193,8 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
             _pRow(l10n.t('irrigation'), l10n.translateIrrigation(farm.irrigationMethod)),
             _pRow(l10n.t('land_area'), '${farm.landAreaAcres} ${l10n.t('acres')}'),
           ] else
-            const Text('Set up your farm profile to get personalized recommendations.',
-                style: TextStyle(color: Colors.white70)),
+            Text(l10n.t('setup_farm_profile_hint'),
+                style: const TextStyle(color: Colors.white70)),
         ]),
       ),
     );
@@ -210,15 +208,15 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
     ]),
   );
 
-  Widget _taskRow(Map<String, String> t) => Padding(
+  Widget _taskRow(Map<String, String> t, AppLocalizations l10n) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(t['icon']!, style: const TextStyle(fontSize: 22)),
       const SizedBox(width: 12),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(t['week']!, style: const TextStyle(
+        Text(l10n.translateTwinWeek(t['week']!), style: const TextStyle(
             fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.leafGreen)),
-        Text(t['task']!, style: const TextStyle(fontSize: 14, color: AppColors.textDark)),
+        Text(l10n.translateTwinTask(t['task']!), style: const TextStyle(fontSize: 14, color: AppColors.textDark)),
       ])),
     ]),
   );

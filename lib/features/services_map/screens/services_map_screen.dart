@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/localization/app_localizations.dart';
 
 class ServicesMapScreen extends StatefulWidget {
   const ServicesMapScreen({super.key});
@@ -30,10 +31,11 @@ class _ServicesMapScreenState extends State<ServicesMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Nearby Farm Services'),
+        title: Text(l10n.t('nearby_services')),
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
@@ -51,12 +53,12 @@ class _ServicesMapScreenState extends State<ServicesMapScreen> {
                   BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
                 ],
               ),
-              child: const Row(children: [
-                Icon(Icons.info_outline, color: AppColors.forestGreen, size: 16),
-                SizedBox(width: 6),
+              child: Row(children: [
+                const Icon(Icons.info_outline, color: AppColors.forestGreen, size: 16),
+                const SizedBox(width: 6),
                 Expanded(child: Text(
-                  'Sample data for Mysuru. Configure location permissions for live results.',
-                  style: TextStyle(color: AppColors.textDark, fontSize: 12),
+                  l10n.t('nearby_services_notice'),
+                  style: const TextStyle(color: AppColors.textDark, fontSize: 12),
                 )),
               ]),
             ),
@@ -79,7 +81,7 @@ class _ServicesMapScreenState extends State<ServicesMapScreen> {
                           BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4),
                         ],
                       ),
-                      child: Text(t, style: TextStyle(
+                      child: Text(l10n.translateServiceType(t), style: TextStyle(
                           color: sel ? Colors.white : AppColors.textDark, fontSize: 12,
                           fontWeight: sel ? FontWeight.w700 : FontWeight.w500)),
                     ),
@@ -91,7 +93,7 @@ class _ServicesMapScreenState extends State<ServicesMapScreen> {
         ),
         Expanded(
           child: _filtered.isEmpty
-              ? const Center(child: Text('No services found'))
+              ? Center(child: Text(l10n.t('no_services_found')))
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
                   itemCount: _filtered.length,
@@ -109,6 +111,7 @@ class _ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       color: Colors.white.withOpacity(0.92),
       margin: const EdgeInsets.only(bottom: 10),
@@ -123,27 +126,27 @@ class _ServiceCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(service['name']!, style: const TextStyle(
+            Text(l10n.translateServiceName(service['name']!), style: const TextStyle(
                 fontWeight: FontWeight.w700, fontSize: 14)),
             const SizedBox(height: 3),
-            Text(service['type']!, style: const TextStyle(
+            Text(l10n.translateServiceType(service['type']!), style: const TextStyle(
                 fontSize: 12, color: AppColors.leafGreen, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             Row(children: [
               const Icon(Icons.location_on_outlined, size: 13, color: AppColors.textLight),
               const SizedBox(width: 3),
-              Expanded(child: Text(service['address']!,
+              Expanded(child: Text(l10n.translateServiceAddress(service['address']!),
                   style: const TextStyle(fontSize: 12, color: AppColors.textMedium))),
             ]),
             if ((service['dist'] ?? '—') != '—')
               Padding(padding: const EdgeInsets.only(top: 3), child: Text(
-                '~${service['dist']} away',
+                '~${service['dist']} ${l10n.t('away')}',
                 style: const TextStyle(fontSize: 11, color: AppColors.textLight))),
             const SizedBox(height: 6),
             Row(children: [
               const Icon(Icons.phone_outlined, size: 13, color: AppColors.textLight),
               const SizedBox(width: 3),
-              Text(service['phone']!, style: const TextStyle(fontSize: 12, color: AppColors.textMedium)),
+              Text(l10n.translateServiceAddress(service['phone']!), style: const TextStyle(fontSize: 12, color: AppColors.textMedium)),
             ]),
           ])),
         ]),

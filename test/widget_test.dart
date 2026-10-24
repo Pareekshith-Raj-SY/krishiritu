@@ -450,5 +450,43 @@ void main() {
       expect(AppLocalizations.canonicalIrrigation('ಮಳೆಯಾಶ್ರಿತ'), equals('Rainfed'));
       expect(AppLocalizations.canonicalIrrigation('Rainfed'), equals('Rainfed'));
     });
+
+    test('translates dashboard headlines and screen titles in Kannada, Hindi, and English', () {
+      expect(l10nKn.t('what_if'), equals('ವಾಟ್-ಇಫ್ ಸಿಮ್ಯುಲೇಟರ್'));
+      expect(l10nHi.t('what_if'), equals('व्हाट्स-इफ सिम्युलेटर'));
+      expect(l10nEn.t('what_if'), equals('What-If Simulator'));
+
+      expect(l10nKn.t('nearby_services'), equals('ಹತ್ತಿರದ ಕೃಷಿ ಸೇವೆಗಳು'));
+      expect(l10nHi.t('nearby_services'), equals('आस-पास की कृषि सेवाएं'));
+      expect(l10nEn.t('nearby_services'), equals('Nearby Farm Services'));
+
+      expect(l10nKn.t('tasks_and_notifications'), equals('ಕಾರ್ಯಗಳು ಮತ್ತು ಅಧಿಸೂಚನೆಗಳು'));
+      expect(l10nHi.t('tasks_and_notifications'), equals('कार्य और सूचनाएं'));
+      expect(l10nEn.t('tasks_and_notifications'), equals('Tasks & Notifications'));
+    });
+
+    test('translates task titles, dates, and descriptions', () {
+      expect(l10nKn.translateTaskTitle('Kharif Sowing Window Open'), equals('ಖರೀಫ್ ಬಿತ್ತನೆ ಸಮಯ ಆರಂಭವಾಗಿದೆ'));
+      expect(l10nHi.translateTaskTitle('Kharif Sowing Window Open'), equals('खरीफ बुवाई का समय खुला है'));
+
+      expect(l10nKn.translateTaskDate('This week'), equals('ಈ ವಾರ'));
+      expect(l10nHi.translateTaskDate('This week'), equals('इस सप्ताह'));
+    });
+
+    test('translates nearby service names, types, and addresses', () {
+      expect(l10nKn.translateServiceName('Krishi Vigyan Kendra, Mysuru'), equals('ಕೃಷಿ ವಿಜ್ಞಾನ ಕೇಂದ್ರ, ಮೈಸೂರು'));
+      expect(l10nHi.translateServiceName('Krishi Vigyan Kendra, Mysuru'), equals('कृषि विज्ञान केंद्र, मैसूरु'));
+
+      expect(l10nKn.translateServiceType('Agriculture Office'), equals('ಕೃಷಿ ಕಚೇರಿ'));
+      expect(l10nHi.translateServiceType('Agriculture Office'), equals('कृषि कार्यालय'));
+    });
+
+    test('translates crop health and expense categories', () {
+      expect(l10nKn.translateCropHealthTitle('Ragi Blast (Neck Blast)'), equals('ರಾಗಿ ಬೆಂಕಿ ರೋಗ (ಕುತ್ತಿಗೆ ಬೆಂಕಿ)'));
+      expect(l10nHi.translateCropHealthTitle('Ragi Blast (Neck Blast)'), equals('रागी ब्लास्ट (गर्दन ब्लास्ट)'));
+
+      expect(l10nKn.translateExpenseCategory('Seeds'), equals('ಬೀಜಗಳು'));
+      expect(l10nHi.translateExpenseCategory('Seeds'), equals('बीज'));
+    });
   });
 }

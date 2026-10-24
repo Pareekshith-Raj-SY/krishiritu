@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/config/app_config.dart';
 import 'data/services/supabase_service.dart';
 import 'app.dart';
@@ -52,5 +53,20 @@ Future<void> main() async {
     ),
   );
 
-  runApp(const ProviderScope(child: KrishiRituApp()));
+  // Load saved language preference
+  String initialLang = 'en';
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    initialLang = prefs.getString('app_language') ?? 'en';
+  } catch (_) {}
+  if (!['en', 'kn', 'hi'].contains(initialLang)) {
+    initialLang = 'en';
+  }
+
+  runApp(ProviderScope(
+    overrides: [
+      localeProvider.overrideWith((ref) => Locale(initialLang)),
+    ],
+    child: const KrishiRituApp(),
+  ));
 }

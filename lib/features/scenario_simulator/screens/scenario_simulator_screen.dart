@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/localization/app_localizations.dart';
 
 class ScenarioSimulatorScreen extends StatefulWidget {
   const ScenarioSimulatorScreen({super.key});
@@ -60,10 +61,11 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('What-If Simulator'),
+        title: Text(l10n.t('what_if')),
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
@@ -76,13 +78,13 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
             child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('📊 Scenario Parameters', style: TextStyle(
+              Text(l10n.t('scenario_parameters'), style: const TextStyle(
                   fontSize: 16, fontWeight: FontWeight.w700)),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
                 value: _crop,
-                decoration: const InputDecoration(labelText: 'Crop'),
-                items: _crops.keys.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                decoration: InputDecoration(labelText: l10n.t('crop_name')),
+                items: _crops.keys.map((c) => DropdownMenuItem(value: c, child: Text(l10n.translateCrop(c)))).toList(),
                 onChanged: (v) {
                   setState(() {
                     _crop = v!;
@@ -94,9 +96,9 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
                 },
               ),
               const SizedBox(height: 14),
-              Text('Land Area: ${_acres.toStringAsFixed(1)} acres', style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text('${l10n.t('land_area')}: ${_acres.toStringAsFixed(1)} ${l10n.t('acres')}', style: const TextStyle(fontWeight: FontWeight.w600)),
               Slider(value: _acres, min: 0.5, max: 10, divisions: 19,
-                  label: '${_acres.toStringAsFixed(1)} ac',
+                  label: '${_acres.toStringAsFixed(1)} ${l10n.t('acres')}',
                   activeColor: AppColors.leafGreen,
                   onChanged: (v) => setState(() { _acres = v; _simulated = false; })),
             ]),
@@ -107,28 +109,28 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
             child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('⚡ What-If Adjustments', style: TextStyle(
+              Text(l10n.t('what_if_adjustments'), style: const TextStyle(
                   fontSize: 15, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
-              _sliderRow('Monsoon Delay', '${_rainfallDelay.toInt()} days',
+              _sliderRow(l10n.t('monsoon_delay'), '${_rainfallDelay.toInt()} ${l10n.t('days')}',
                   _rainfallDelay, 0, 60, (v) { _rainfallDelay = v; _simulated = false; },
-                  'Reduces yield if sowing is delayed'),
-              _sliderRow('Input Cost Increase', '+${_costIncrease.toInt()}%',
+                  l10n.t('monsoon_delay_hint')),
+              _sliderRow(l10n.t('input_cost_increase'), '+${_costIncrease.toInt()}%',
                   _costIncrease, 0, 50, (v) { _costIncrease = v; _simulated = false; },
-                  'Seeds, fertilizer, labour prices rise'),
-              _sliderRow('Yield Reduction', '-${_yieldReduction.toInt()}%',
+                  l10n.t('input_cost_hint')),
+              _sliderRow(l10n.t('yield_reduction'), '-${_yieldReduction.toInt()}%',
                   _yieldReduction, 0, 50, (v) { _yieldReduction = v; _simulated = false; },
-                  'Pest, disease, or water shortage impact'),
-              _sliderRow('Market Price (₹/kg)', '₹${_price.toStringAsFixed(_price < 10 ? 1 : 0)}',
+                  l10n.t('yield_reduction_hint')),
+              _sliderRow(l10n.t('market_price_kg'), '₹${_price.toStringAsFixed(_price < 10 ? 1 : 0)}',
                   _price.clamp(_minPrice, _maxPrice), _minPrice, _maxPrice, (v) { _price = v; _simulated = false; },
-                  'Adjust expected selling price'),
+                  l10n.t('market_price_hint')),
             ]),
           )),
           const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: () => setState(() => _simulated = true),
             icon: const Icon(Icons.play_arrow),
-            label: const Text('Run Simulation'),
+            label: Text(l10n.t('simulate')),
           ),
           if (_simulated) ...[
             const SizedBox(height: 16),
@@ -138,23 +140,22 @@ class _ScenarioSimulatorScreenState extends State<ScenarioSimulatorScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Column(children: [
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    const Text('Simulation Results', style: TextStyle(
+                    Text(l10n.t('simulation_results'), style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w700)),
                     Icon(_profit >= 0 ? Icons.trending_up : Icons.trending_down,
                         color: _profit >= 0 ? AppColors.leafGreen : AppColors.errorRed),
                   ]),
                   const Divider(height: 20),
-                  _resultRow('Total Input Cost', '₹${_totalCost.toStringAsFixed(0)}', AppColors.errorRed),
-                  _resultRow('Expected Revenue', '₹${_revenue.toStringAsFixed(0)}', AppColors.leafGreen),
+                  _resultRow(l10n.t('total_input_cost'), '₹${_totalCost.toStringAsFixed(0)}', AppColors.errorRed),
+                  _resultRow(l10n.t('expected_revenue'), '₹${_revenue.toStringAsFixed(0)}', AppColors.leafGreen),
                   const Divider(),
-                  _resultRow('Net Profit / Loss', '₹${_profit.toStringAsFixed(0)}',
+                  _resultRow(l10n.t('net_profit_loss'), '₹${_profit.toStringAsFixed(0)}',
                       _profit >= 0 ? AppColors.forestGreen : AppColors.errorRed),
-                  _resultRow('Break-even Price', '₹${_breakEven.toStringAsFixed(1)}/kg', AppColors.earthBrown),
+                  _resultRow(l10n.t('break_even'), '₹${_breakEven.toStringAsFixed(1)}/${l10n.t('kg')}', AppColors.earthBrown),
                   const SizedBox(height: 12),
-                  const Text(
-                    '* These are estimates only. Market prices, weather, and yields are '
-                    'variable. Do not use as financial advice.',
-                    style: TextStyle(fontSize: 11, color: AppColors.textMedium, height: 1.5),
+                  Text(
+                    l10n.t('simulator_disclaimer'),
+                    style: const TextStyle(fontSize: 11, color: AppColors.textMedium, height: 1.5),
                     textAlign: TextAlign.center,
                   ),
                 ]),

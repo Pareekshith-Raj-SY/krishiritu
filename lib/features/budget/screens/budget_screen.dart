@@ -70,19 +70,19 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('📋 Input Costs (per acre, ₹)', style: TextStyle(
+              Text(l10n.t('input_costs_per_acre'), style: const TextStyle(
                   fontSize: 15, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
-              _row2('Seeds/Seedlings', _seeds, 'Fertilizers', _fertilizer),
+              _row2(l10n.t('seeds_seedlings'), _seeds, l10n.t('fertilizers'), _fertilizer),
               const SizedBox(height: 10),
-              _row2('Pesticides', _pesticide, 'Labour', _labour),
+              _row2(l10n.t('pesticides'), _pesticide, l10n.t('labour'), _labour),
               const SizedBox(height: 10),
-              _row2('Irrigation', _irrigation, 'Other', _other),
+              _row2(l10n.t('irrigation_cost'), _irrigation, l10n.t('other_cost'), _other),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _acres,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Land Area (acres)'),
+                decoration: InputDecoration(labelText: l10n.t('land_area_acres')),
                 onChanged: (_) => setState(() => _calculated = false),
               ),
             ]),
@@ -93,17 +93,17 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('💰 Revenue Assumptions', style: TextStyle(
+              Text(l10n.t('revenue_assumptions'), style: const TextStyle(
                   fontSize: 15, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
-              _row2('Expected Yield (kg/acre)', _yieldKg, 'Market Price (₹/kg)', _pricePerKg),
+              _row2(l10n.t('expected_yield_kg'), _yieldKg, l10n.t('market_price_kg'), _pricePerKg),
             ]),
           )),
           const SizedBox(height: 14),
           ElevatedButton.icon(
             onPressed: () => setState(() => _calculated = true),
             icon: const Icon(Icons.calculate),
-            label: const Text('Calculate'),
+            label: Text(l10n.t('calculate')),
           ),
           if (_calculated) ...[
             const SizedBox(height: 16),
@@ -112,22 +112,21 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(children: [
-                  const Text('Results', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  Text(l10n.t('results'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                   const Divider(height: 20),
-                  _result('Total Input Cost', '₹${_totalCost.toStringAsFixed(0)}', AppColors.errorRed),
-                  _result('Expected Revenue', '₹${_revenue.toStringAsFixed(0)}', AppColors.leafGreen),
+                  _result(l10n.t('total_input_cost'), '₹${_totalCost.toStringAsFixed(0)}', AppColors.errorRed),
+                  _result(l10n.t('expected_revenue'), '₹${_revenue.toStringAsFixed(0)}', AppColors.leafGreen),
                   const Divider(),
                   _result(
-                    _profit >= 0 ? 'Estimated Profit' : 'Estimated Loss',
+                    _profit >= 0 ? l10n.t('estimated_profit') : l10n.t('estimated_loss'),
                     '₹${_profit.abs().toStringAsFixed(0)}',
                     _profit >= 0 ? AppColors.forestGreen : AppColors.errorRed,
                   ),
-                  _result('Break-even Price', '₹${_breakEven.toStringAsFixed(1)}/kg', AppColors.earthBrown),
+                  _result(l10n.t('break_even'), '₹${_breakEven.toStringAsFixed(1)}/${l10n.t('kg')}', AppColors.earthBrown),
                   const SizedBox(height: 12),
-                  const Text(
-                    '* Estimates only. Actual results depend on weather, market prices, '
-                    'and farming conditions. Not financial advice.',
-                    style: TextStyle(fontSize: 11, color: AppColors.textMedium),
+                  Text(
+                    l10n.t('budget_disclaimer'),
+                    style: const TextStyle(fontSize: 11, color: AppColors.textMedium),
                     textAlign: TextAlign.center,
                   ),
                 ]),

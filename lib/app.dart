@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'shared/localization/app_localizations.dart';
@@ -16,6 +17,13 @@ class KrishiRituApp extends ConsumerWidget {
 
     final router = ref.watch(appRouterProvider);
     final locale = ref.watch(localeProvider);
+
+    ref.listen<Locale>(localeProvider, (prev, next) async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('app_language', next.languageCode);
+      } catch (_) {}
+    });
 
     return MaterialApp.router(
       title: 'KrishiRitu AI',

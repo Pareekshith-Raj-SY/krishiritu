@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/localization/app_localizations.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -18,10 +19,11 @@ class NotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Tasks & Notifications'),
+        title: Text(l10n.t('tasks_and_notifications')),
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
@@ -35,13 +37,12 @@ class NotificationsScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppColors.leafGreen.withOpacity(0.3)),
           ),
-          child: const Row(children: [
-            Icon(Icons.info_outline, size: 15, color: AppColors.leafGreen),
-            SizedBox(width: 6),
+          child: Row(children: [
+            const Icon(Icons.info_outline, size: 15, color: AppColors.leafGreen),
+            const SizedBox(width: 6),
             Expanded(child: Text(
-              'Notifications are based on typical Karnataka crop calendars. '
-              'Set up your farm profile for personalized reminders.',
-              style: TextStyle(fontSize: 11, color: AppColors.forestGreen),
+              l10n.t('notifications_notice'),
+              style: const TextStyle(fontSize: 11, color: AppColors.forestGreen),
             )),
           ]),
         ),
@@ -72,6 +73,7 @@ class _TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       color: Colors.white.withOpacity(0.92),
       margin: const EdgeInsets.only(bottom: 10),
@@ -82,19 +84,19 @@ class _TaskCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Expanded(child: Text(task['title']!, style: const TextStyle(
+              Expanded(child: Text(l10n.translateTaskTitle(task['title']!), style: const TextStyle(
                   fontWeight: FontWeight.w700, fontSize: 14))),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                     color: _typeColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8)),
-                child: Text(task['date']!, style: TextStyle(
+                child: Text(l10n.translateTaskDate(task['date']!), style: TextStyle(
                     fontSize: 11, color: _typeColor, fontWeight: FontWeight.w600)),
               ),
             ]),
             const SizedBox(height: 5),
-            Text(task['desc']!,
+            Text(l10n.translateTaskDesc(task['desc']!),
                 style: const TextStyle(fontSize: 13, color: AppColors.textMedium, height: 1.4)),
           ])),
         ]),

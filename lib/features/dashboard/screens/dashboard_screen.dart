@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../features/farms/providers/farm_provider.dart';
@@ -197,8 +198,12 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _langButton(WidgetRef ref, String code, String label, bool isSelected) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         ref.read(localeProvider.notifier).state = Locale(code);
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('app_language', code);
+        } catch (_) {}
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
@@ -234,8 +239,12 @@ class DashboardScreen extends ConsumerWidget {
   Widget _languageSelectorMenu(BuildContext context, WidgetRef ref, Locale locale) {
     return PopupMenuButton<String>(
       initialValue: locale.languageCode,
-      onSelected: (code) {
+      onSelected: (code) async {
         ref.read(localeProvider.notifier).state = Locale(code);
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('app_language', code);
+        } catch (_) {}
       },
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       offset: const Offset(0, 38),
@@ -420,7 +429,7 @@ class DashboardScreen extends ConsumerWidget {
           _farmRow(l10n.t('soil_type'), l10n.translateSoil(farm.soilType)),
           _farmRow(l10n.t('irrigation'), l10n.translateIrrigation(farm.irrigationMethod)),
           if (farm.currentCrop != null && farm.currentCrop!.isNotEmpty)
-            _farmRow(l10n.t('current_crop'), farm.currentCrop!),
+            _farmRow(l10n.t('current_crop'), l10n.translateCrop(farm.currentCrop!)),
         ]),
       ),
     );
