@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import '../lib/data/repositories/crop_repository.dart';
 import '../lib/data/models/crop_model.dart';
@@ -6,6 +7,7 @@ import '../lib/core/utils/format_utils.dart';
 import '../lib/core/utils/date_utils.dart' as appdate;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../lib/data/services/auth_service.dart';
+import '../lib/shared/localization/app_localizations.dart';
 
 void main() {
   // ─── CropRepository Tests ───────────────────────────────────────────────
@@ -407,6 +409,46 @@ void main() {
         isGoogleAuth: true,
       );
       expect(right.success, isTrue);
+    });
+  });
+
+  // ─── AppLocalizations District, Soil, and Irrigation Tests ───────────────
+  group('AppLocalizations District, Soil, and Irrigation', () {
+    final l10nKn = AppLocalizations(const Locale('kn'));
+    final l10nHi = AppLocalizations(const Locale('hi'));
+    final l10nEn = AppLocalizations(const Locale('en'));
+
+    test('translates Mysuru into Kannada and Hindi', () {
+      expect(l10nKn.translateDistrict('Mysuru'), equals('ಮೈಸೂರು'));
+      expect(l10nHi.translateDistrict('Mysuru'), equals('मैसूरु'));
+      expect(l10nEn.translateDistrict('Mysuru'), equals('Mysuru'));
+    });
+
+    test('translates Red Sandy Loam into Kannada and Hindi', () {
+      expect(l10nKn.translateSoil('Red Sandy Loam'), equals('ಕೆಂಪು ಮರಳು ಗೋಡು ಮಣ್ಣು'));
+      expect(l10nHi.translateSoil('Red Sandy Loam'), equals('लाल रेतीली दोमट मिट्टी'));
+      expect(l10nEn.translateSoil('Red Sandy Loam'), equals('Red Sandy Loam'));
+    });
+
+    test('translates Rainfed and Borewell irrigation into Kannada and Hindi', () {
+      expect(l10nKn.translateIrrigation('Rainfed'), equals('ಮಳೆಯಾಶ್ರಿತ'));
+      expect(l10nHi.translateIrrigation('Rainfed'), equals('वर्षा आधारित'));
+      expect(l10nEn.translateIrrigation('Rainfed'), equals('Rainfed'));
+
+      expect(l10nKn.translateIrrigation('Borewell'), equals('ಕೊಳವೆ ಬಾವಿ'));
+      expect(l10nHi.translateIrrigation('Borewell'), equals('बोरवेल'));
+    });
+
+    test('canonical mappings return canonical English values', () {
+      expect(AppLocalizations.canonicalDistrict('ಮೈಸೂರು'), equals('Mysuru'));
+      expect(AppLocalizations.canonicalDistrict('मैसूरु'), equals('Mysuru'));
+      expect(AppLocalizations.canonicalDistrict('Mysuru'), equals('Mysuru'));
+
+      expect(AppLocalizations.canonicalSoil('ಕೆಂಪು ಮರಳು ಗೋಡು ಮಣ್ಣು'), equals('Red Sandy Loam'));
+      expect(AppLocalizations.canonicalSoil('Red Sandy Loam'), equals('Red Sandy Loam'));
+
+      expect(AppLocalizations.canonicalIrrigation('ಮಳೆಯಾಶ್ರಿತ'), equals('Rainfed'));
+      expect(AppLocalizations.canonicalIrrigation('Rainfed'), equals('Rainfed'));
     });
   });
 }

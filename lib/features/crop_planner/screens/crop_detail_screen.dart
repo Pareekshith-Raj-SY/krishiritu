@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/repositories/crop_repository.dart';
+import '../../../shared/localization/app_localizations.dart';
 
 class CropDetailScreen extends StatelessWidget {
   final String cropId;
@@ -8,6 +9,7 @@ class CropDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final crop = CropRepository().getCropById(cropId);
     if (crop == null) {
       return Scaffold(
@@ -64,15 +66,15 @@ class CropDetailScreen extends StatelessWidget {
                 ]),
                 const SizedBox(height: 12),
                 _infoCard('🌱 Growing Requirements', [
-                  _row('Soil Types', crop.soilTypes),
-                  _row('Water Need', crop.waterNeed.toUpperCase()),
-                  _row('Irrigation', crop.irrigationMethods),
+                  _row(l10n.t('soil_type'), l10n.translateSoilList(crop.soilTypes)),
+                  _row(l10n.t('water_need'), crop.waterNeed.toUpperCase()),
+                  _row(l10n.t('irrigation'), l10n.translateIrrigationList(crop.irrigationMethods)),
                 ]),
                 const SizedBox(height: 12),
                 _infoCard('💰 Economics (Estimates per Acre)', [
                   _row('Input Cost', '₹${crop.estimatedCostPerAcre.toStringAsFixed(0)}'),
-                  _row('Expected Yield', '${crop.estimatedYieldPerAcre} ${crop.unit}'),
-                  _row('Suitable Districts', crop.suitableDistricts.take(5).join(', ')),
+                  _row(l10n.t('yield'), '${crop.estimatedYieldPerAcre} ${crop.unit}'),
+                  _row(l10n.t('suitable_districts'), crop.suitableDistricts.take(5).map((d) => l10n.translateDistrict(d)).join(', ')),
                 ]),
                 const SizedBox(height: 12),
                 Card(

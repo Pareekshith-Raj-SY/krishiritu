@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/config/app_config.dart';
 
 class AppLocalizations {
   final Locale locale;
@@ -189,6 +190,73 @@ class AppLocalizations {
       'sign_out': 'Sign Out',
       'return_to_login': 'Return to login',
       'understood': 'Understood',
+
+      // Karnataka Districts
+      'Bagalkot': 'Bagalkot',
+      'Ballari': 'Ballari',
+      'Belagavi': 'Belagavi',
+      'Bengaluru Rural': 'Bengaluru Rural',
+      'Bengaluru Urban': 'Bengaluru Urban',
+      'Bidar': 'Bidar',
+      'Chamarajanagara': 'Chamarajanagara',
+      'Chikballapur': 'Chikballapur',
+      'Chikkamagaluru': 'Chikkamagaluru',
+      'Chitradurga': 'Chitradurga',
+      'Dakshina Kannada': 'Dakshina Kannada',
+      'Davanagere': 'Davanagere',
+      'Dharwad': 'Dharwad',
+      'Gadag': 'Gadag',
+      'Hassan': 'Hassan',
+      'Haveri': 'Haveri',
+      'Kalaburagi': 'Kalaburagi',
+      'Kodagu': 'Kodagu',
+      'Kolar': 'Kolar',
+      'Koppal': 'Koppal',
+      'Mandya': 'Mandya',
+      'Mysuru': 'Mysuru',
+      'Raichur': 'Raichur',
+      'Ramanagara': 'Ramanagara',
+      'Shivamogga': 'Shivamogga',
+      'Tumakuru': 'Tumakuru',
+      'Udupi': 'Udupi',
+      'Uttara Kannada': 'Uttara Kannada',
+      'Vijayapura': 'Vijayapura',
+      'Yadgir': 'Yadgir',
+      'Vijayanagara': 'Vijayanagara',
+      'Karnataka': 'Karnataka',
+
+      // Soil Types
+      'Red Sandy Loam': 'Red Sandy Loam',
+      'Black Cotton Soil': 'Black Cotton Soil',
+      'Laterite': 'Laterite',
+      'Alluvial': 'Alluvial',
+      'Sandy Loam': 'Sandy Loam',
+      'Clay': 'Clay',
+      'Loamy': 'Loamy',
+      'Red Loam': 'Red Loam',
+      'Clay Loam': 'Clay Loam',
+      'Deep Loamy': 'Deep Loamy',
+      'Well-drained Clay Loam': 'Well-drained Clay Loam',
+      'Well-drained Loamy': 'Well-drained Loamy',
+
+      // Irrigation Methods
+      'Rainfed': 'Rainfed',
+      'Borewell': 'Borewell',
+      'Canal': 'Canal',
+      'Tank': 'Tank',
+      'Drip': 'Drip',
+      'Sprinkler': 'Sprinkler',
+      'River': 'River',
+      'Well': 'Well',
+      'Furrow': 'Furrow',
+
+      // General Farm Labels
+      'suitable_districts': 'Suitable Districts',
+      'save_and_continue': 'Save & Continue',
+      'skip_for_now': 'Skip for now',
+      'set_up_your_farm': 'Set Up Your Farm',
+      'required': 'Required',
+      'enter_valid_area': 'Enter valid area',
     },
     'kn': {
       'app_name': 'ಕೃಷಿಋತು AI',
@@ -366,6 +434,73 @@ class AppLocalizations {
       'sign_out': 'ಸೈನ್ ಔಟ್',
       'return_to_login': 'ಲಾಗಿನ್‌ಗೆ ಹಿಂತಿರುಗಿ',
       'understood': 'ಅರ್ಥವಾಯಿತು',
+
+      // Karnataka Districts
+      'Bagalkot': 'ಬಾಗಲಕೋಟೆ',
+      'Ballari': 'ಬಳ್ಳಾರಿ',
+      'Belagavi': 'ಬೆಳಗಾವಿ',
+      'Bengaluru Rural': 'ಬೆಂಗಳೂರು ಗ್ರಾಮಾಂತರ',
+      'Bengaluru Urban': 'ಬೆಂಗಳೂರು ನಗರ',
+      'Bidar': 'ಬೀದರ್',
+      'Chamarajanagara': 'ಚಾಮರಾಜನಗರ',
+      'Chikballapur': 'ಚಿಕ್ಕಬಳ್ಳಾಪುರ',
+      'Chikkamagaluru': 'ಚಿಕ್ಕಮಗಳೂರು',
+      'Chitradurga': 'ಚಿತ್ರದುರ್ಗ',
+      'Dakshina Kannada': 'ದಕ್ಷಿಣ ಕನ್ನಡ',
+      'Davanagere': 'ದಾವಣಗೆರೆ',
+      'Dharwad': 'ಧಾರವಾಡ',
+      'Gadag': 'ಗದಗ',
+      'Hassan': 'ಹಾಸನ',
+      'Haveri': 'ಹಾವೇರಿ',
+      'Kalaburagi': 'ಕಲಬುರಗಿ',
+      'Kodagu': 'ಕೊಡಗು',
+      'Kolar': 'ಕೋಲಾರ',
+      'Koppal': 'ಕೊಪ್ಪಳ',
+      'Mandya': 'ಮಂಡ್ಯ',
+      'Mysuru': 'ಮೈಸೂರು',
+      'Raichur': 'ರಾಯಚೂರು',
+      'Ramanagara': 'ರಾಮನಗರ',
+      'Shivamogga': 'ಶಿವಮೊಗ್ಗ',
+      'Tumakuru': 'ತುಮಕೂರು',
+      'Udupi': 'ಉಡುಪಿ',
+      'Uttara Kannada': 'ಉತ್ತರ ಕನ್ನಡ',
+      'Vijayapura': 'ವಿಜಯಪುರ',
+      'Yadgir': 'ಯಾದಗಿರಿ',
+      'Vijayanagara': 'ವಿಜಯನಗರ',
+      'Karnataka': 'ಕರ್ನಾಟಕ',
+
+      // Soil Types
+      'Red Sandy Loam': 'ಕೆಂಪು ಮರಳು ಗೋಡು ಮಣ್ಣು',
+      'Black Cotton Soil': 'ಕಪ್ಪು ಹತ್ತಿ ಮಣ್ಣು',
+      'Laterite': 'ಲ್ಯಾಟರೈಟ್ ಮಣ್ಣು',
+      'Alluvial': 'ಮೆಕ್ಕಲು ಮಣ್ಣು',
+      'Sandy Loam': 'ಮರಳು ಗೋಡು ಮಣ್ಣು',
+      'Clay': 'ಜೇಡಿ ಮಣ್ಣು',
+      'Loamy': 'ಗೋಡು ಮಣ್ಣು',
+      'Red Loam': 'ಕೆಂಪು ಗೋಡು ಮಣ್ಣು',
+      'Clay Loam': 'ಜೇಡಿ ಗೋಡು ಮಣ್ಣು',
+      'Deep Loamy': 'ಆಳವಾದ ಗೋಡು ಮಣ್ಣು',
+      'Well-drained Clay Loam': 'ಉತ್ತಮ ಬಸಿದುಹೋಗುವ ಜೇಡಿ ಗೋಡು ಮಣ್ಣು',
+      'Well-drained Loamy': 'ಉತ್ತಮ ಬಸಿದುಹೋಗುವ ಗೋಡು ಮಣ್ಣು',
+
+      // Irrigation Methods
+      'Rainfed': 'ಮಳೆಯಾಶ್ರಿತ',
+      'Borewell': 'ಕೊಳವೆ ಬಾವಿ',
+      'Canal': 'ಕಾಲುವೆ',
+      'Tank': 'ಕೆರೆ',
+      'Drip': 'ಹನಿ ನೀರಾವರಿ',
+      'Sprinkler': 'ತುಂತುರು ನೀರಾವರಿ',
+      'River': 'ನದಿ',
+      'Well': 'ಬಾವಿ',
+      'Furrow': 'ಸಾಲು ನೀರಾವರಿ',
+
+      // General Farm Labels
+      'suitable_districts': 'ಸೂಕ್ತ ಜಿಲ್ಲೆಗಳು',
+      'save_and_continue': 'ಉಳಿಸಿ & ಮುಂದುವರಿಯಿರಿ',
+      'skip_for_now': 'ಸದ್ಯಕ್ಕೆ ಬಿಟ್ಟುಬಿಡಿ',
+      'set_up_your_farm': 'ನಿಮ್ಮ ಜಮೀನನ್ನು ಹೊಂದಿಸಿ',
+      'required': 'ಅಗತ್ಯವಿದೆ',
+      'enter_valid_area': 'ಸರಿಯಾದ ವಿಸ್ತೀರ್ಣ ನಮೂದಿಸಿ',
     },
     'hi': {
       'app_name': 'कृषिऋतु AI',
@@ -543,6 +678,73 @@ class AppLocalizations {
       'sign_out': 'साइन आउट',
       'return_to_login': 'लॉगिन पर लौटें',
       'understood': 'समझ गया',
+
+      // Karnataka Districts
+      'Bagalkot': 'बागलकोट',
+      'Ballari': 'बल्लारी',
+      'Belagavi': 'बेलगावी',
+      'Bengaluru Rural': 'बेंगलुरु ग्रामीण',
+      'Bengaluru Urban': 'बेंगलुरु शहरी',
+      'Bidar': 'बीदर',
+      'Chamarajanagara': 'चामराजनगर',
+      'Chikballapur': 'चिकबल्लापुर',
+      'Chikkamagaluru': 'चिकमगलूर',
+      'Chitradurga': 'चित्रदुर्ग',
+      'Dakshina Kannada': 'दक्षिण कन्नड़',
+      'Davanagere': 'दावणगेरे',
+      'Dharwad': 'धारवाड़',
+      'Gadag': 'गदग',
+      'Hassan': 'हासन',
+      'Haveri': 'हावेरी',
+      'Kalaburagi': 'कलबुर्गी',
+      'Kodagu': 'कोडागु',
+      'Kolar': 'कोलार',
+      'Koppal': 'कोप्पल',
+      'Mandya': 'मांड्या',
+      'Mysuru': 'मैसूरु',
+      'Raichur': 'रायचूर',
+      'Ramanagara': 'रामनगर',
+      'Shivamogga': 'शिवमोग्गा',
+      'Tumakuru': 'तुमकुरु',
+      'Udupi': 'उडुपी',
+      'Uttara Kannada': 'उत्तर कन्नड़',
+      'Vijayapura': 'विजयपुरा',
+      'Yadgir': 'यादगीर',
+      'Vijayanagara': 'विजयनगर',
+      'Karnataka': 'कर्नाटक',
+
+      // Soil Types
+      'Red Sandy Loam': 'लाल रेतीली दोमट मिट्टी',
+      'Black Cotton Soil': 'काली कपास मिट्टी',
+      'Laterite': 'लैटेराइट मिट्टी',
+      'Alluvial': 'जलोढ़ मिट्टी',
+      'Sandy Loam': 'रेतीली दोमट मिट्टी',
+      'Clay': 'चिकनी मिट्टी',
+      'Loamy': 'दोमट मिट्टी',
+      'Red Loam': 'लाल दोमट मिट्टी',
+      'Clay Loam': 'चिकनी दोमट मिट्टी',
+      'Deep Loamy': 'गहरी दोमट मिट्टी',
+      'Well-drained Clay Loam': 'अच्छी जल निकासी वाली चिकनी दोमट मिट्टी',
+      'Well-drained Loamy': 'अच्छी जल निकासी वाली दोमट मिट्टी',
+
+      // Irrigation Methods
+      'Rainfed': 'वर्षा आधारित',
+      'Borewell': 'बोरवेल',
+      'Canal': 'नहर',
+      'Tank': 'तालाब',
+      'Drip': 'ड्रिप सिंचाई',
+      'Sprinkler': 'स्प्रिंकलर सिंचाई',
+      'River': 'नदी',
+      'Well': 'कुआँ',
+      'Furrow': 'नाली सिंचाई',
+
+      // General Farm Labels
+      'suitable_districts': 'उपयुक्त जिले',
+      'save_and_continue': 'सहेजें और जारी रखें',
+      'skip_for_now': 'अभी छोड़ें',
+      'set_up_your_farm': 'अपना खेत सेट करें',
+      'required': 'आवश्यक है',
+      'enter_valid_area': 'मान्य क्षेत्र दर्ज करें',
     },
   };
 
@@ -552,6 +754,88 @@ class AppLocalizations {
   }
 
   String t(String key) => translate(key);
+
+  String translateDistrict(String district) {
+    if (district.isEmpty) return district;
+    final trimmed = district.trim();
+    final direct = translate(trimmed);
+    if (direct != trimmed) return direct;
+    return trimmed;
+  }
+
+  String translateSoil(String soil) {
+    if (soil.isEmpty) return soil;
+    final trimmed = soil.trim();
+    final direct = translate(trimmed);
+    if (direct != trimmed) return direct;
+    return trimmed;
+  }
+
+  String translateIrrigation(String method) {
+    if (method.isEmpty) return method;
+    final trimmed = method.trim();
+    final direct = translate(trimmed);
+    if (direct != trimmed) return direct;
+    return trimmed;
+  }
+
+  String translateSoilList(String soils) {
+    if (soils.isEmpty) return soils;
+    return soils.split(',').map((s) => translateSoil(s.trim())).join(', ');
+  }
+
+  String translateIrrigationList(String methods) {
+    if (methods.isEmpty) return methods;
+    return methods.split(',').map((m) => translateIrrigation(m.trim())).join(', ');
+  }
+
+  /// Maps any localized district name back to the canonical English district name
+  static String canonicalDistrict(String? d) {
+    if (d == null || d.trim().isEmpty) return 'Mysuru';
+    final candidate = d.trim();
+    for (final dist in AppConfig.karnatakaDistricts) {
+      if (dist.toLowerCase() == candidate.toLowerCase()) return dist;
+      for (final lang in ['kn', 'hi', 'en']) {
+        final val = _localizedValues[lang]?[dist];
+        if (val != null && val.toLowerCase() == candidate.toLowerCase()) {
+          return dist;
+        }
+      }
+    }
+    return 'Mysuru';
+  }
+
+  /// Maps any localized soil name back to the canonical English soil name
+  static String canonicalSoil(String? s) {
+    if (s == null || s.trim().isEmpty) return 'Red Sandy Loam';
+    final candidate = s.trim();
+    for (final soil in AppConfig.soilTypes) {
+      if (soil.toLowerCase() == candidate.toLowerCase()) return soil;
+      for (final lang in ['kn', 'hi', 'en']) {
+        final val = _localizedValues[lang]?[soil];
+        if (val != null && val.toLowerCase() == candidate.toLowerCase()) {
+          return soil;
+        }
+      }
+    }
+    return 'Red Sandy Loam';
+  }
+
+  /// Maps any localized irrigation name back to the canonical English irrigation name
+  static String canonicalIrrigation(String? m) {
+    if (m == null || m.trim().isEmpty) return 'Rainfed';
+    final candidate = m.trim();
+    for (final method in AppConfig.irrigationMethods) {
+      if (method.toLowerCase() == candidate.toLowerCase()) return method;
+      for (final lang in ['kn', 'hi', 'en']) {
+        final val = _localizedValues[lang]?[method];
+        if (val != null && val.toLowerCase() == candidate.toLowerCase()) {
+          return method;
+        }
+      }
+    }
+    return 'Rainfed';
+  }
 }
 
 class _AppLocalizationsDelegate

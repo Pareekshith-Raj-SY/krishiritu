@@ -98,7 +98,7 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          farm != null ? '${farm.name} · ${farm.district}' : l10n.t('welcome_farmer'),
+                          farm != null ? '${farm.name} · ${l10n.translateDistrict(farm.district)}' : l10n.t('welcome_farmer'),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -415,10 +415,10 @@ class DashboardScreen extends ConsumerWidget {
             ),
           ]),
           const Divider(),
-          _farmRow(l10n.t('district'), farm.district),
+          _farmRow(l10n.t('district'), l10n.translateDistrict(farm.district)),
           _farmRow(l10n.t('land_area'), '${farm.landAreaAcres} ${l10n.t('acres')}'),
-          _farmRow(l10n.t('soil_type'), farm.soilType),
-          _farmRow(l10n.t('irrigation'), farm.irrigationMethod),
+          _farmRow(l10n.t('soil_type'), l10n.translateSoil(farm.soilType)),
+          _farmRow(l10n.t('irrigation'), l10n.translateIrrigation(farm.irrigationMethod)),
           if (farm.currentCrop != null && farm.currentCrop!.isNotEmpty)
             _farmRow(l10n.t('current_crop'), farm.currentCrop!),
         ]),

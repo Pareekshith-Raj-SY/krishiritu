@@ -64,7 +64,7 @@ class WeatherScreen extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('📍 ${l10n.t('seasonal_risks')} — $district', style: const TextStyle(
+          Text('📍 ${l10n.t('seasonal_risks')} — ${l10n.translateDistrict(district)}', style: const TextStyle(
               fontSize: 15, fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
           Text('${l10n.t('based_on_conditions')} ${_monthName(month, langCode)}',

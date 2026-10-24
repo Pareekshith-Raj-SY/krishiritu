@@ -52,7 +52,7 @@ class SettingsScreen extends ConsumerWidget {
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(farm?.name ?? l10n.t('farmer'), style: const TextStyle(
                     color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
-                Text(farm?.district ?? l10n.t('setup_farm_profile'),
+                Text(farm != null ? l10n.translateDistrict(farm.district) : l10n.t('setup_farm_profile'),
                     style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 14)),
               ])),
               IconButton(

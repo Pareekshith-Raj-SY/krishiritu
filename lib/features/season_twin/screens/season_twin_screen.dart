@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/localization/app_localizations.dart';
 import '../../farms/providers/farm_provider.dart';
 
 class SeasonTwinScreen extends ConsumerStatefulWidget {
@@ -76,10 +77,11 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
   @override
   Widget build(BuildContext context) {
     final farm = ref.watch(farmProvider);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Farm Season Twin'),
+        title: Text(l10n.t('season_twin')),
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
@@ -87,7 +89,7 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _profileCard(farm),
+          _profileCard(farm, l10n),
           const SizedBox(height: 16),
           Card(
             color: Colors.white.withOpacity(0.92),
@@ -178,7 +180,7 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
     );
   }
 
-  Widget _profileCard(farm) {
+  Widget _profileCard(farm, AppLocalizations l10n) {
     return Card(
       color: AppColors.forestGreen.withOpacity(0.88),
       child: Padding(
@@ -188,10 +190,10 @@ class _SeasonTwinScreenState extends ConsumerState<SeasonTwinScreen> {
               color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
           if (farm != null) ...[
-            _pRow('District', farm.district),
-            _pRow('Soil', farm.soilType),
-            _pRow('Irrigation', farm.irrigationMethod),
-            _pRow('Area', '${farm.landAreaAcres} acres'),
+            _pRow(l10n.t('district'), l10n.translateDistrict(farm.district)),
+            _pRow(l10n.t('soil_type'), l10n.translateSoil(farm.soilType)),
+            _pRow(l10n.t('irrigation'), l10n.translateIrrigation(farm.irrigationMethod)),
+            _pRow(l10n.t('land_area'), '${farm.landAreaAcres} ${l10n.t('acres')}'),
           ] else
             const Text('Set up your farm profile to get personalized recommendations.',
                 style: TextStyle(color: Colors.white70)),

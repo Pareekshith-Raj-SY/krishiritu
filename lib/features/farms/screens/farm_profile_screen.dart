@@ -33,9 +33,9 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
     _village = TextEditingController(text: farm?.village ?? '');
     _area = TextEditingController(text: farm?.landAreaAcres.toString() ?? '2');
     _budget = TextEditingController(text: farm?.budgetPerAcre?.toStringAsFixed(0) ?? '');
-    _district = farm?.district ?? 'Mysuru';
-    _soil = farm?.soilType ?? 'Red Sandy Loam';
-    _irrigation = farm?.irrigationMethod ?? 'Rainfed';
+    _district = AppLocalizations.canonicalDistrict(farm?.district);
+    _soil = AppLocalizations.canonicalSoil(farm?.soilType);
+    _irrigation = AppLocalizations.canonicalIrrigation(farm?.irrigationMethod);
     _currentCrop = farm?.currentCrop ?? '';
     _prevCrop = farm?.previousCrop ?? '';
   }
@@ -90,7 +90,7 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
                         value: _district,
                         decoration: InputDecoration(labelText: l10n.t('district')),
                         items: AppConfig.karnatakaDistricts
-                            .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                            .map((d) => DropdownMenuItem(value: d, child: Text(l10n.translateDistrict(d))))
                             .toList(),
                         onChanged: (v) => setState(() => _district = v!),
                       ),
@@ -123,7 +123,7 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
                         value: _soil,
                         decoration: InputDecoration(labelText: l10n.t('soil_type')),
                         items: AppConfig.soilTypes
-                            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                            .map((s) => DropdownMenuItem(value: s, child: Text(l10n.translateSoil(s))))
                             .toList(),
                         onChanged: (v) => setState(() => _soil = v!),
                       ),
@@ -132,7 +132,7 @@ class _FarmProfileScreenState extends ConsumerState<FarmProfileScreen> {
                         value: _irrigation,
                         decoration: InputDecoration(labelText: l10n.t('irrigation_method')),
                         items: AppConfig.irrigationMethods
-                            .map((m) => DropdownMenuItem(value: m, child: Text(m)))
+                            .map((m) => DropdownMenuItem(value: m, child: Text(l10n.translateIrrigation(m))))
                             .toList(),
                         onChanged: (v) => setState(() => _irrigation = v!),
                       ),

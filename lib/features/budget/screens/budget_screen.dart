@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/localization/app_localizations.dart';
 import '../../farms/providers/farm_provider.dart';
 
 class BudgetScreen extends ConsumerStatefulWidget {
@@ -34,10 +35,11 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   @override
   Widget build(BuildContext context) {
     final farm = ref.watch(farmProvider);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Budget & Profit Explorer'),
+        title: Text(l10n.t('budget_explorer')),
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
@@ -53,9 +55,14 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.leafGreen.withOpacity(0.3)),
               ),
-              child: Text('Farm: ${farm.name} · ${farm.landAreaAcres} acres · ${farm.district}',
-                  style: const TextStyle(fontSize: 13, color: AppColors.forestGreen,
-                      fontWeight: FontWeight.w600)),
+              child: Text(
+                '${farm.name} · ${farm.landAreaAcres} ${l10n.t('acres')} · ${l10n.translateDistrict(farm.district)}',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.forestGreen,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           const SizedBox(height: 16),
           Card(

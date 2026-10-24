@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/localization/app_localizations.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../providers/farm_provider.dart';
 
@@ -49,11 +50,12 @@ class _FarmSetupScreenState extends ConsumerState<FarmSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Set Up Your Farm'),
+          title: Text(l10n.t('set_up_your_farm')),
           backgroundColor: Colors.transparent,
           foregroundColor: AppColors.forestGreen,
           elevation: 0,
@@ -69,53 +71,83 @@ class _FarmSetupScreenState extends ConsumerState<FarmSetupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionHeader('Farm Details'),
-                    TextFormField(controller: _nameCtrl,
-                        decoration: const InputDecoration(labelText: 'Farm Name', prefixIcon: Icon(Icons.agriculture)),
-                        validator: (v) => v!.trim().isEmpty ? 'Required' : null),
+                    _sectionHeader(l10n.t('farm_details')),
+                    TextFormField(
+                      controller: _nameCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.t('farm_name'),
+                        prefixIcon: const Icon(Icons.agriculture),
+                      ),
+                      validator: (v) => v!.trim().isEmpty ? l10n.t('required') : null,
+                    ),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
                       value: _district,
-                      decoration: const InputDecoration(labelText: 'District', prefixIcon: Icon(Icons.location_city)),
+                      decoration: InputDecoration(
+                        labelText: l10n.t('district'),
+                        prefixIcon: const Icon(Icons.location_city),
+                      ),
                       items: AppConfig.karnatakaDistricts
-                          .map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+                          .map((d) => DropdownMenuItem(value: d, child: Text(l10n.translateDistrict(d))))
+                          .toList(),
                       onChanged: (v) => setState(() => _district = v!),
                     ),
                     const SizedBox(height: 14),
-                    TextFormField(controller: _villageCtrl,
-                        decoration: const InputDecoration(labelText: 'Village / Hobli', prefixIcon: Icon(Icons.home_outlined))),
+                    TextFormField(
+                      controller: _villageCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.t('village'),
+                        prefixIcon: const Icon(Icons.home_outlined),
+                      ),
+                    ),
                     const SizedBox(height: 14),
-                    TextFormField(controller: _areaCtrl,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(labelText: 'Land Area (acres)', prefixIcon: Icon(Icons.crop_square)),
-                        validator: (v) {
-                          final n = double.tryParse(v ?? '');
-                          return n != null && n > 0 ? null : 'Enter valid area';
-                        }),
+                    TextFormField(
+                      controller: _areaCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: l10n.t('land_area_acres'),
+                        prefixIcon: const Icon(Icons.crop_square),
+                      ),
+                      validator: (v) {
+                        final n = double.tryParse(v ?? '');
+                        return n != null && n > 0 ? null : l10n.t('enter_valid_area');
+                      },
+                    ),
                     const SizedBox(height: 24),
-                    _sectionHeader('Soil & Irrigation'),
+                    _sectionHeader(l10n.t('soil_irrigation')),
                     DropdownButtonFormField<String>(
                       value: _soil,
-                      decoration: const InputDecoration(labelText: 'Soil Type', prefixIcon: Icon(Icons.grass)),
+                      decoration: InputDecoration(
+                        labelText: l10n.t('soil_type'),
+                        prefixIcon: const Icon(Icons.grass),
+                      ),
                       items: AppConfig.soilTypes
-                          .map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                          .map((s) => DropdownMenuItem(value: s, child: Text(l10n.translateSoil(s))))
+                          .toList(),
                       onChanged: (v) => setState(() => _soil = v!),
                     ),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
                       value: _irrigation,
-                      decoration: const InputDecoration(labelText: 'Irrigation Method', prefixIcon: Icon(Icons.water_drop_outlined)),
+                      decoration: InputDecoration(
+                        labelText: l10n.t('irrigation_method'),
+                        prefixIcon: const Icon(Icons.water_drop_outlined),
+                      ),
                       items: AppConfig.irrigationMethods
-                          .map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                          .map((m) => DropdownMenuItem(value: m, child: Text(l10n.translateIrrigation(m))))
+                          .toList(),
                       onChanged: (v) => setState(() => _irrigation = v!),
                     ),
                     const SizedBox(height: 36),
                     ElevatedButton(
                       onPressed: _saving ? null : _save,
                       child: _saving
-                          ? const SizedBox(width: 24, height: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Save & Continue'),
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Text(l10n.t('save_and_continue')),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(
@@ -124,7 +156,7 @@ class _FarmSetupScreenState extends ConsumerState<FarmSetupScreen> {
                         await prefs.setBool('is_authenticated', true);
                         if (context.mounted) context.go('/home');
                       },
-                      child: const Text('Skip for now'),
+                      child: Text(l10n.t('skip_for_now')),
                     ),
                   ],
                 ),

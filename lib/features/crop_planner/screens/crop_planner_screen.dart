@@ -211,7 +211,7 @@ class _CropPlannerScreenState extends ConsumerState<CropPlannerScreen> {
                       const Icon(Icons.location_on, color: AppColors.forestGreen, size: 16),
                       const SizedBox(width: 6),
                       Text(
-                        '${farm.district} · ${farm.soilType} · ${farm.irrigationMethod}',
+                        '${l10n.translateDistrict(farm.district)} · ${l10n.translateSoil(farm.soilType)} · ${l10n.translateIrrigation(farm.irrigationMethod)}',
                         style: const TextStyle(color: AppColors.textDark, fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ]),
