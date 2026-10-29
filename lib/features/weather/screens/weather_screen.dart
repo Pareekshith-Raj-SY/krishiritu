@@ -1,18 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../data/services/weather_service.dart';
 import '../../../shared/localization/app_localizations.dart';
 import '../../../app.dart';
 import '../../farms/providers/farm_provider.dart';
 
-class WeatherScreen extends ConsumerWidget {
+class WeatherScreen extends ConsumerStatefulWidget {
   const WeatherScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WeatherScreen> createState() => _WeatherScreenState();
+}
+
+class _WeatherScreenState extends ConsumerState<WeatherScreen> {
+  final WeatherService _weatherService = WeatherService();
+  WeatherData? _weather;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadWeather();
+    });
+  }
+
+  Future<void> _loadWeather({bool forceRefresh = false}) async {
+    final farm = ref.read(farmProvider);
+    final district = farm?.district ?? 'Bengaluru';
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final data = await _weatherService.getWeather(district, forceRefresh: forceRefresh);
+      if (mounted) {
+        setState(() {
+          _weather = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final farm = ref.watch(farmProvider);
     final locale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context);
+    final currentDistrict = farm?.district ?? 'Bengaluru';
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -21,13 +68,20 @@ class WeatherScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.forestGreen,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.forestGreen),
+            tooltip: 'Refresh Weather',
+            onPressed: _isLoading ? null : () => _loadWeather(forceRefresh: true),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(children: [
-          _apiNotice(l10n),
+          _liveWeatherCard(currentDistrict, l10n, locale.languageCode),
           const SizedBox(height: 16),
-          _seasonalRisk(farm?.district ?? 'Karnataka', l10n, locale.languageCode),
+          _seasonalRisk(currentDistrict, l10n, locale.languageCode),
           const SizedBox(height: 16),
           _riskCalendar(l10n, locale.languageCode),
           const SizedBox(height: 90),
@@ -36,25 +90,197 @@ class WeatherScreen extends ConsumerWidget {
     );
   }
 
-  Widget _apiNotice(AppLocalizations l10n) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.92),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.skyBlue.withOpacity(0.4)),
-    ),
-    child: Row(children: [
-      const Text('🌤️', style: TextStyle(fontSize: 28)),
-      const SizedBox(width: 12),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(l10n.t('live_weather'), style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.skyBlue)),
-        Text(
-          l10n.t('weather_api_notice'),
-          style: const TextStyle(fontSize: 12, color: AppColors.textMedium, height: 1.4),
+  Widget _liveWeatherCard(String district, AppLocalizations l10n, String langCode) {
+    if (_isLoading) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.92),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2)),
+          ],
         ),
-      ])),
-    ]),
-  );
+        child: const Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Column(
+              children: [
+                CircularProgressIndicator(color: AppColors.skyBlue),
+                SizedBox(height: 12),
+                Text('Fetching live district weather...', style: TextStyle(color: AppColors.textMedium, fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final data = _weather;
+    if (data == null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.92),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(children: [
+          const Text('⚠️', style: TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _errorMessage ?? 'Weather temporarily unavailable. Please retry.',
+              style: const TextStyle(color: AppColors.textMedium, fontSize: 13),
+            ),
+          ),
+          TextButton(
+            onPressed: () => _loadWeather(forceRefresh: true),
+            child: const Text('Retry'),
+          ),
+        ]),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF1E6091).withOpacity(0.95),
+            const Color(0xFF168AAD).withOpacity(0.90),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF1E6091).withOpacity(0.25), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Location & Live Tag
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.location_on, color: Colors.white, size: 18),
+                  const SizedBox(width: 5),
+                  Text(
+                    '${l10n.translateDistrict(district)} · ${l10n.t('live_weather')}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.22),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF52B788),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      data.source,
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Main Temperature and Condition
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                data.conditionEmoji,
+                style: const TextStyle(fontSize: 48),
+              ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${data.tempC.toStringAsFixed(1)}°C',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    data.condition,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: Colors.white24, height: 1),
+          const SizedBox(height: 12),
+
+          // Weather Metrics Grid (Humidity, Rainfall, Wind)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _metricPill(
+                icon: Icons.water_drop_outlined,
+                label: 'Humidity',
+                value: '${data.humidity.toStringAsFixed(0)}%',
+              ),
+              _metricPill(
+                icon: Icons.umbrella_outlined,
+                label: 'Rainfall',
+                value: '${data.rainfall.toStringAsFixed(1)} mm',
+              ),
+              _metricPill(
+                icon: Icons.air_outlined,
+                label: 'Wind',
+                value: '${data.windSpeedKmH.toStringAsFixed(0)} km/h',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricPill({required IconData icon, required String label, required String value}) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white70, size: 18),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+      ],
+    );
+  }
 
   Widget _seasonalRisk(String district, AppLocalizations l10n, String langCode) {
     final month = DateTime.now().month;

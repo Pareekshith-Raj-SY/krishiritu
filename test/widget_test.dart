@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/data/repositories/crop_repository.dart';
-import '../lib/data/models/crop_model.dart';
-import '../lib/data/models/farm_model.dart';
-import '../lib/core/utils/format_utils.dart';
-import '../lib/core/utils/date_utils.dart' as appdate;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../lib/data/services/auth_service.dart';
-import '../lib/data/services/groq_crop_service.dart';
-import '../lib/shared/localization/app_localizations.dart';
+import 'package:krishiritu/data/repositories/crop_repository.dart';
+import 'package:krishiritu/data/models/crop_model.dart';
+import 'package:krishiritu/data/models/farm_model.dart';
+import 'package:krishiritu/core/utils/format_utils.dart';
+import 'package:krishiritu/core/utils/date_utils.dart' as appdate;
+import 'package:krishiritu/core/config/app_config.dart';
+import 'package:krishiritu/data/services/auth_service.dart';
+import 'package:krishiritu/data/services/groq_crop_service.dart';
+import 'package:krishiritu/data/services/weather_service.dart';
+import 'package:krishiritu/data/services/ai_assistant_service.dart';
+import 'package:krishiritu/shared/localization/app_localizations.dart';
 
 void main() {
   // ─── CropRepository Tests ───────────────────────────────────────────────
@@ -539,6 +542,53 @@ void main() {
 
       expect(l10nKn.translateExpenseCategory('Seeds'), equals('ಬೀಜಗಳು'));
       expect(l10nHi.translateExpenseCategory('Seeds'), equals('बीज'));
+    });
+  });
+
+  // ─── Weather & AI Assistant Service Tests ───────────────────────────────
+  group('Weather & AI Assistant Features', () {
+    test('AppConfig marks Weather and AI active out of the box', () {
+      expect(AppConfig.hasWeather, isTrue);
+      expect(AppConfig.hasAI, isTrue);
+    });
+
+    test('WeatherService returns valid weather and caches results', () async {
+      SharedPreferences.setMockInitialValues({});
+      final service = WeatherService();
+
+      // Test Karnataka district coordinates resolution
+      final weather = await service.getWeather('Mysuru');
+      expect(weather, isNotNull);
+      expect(weather!.city, equals('Mysuru'));
+      expect(weather.tempC, isPositive);
+      expect(weather.humidity, isPositive);
+      expect(weather.condition.isNotEmpty, isTrue);
+      expect(weather.conditionEmoji.isNotEmpty, isTrue);
+
+      // Second retrieval must use cache
+      final cachedWeather = await service.getWeather('Mysuru');
+      expect(cachedWeather, isNotNull);
+      expect(cachedWeather!.city, equals('Mysuru'));
+    });
+
+    test('AiAssistantService provides rate-limit safe advice', () async {
+      SharedPreferences.setMockInitialValues({});
+      final ai = AiAssistantService();
+
+      // Test pest control query in Kannada
+      final responseKn = await ai.askAssistant('ರಾಗಿ ಬೆಂಕಿ ರೋಗ ನಿಯಂತ್ರಣ', language: 'kn');
+      expect(responseKn.answer, isNotEmpty);
+      expect(responseKn.answer, contains('ಬೆಂಕಿ'));
+      expect(responseKn.source, isNotEmpty);
+
+      // Test fertilizer NPK query in English
+      final responseEn = await ai.askAssistant('What is the fertilizer dosage for maize?', language: 'en');
+      expect(responseEn.answer, isNotEmpty);
+      expect(responseEn.answer, contains('Fertilizer'));
+
+      // Test cache retrieval with zero API cost
+      final cachedRes = await ai.askAssistant('What is the fertilizer dosage for maize?', language: 'en');
+      expect(cachedRes.isCached, isTrue);
     });
   });
 }

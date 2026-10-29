@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/config/app_config.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../shared/localization/app_localizations.dart';
-import '../../../app.dart';
 import '../../farms/providers/farm_provider.dart';
+import '../widgets/ai_assistant_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(localeProvider);
     final farm = ref.watch(farmProvider);
     final l10n = AppLocalizations.of(context);
 
@@ -64,38 +62,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
 
-          // Language
-          _SettingsSection(title: 'Language / ಭಾಷೆ / भाषा', children: [
-            _SettingsTile(
-              icon: Icons.language,
-              title: l10n.t('app_language'),
-              subtitle: locale.languageCode == 'kn'
-                  ? 'ಕನ್ನಡ (Kannada)'
-                  : locale.languageCode == 'hi'
-                      ? 'हिंदी (Hindi)'
-                      : 'English',
-              trailing: DropdownButton<String>(
-                value: locale.languageCode,
-                underline: const SizedBox(),
-                items: const [
-                  DropdownMenuItem(value: 'en', child: Text('English')),
-                  DropdownMenuItem(value: 'kn', child: Text('ಕನ್ನಡ')),
-                  DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
-                ],
-                onChanged: (v) async {
-                  if (v != null) {
-                    ref.read(localeProvider.notifier).state = Locale(v);
-                    try {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setString('app_language', v);
-                    } catch (_) {}
-                  }
-                },
-              ),
-            ),
-          ]),
-
-          // Farm
+          // Farm Section
           _SettingsSection(title: l10n.t('farm_section'), children: [
             _SettingsTile(
               icon: Icons.agriculture,
@@ -111,7 +78,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ]),
 
-          // Features
+          // Features Section
           _SettingsSection(title: l10n.t('features_section'), children: [
             _SettingsTile(
               icon: Icons.cloud,
@@ -119,6 +86,7 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: AppConfig.hasWeather ? l10n.t('configured') : l10n.t('add_key_env'),
               trailing: Icon(AppConfig.hasWeather ? Icons.check_circle : Icons.warning_amber,
                   color: AppConfig.hasWeather ? AppColors.leafGreen : AppColors.warmAmber),
+              onTap: () => context.push('/weather'),
             ),
             _SettingsTile(
               icon: Icons.auto_awesome,
@@ -126,6 +94,7 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: AppConfig.hasAI ? l10n.t('configured') : l10n.t('add_key_env'),
               trailing: Icon(AppConfig.hasAI ? Icons.check_circle : Icons.warning_amber,
                   color: AppConfig.hasAI ? AppColors.leafGreen : AppColors.warmAmber),
+              onTap: () => AiAssistantSheet.show(context),
             ),
             _SettingsTile(
               icon: Icons.storage,
@@ -136,7 +105,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ]),
 
-          // About
+          // About Section
           _SettingsSection(title: l10n.t('about_section'), children: [
             _SettingsTile(
               icon: Icons.info_outline,

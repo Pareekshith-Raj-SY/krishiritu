@@ -4,7 +4,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/expense_model.dart';
 import '../../../data/repositories/farm_repository.dart';
 import '../../../shared/localization/app_localizations.dart';
-import '../../farms/providers/farm_provider.dart';
 
 final expensesProvider = FutureProvider<List<ExpenseModel>>((ref) async {
   return FarmRepository().loadExpenses();

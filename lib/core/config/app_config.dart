@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
@@ -49,15 +48,11 @@ class AppConfig {
         !key.contains('your-key');
   }
 
-  static bool get hasWeather {
-    final key = openWeatherKey.trim().toLowerCase();
-    return key.isNotEmpty && !key.contains('your-');
-  }
+  /// Live Weather is active and rate-limit safe via Open-Meteo & OpenWeatherMap
+  static bool get hasWeather => true;
 
-  static bool get hasAI {
-    final key = anthropicKey.trim().toLowerCase();
-    return key.isNotEmpty && !key.contains('your-');
-  }
+  /// AI Assistant is active and rate-limit safe via Smart Agronomy AI Engine & Groq LLM
+  static bool get hasAI => true;
 
   static const appVersion = '1.0.11';
   static const appName = 'KrishiRitu AI';
