@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../features/farms/providers/farm_provider.dart';
 import '../../../shared/localization/app_localizations.dart';
+import '../widgets/dashboard_weather_card.dart';
 import '../../../app.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -156,6 +157,8 @@ class DashboardScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _seasonCard(context, l10n),
+                  const SizedBox(height: 12),
+                  const DashboardWeatherCard(),
                   const SizedBox(height: 16),
                   _sectionTitle(l10n.t('quick_actions')),
                   const SizedBox(height: 10),

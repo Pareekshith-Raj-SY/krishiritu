@@ -26,27 +26,41 @@ class AiAssistantService {
   static DateTime? _lastApiCallTime;
   static const Duration _minCallCooldown = Duration(milliseconds: 2000);
 
-  /// Quick suggestions for farmers
+  /// Quick suggestions and common crop problems for farmers
   static const List<Map<String, String>> quickPrompts = [
     {
-      'title': 'Best Crops for Current Season',
-      'title_kn': 'ಪ್ರಸ್ತುತ ಋತುವಿನ ಉತ್ತಮ ಬೆಳೆಗಳು',
-      'title_hi': 'वर्तमान मौसम की सर्वोत्तम फसलें',
-      'query': 'What are the best crops to plant in Karnataka for the current season with high profit and low water requirement?',
-      'icon': '🌾',
+      'title': 'Yellow Leaves Problem',
+      'title_kn': 'ಎಲೆ ಹಳದಿ ರೋಗ ಪರಿಹಾರ',
+      'title_hi': 'पत्तियां पीली पड़ने का समाधान',
+      'query': 'Why are my crop leaves turning yellow, and what is the exact fertilizer or spray remedy?',
+      'icon': '🍂',
     },
     {
-      'title': 'Pest & Disease Control',
-      'title_kn': 'ಕೀಟ ಮತ್ತು ರೋಗ ನಿಯಂತ್ರಣ',
-      'title_hi': 'कीट और रोग नियंत्रण',
-      'query': 'How to identify and control stem borer and blast disease organically and chemically?',
+      'title': 'Pest & Caterpillar Attack',
+      'title_kn': 'ಕೀಟ ಮತ್ತು ಹುಳು ನಿಯಂತ್ರಣ',
+      'title_hi': 'कीट और इल्ली नियंत्रण',
+      'query': 'How to identify and control stem borer, armyworm caterpillars, and blast disease organically and chemically?',
       'icon': '🐛',
+    },
+    {
+      'title': 'Wilting & Root Rot',
+      'title_kn': 'ಗಿಡ ಒಣಗುವುದು ಮತ್ತು ಬುಡ ಕೊಳೆತ',
+      'title_hi': 'पौधे मुरझाना और जड़ सड़न',
+      'query': 'How to treat plants suddenly wilting and root rot in standing crops?',
+      'icon': '🥀',
+    },
+    {
+      'title': 'Fruit Borer & Leaf Curl',
+      'title_kn': 'ಕಾಯಿ ಕೊರೆಯುವುದು ಮತ್ತು ಮುದುಡು ರೋಗ',
+      'title_hi': 'फल छेदक और पत्ती मरोड़ रोग',
+      'query': 'How to control whitefly, thrips, leaf curl virus, and fruit borer in vegetables and commercial crops?',
+      'icon': '🍅',
     },
     {
       'title': 'Fertilizer & NPK Dosage',
       'title_kn': 'ರಸಗೊಬ್ಬರ ಮತ್ತು NPK ಪ್ರಮಾಣ',
       'title_hi': 'उर्वरक और एनपीके खुराक',
-      'query': 'What is the recommended NPK fertilizer dosage and timing for major Karnataka crops?',
+      'query': 'What is the recommended NPK fertilizer dosage, micronutrients, and timing for Karnataka crops?',
       'icon': '🧪',
     },
     {
@@ -57,10 +71,17 @@ class AiAssistantService {
       'icon': '💧',
     },
     {
+      'title': 'Best Crops for Season',
+      'title_kn': 'ಪ್ರಸ್ತುತ ಋತುವಿನ ಉತ್ತಮ ಬೆಳೆಗಳು',
+      'title_hi': 'वर्तमान मौसम की सर्वोत्तम फसलें',
+      'query': 'What are the best crops to plant in Karnataka for the current season with high profit and low water requirement?',
+      'icon': '🌾',
+    },
+    {
       'title': 'Karnataka Farmer Schemes',
       'title_kn': 'ಕರ್ನಾಟಕ ರೈತ ಕಲ್ಯಾಣ ಯೋಜನೆಗಳು',
       'title_hi': 'कर्नाटक किसान कल्याण योजनाएं',
-      'query': 'What government schemes and subsidies are available for Karnataka farmers (Raitha Siri, PM-KISAN, KVK)?',
+      'query': 'What government schemes and subsidies are available for Karnataka farmers (Raitha Siri, PM-KISAN, Krishi Bhagya, KVK)?',
       'icon': '🏛️',
     },
   ];
@@ -208,55 +229,182 @@ class AiAssistantService {
   String _synthesizeAgronomyAdvice(String query, String language) {
     final q = query.toLowerCase();
 
-    // 1. Pest & Disease / Blast / Borer
-    if (q.contains('pest') || q.contains('disease') || q.contains('blast') || q.contains('borer') ||
-        q.contains('bug') || q.contains('worm') || q.contains('ರೋಗ') || q.contains('ಕೀಟ')) {
+    // 1. Yellowing leaves / Chlorosis / Nutrient deficiency
+    if (q.contains('yellow') || q.contains('chlorosis') || q.contains('pale') ||
+        q.contains('ಹಳದಿ') || q.contains('haladi') || q.contains('ಪೀಲಿ') || q.contains('पीली') || q.contains('पीला')) {
       if (language == 'kn') {
-        return '🌱 **ಕೀಟ ಮತ್ತು ರೋಗ ನಿಯಂತ್ರಣ ಮಾರ್ಗದರ್ಶಿ:**\n\n'
-            '• **ಬೆಂಕಿ ರೋಗ (Blast):** ಟ್ರೈಸೈಕ್ಲಾಜೋಲ್ 75WP (0.6 ಗ್ರಾಂ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ. ಶಿಲೀಂಧ್ರನಾಶಕವನ್ನು ಬೆಳಗಿನ ಜಾವ ಸಿಂಪಡಿಸುವುದು ಉತ್ತಮ.\n'
-            '• **ಕಾಂಡ ಕೊರೆಯುವ ಹುಳು (Stem Borer):** ಕ್ಲೋರಾಂಟ್ರಾನಿಲಿಪ್ರೋಲ್ 18.5SC (0.3 ಮಿಲಿ/ಲೀಟರ್) ಬಳಸಿ ಮತ್ತು ಎಕರೆಗೆ 4-5 ಫೆರಮೋನ್ ಬಲೆಗಳನ್ನು ಇರಿಸಿ.\n'
-            '• **ಸಾವಯವ ಪರಿಹಾರ:** 5% ಬೇವಿನ ಬೀಜದ ಕಷಾಯ (NSKE) ಸಿಂಪಡಿಸುವುದರಿಂದ ಕೀಟಗಳ ಮೊಟ್ಟೆಗಳು ನಾಶವಾಗುತ್ತವೆ.\n'
-            '• **ಮುನ್ನೆಚ್ಚರಿಕೆ:** ಅತಿಯಾದ ಸಾರಜನಕ (ಯೂರಿಯಾ) ಬಳಕೆಯನ್ನು ತಪ್ಪಿಸಿ, ಏಕೆಂದರೆ ಇದು ರೋಗದ ಸಾಧ್ಯತೆಯನ್ನು ಹೆಚ್ಚಿಸುತ್ತದೆ.';
+        return '🍂 **ಎಲೆ ಹಳದಿ ರೋಗ ಮತ್ತು ಪೋಷಕಾಂಶಗಳ ಕೊರತೆಯ ಪರಿಹಾರ:**\n\n'
+            '• **ರೋಗಲಕ್ಷಣ:** ಹಳೆಯ ಎಲೆಗಳು ಸಂಪೂರ್ಣ ಹಳದಿಯಾಗಿದ್ದರೆ ಸಾರಜನಕ (Nitrogen) ಕೊರತೆ; ಹೊಸ ಚಿಗುರು ಎಲೆಗಳು ಹಳದಿಯಾಗಿದ್ದರೆ ಕಬ್ಬಿಣ (Iron) ಅಥವಾ ಸತು (Zinc) ಕೊರತೆ.\n'
+            '• **ರಾಸಾಯನಿಕ ಸಿಂಪಡಣೆ:** 19:19:19 ನೀರಿನಲ್ಲಿ ಕರಗುವ ರಸಗೊಬ್ಬರ (ಪ್ರತಿ ಲೀಟರ್ ನೀರಿಗೆ 5 ಗ್ರಾಂ) ಅಥವಾ ಫೆರಸ್ ಸಲ್ಫೇಟ್ (5 ಗ್ರಾಂ/ಲೀಟರ್ + 1 ಗ್ರಾಂ ನಿಂಬೆ ಉಪ್ಪು) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಸಾವಯವ ಪರಿಹಾರ:** 200 ಲೀಟರ್ ಜೀವಾಮೃತವನ್ನು ಎಕರೆಗೆ ಹನಿ ನೀರಾವರಿ ಮೂಲಕ ನೀಡಿ ಅಥವಾ ಶೇ. 10 ರಷ್ಟು ಹಸುವಿನ ಗಂಜಲ ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಮೊಸಾಯಿಕ್ ವೈರಸ್ ಇದ್ದರೆ:** ಬಿಳಿ ನೊಣ ಹರಡದಂತೆ ಅಸಿಟಾಮಿಪ್ರಿಡ್ 20SP (0.3 ಗ್ರಾಂ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ ರೋಗಪೀಡಿತ ಗಿಡಗಳನ್ನು ಕಿತ್ತು ನಾಶಪಡಿಸಿ.';
       } else if (language == 'hi') {
-        return '🌱 **कीट और रोग प्रबंधन सुझाव:**\n\n'
-            '• **ब्लास्ट रोग (Blast):** ट्राइसाइक्लाजोल 75WP (0.6 ग्राम/लीटर) का छिड़काव करें।\n'
-            '• **तना छेदक (Stem Borer):** क्लोरेंट्रानिलीप्रोल 18.5SC (0.3 मिली/लीटर) का प्रयोग करें और 4-5 फेरोमोन ट्रैप लगाएं।\n'
-            '• **जैविक समाधान:** 5% नीम अर्क (NSKE) का छिड़काव करें।\n'
-            '• **सावधानी:** खेत में जलभराव न होने दें और संतुलित उर्वरक दें।';
+        return '🍂 **पत्तियों का पीलापन व पोषण प्रबंधन उपाय:**\n\n'
+            '• **लक्षण पहचान:** निचली पत्तियां पीली पड़ें तो नाइट्रोजन की कमी; नई ऊपरी पत्तियां पीली पड़ें तो आयरन या जिंक की कमी।\n'
+            '• **छिड़काव:** 19:19:19 घुलनशील खाद (5 ग्राम/लीटर पानी) का पर्णीय छिड़काव करें। सूक्ष्म पोषक तत्वों हेतु फेरस सल्फेट 5 ग्राम/लीटर डालें।\n'
+            '• **जैविक समाधान:** प्रति एकड़ 200 लीटर जीवामृत ड्रिप से दें या 5% नीम का तेल छिड़कें।\n'
+            '• **मोज़ेक वायरस रोकथाम:** रोगग्रस्त पौधों को उखाड़ कर नष्ट करें और सफेद मक्खी नियंत्रण हेतु इमिडाक्लोप्रिड 17.8SL (0.5 मिली/लीटर) का प्रयोग करें।';
       }
-      return '🌱 **Pest & Disease Management Advisory:**\n\n'
-          '• **Blast Disease:** Spray Tricyclazole 75WP @ 0.6 g/L of water at the first sign of spindle lesions.\n'
-          '• **Stem Borer:** Apply Chlorantraniliprole 18.5SC @ 0.3 ml/L; deploy 4–5 pheromone traps per acre for early detection.\n'
-          '• **Organic Defense:** Spray 5% Neem Seed Kernel Extract (NSKE) or Neem oil (3 ml/L) weekly.\n'
-          '• **Prevention:** Avoid excessive nitrogen/urea fertilizer, as soft tissue invites rapid insect attack.';
+      return '🍂 **Yellow Leaves Diagnosis & Remedy Advisory:**\n\n'
+          '• **Symptom Check:** Lower/older leaves yellowing indicates Nitrogen deficiency; upper/young leaf chlorosis indicates Iron or Zinc deficiency.\n'
+          '• **Foliar Treatment:** Spray 19:19:19 water-soluble NPK @ 5 g/L water. For micro-nutrient chlorosis, spray Ferrous Sulphate (FeSO4 @ 5 g/L) + Citric acid (1 g/L).\n'
+          '• **Organic Boost:** Apply 200L Jeevamrutha per acre through drip irrigation or spray 10% filtered cow urine solution.\n'
+          '• **Virus Protection:** If mosaic patterns are observed, control whitefly vectors using Acetamiprid 20SP (0.3 g/L) and rogue out diseased plants.';
     }
 
-    // 2. Fertilizer / NPK / Dosage
-    if (q.contains('fertilizer') || q.contains('npk') || q.contains('urea') || q.contains('dap') ||
-        q.contains('potash') || q.contains('ಗೊಬ್ಬರ') || q.contains('ಖಾತ') || q.contains('उर्वरक')) {
+    // 2. Wilting / Root Rot / Damping off / Drying
+    if (q.contains('wilt') || q.contains('root rot') || q.contains('damping') || q.contains('collar rot') ||
+        q.contains('dry') || q.contains('dying') || q.contains('droop') ||
+        q.contains('ಒಣಗ') || q.contains('ಕೊಳೆತ') || q.contains('ಬುಡ ಕೊಳೆತ') || q.contains('बाड़') ||
+        q.contains('सूख') || q.contains('मुरझा') || q.contains('जड़ सड़न') || q.contains('गलन')) {
       if (language == 'kn') {
-        return '🧪 **ರಸಗೊಬ್ಬರ ಮತ್ತು NPK ಪೋಷಕಾಂಶಗಳ ನಿರ್ವಹಣೆ:**\n\n'
+        return '🥀 **ಗಿಡ ಒಣಗುವುದು ಮತ್ತು ಬುಡ ಕೊಳೆತ ರೋಗ ನಿರ್ವಹಣೆ:**\n\n'
+            '• **ರೋಗಲಕ್ಷಣ:** ಬಿಸಿಲಿನಲ್ಲಿ ಗಿಡಗಳು ಹಠಾತ್ ಬಾಡುವುದು, ಕಾಂಡದ ಬುಡ ಮತ್ತು ಬೇರುಗಳು ಕಪ್ಪಾಗಿ ಕೊಳೆಯುವುದು.\n'
+            '• **ಬುಡಕ್ಕೆ ಔಷಧ ಹಾಕುವುದು (Drenching):** ಸಾಫ್ (ಕಾರ್ಬೆಂಡಾಜಿಮ್ 12% + ಮ್ಯಾಂಕೋಜೆಬ್ 63%) 2 ಗ್ರಾಂ/ಲೀಟರ್ ಅಥವಾ ತಾಮ್ರದ ಆಕ್ಸಿಕ್ಲೋರೈಡ್ (COC 50WP) 3 ಗ್ರಾಂ/ಲೀಟರ್ ನೀರಿನಲ್ಲಿ ಬೆರೆಸಿ ಪ್ರತಿ ಗಿಡದ ಬುಡಕ್ಕೆ 150-200 ಮಿಲಿ ಸುರಿಯಿರಿ.\n'
+            '• **ಜೈವಿಕ ನಿಯಂತ್ರಣ:** ಟ್ರೈಕೋಡರ್ಮಾ ವಿರಿಡೆ (Trichoderma viride @ 5 ಕೆಜಿ/ಎಕರೆ) ಅನ್ನು ಚೆನ್ನಾಗಿ ಕೊಳೆತ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರದೊಂದಿಗೆ ಬೆರೆಸಿ ಮಣ್ಣಿಗೆ ಸೇರಿಸಿ.\n'
+            '• **ಮುನ್ನೆಚ್ಚರಿಕೆ:** ಜಮೀನಿನಲ್ಲಿ ನೀರು ನಿಲ್ಲದಂತೆ ಬಸಿದು ಹೋಗಲು ಕಾಲುವೆ ಮಾಡಿ, ಅತಿಯಾದ ನೀರಾವರಿ ತಪ್ಪಿಸಿ.';
+      } else if (language == 'hi') {
+        return '🥀 **मुरझान एवं जड़ गलन रोग प्रबंधन:**\n\n'
+            '• **लक्षण:** पौधों का अचानक मुरझाना और तने के आधार व जड़ों का काला पड़कर सड़ना।\n'
+            '• **जड़ शोधन (Drenching):** कार्बेंडाजिम 12% + मैंकोजेब 63% (साफ) 2 ग्राम/लीटर या कॉपर ऑक्सीक्लोराइड 3 ग्राम/लीटर का घोल बनाकर जड़ों में डालें।\n'
+            '• **जैविक उपचार:** ट्राइकोडर्मा विरिडी (5 किग्रा/एकड़) गोबर की खाद में मिलाकर मिट्टी में मिलाएं।\n'
+            '• **रोकथाम:** खेत में जलभराव न होने दें और उचित जल निकासी सुनिश्चित करें।';
+      }
+      return '🥀 **Wilting, Damping-Off & Root Rot Advisory:**\n\n'
+          '• **Symptoms:** Sudden midday foliage drooping, dark brown discoloration and rotting at the soil collar line and root system.\n'
+          '• **Root Drenching:** Drench around the base of affected plants with Carbendazim 12% + Mancozeb 63% (Saaf @ 2 g/L) or Copper Oxychloride 50WP (3 g/L).\n'
+          '• **Biological Remedy:** Incorporate Trichoderma viride (@ 5 kg/acre) mixed with moist FYM into the root zone.\n'
+          '• **Water Management:** Prevent water stagnation; ensure aeration and clean drainage furrows immediately.';
+    }
+
+    // 3. Sucking pests: Whitefly, Thrips, Aphids, Mites, Leaf Curl
+    if (q.contains('thrip') || q.contains('aphid') || q.contains('whitefly') || q.contains('mite') ||
+        q.contains('curl') || q.contains('ಮುದುಡು') || q.contains('ನುಸಿ') || q.contains('ಹೇನು') ||
+        q.contains('ಬಿಳಿ ನೊಣ') || q.contains('थ्रिप्स') || q.contains('माहू') || q.contains('सफेद मक्खी') ||
+        q.contains('मरोड़') || q.contains('मरोड़िया')) {
+      if (language == 'kn') {
+        return '🦟 **ನುಸಿ, ಬಿಳಿ ನೊಣ ಮತ್ತು ಮುದುಡು ರೋಗ ನಿಯಂತ್ರಣ:**\n\n'
+            '• **ರೋಗಲಕ್ಷಣ:** ಮೆಣಸಿನಕಾಯಿ, ಟೊಮೆಟೊ, ಹತ್ತಿ ಬೆಳೆಗಳಲ್ಲಿ ಎಲೆಗಳು ದೋಣಿಯಾಕಾರದಲ್ಲಿ ಮೇಲಕ್ಕೆ ಅಥವಾ ಕೆಳಕ್ಕೆ ಮುದುಡುವುದು.\n'
+            '• **ಕೀಟನಾಶಕ ಸಿಂಪಡಣೆ:** ಥ್ರಿಪ್ಸ್ ಮತ್ತು ಹೇನುಗಳಿಗೆ ಇಮಿಡಾಕ್ಲೋಪ್ರಿಡ್ 17.8SL (0.5 ಮಿಲಿ/ಲೀಟರ್) ಅಥವಾ ಡೈಫೆಂಥಿಯುರಾನ್ 50WP (1 ಗ್ರಾಂ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಕೆಂಪು ನುಸಿಗಳಿಗೆ (Mites):** ಪ್ರೋಪರ್ಗೈಟ್ 57EC (2 ಮಿಲಿ/ಲೀಟರ್) ಅಥವಾ ಕರಗುವ ಗಂಧಕ (3 ಗ್ರಾಂ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಬಲೆಗಳು:** ಎಕರೆಗೆ 15-20 ಹಳದಿ ಮತ್ತು ನೀಲಿ ಜಿಗುಟು ಬಲೆಗಳನ್ನು (Sticky traps) ಅಳವಡಿಸಿ, ವಾರಕ್ಕೊಮ್ಮೆ ಬೇವಿನ ಎಣ್ಣೆ (3 ಮಿಲಿ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.';
+      } else if (language == 'hi') {
+        return '🦟 **थ्रिप्स, सफेद मक्खी और पत्ती मरोड़ नियंत्रण:**\n\n'
+            '• **लक्षण:** पत्तियों का ऊपर या नीचे की ओर मुड़ना और पौधों का बौना होना।\n'
+            '• **कीटनाशक:** इमिडाक्लोप्रिड 17.8SL (0.5 मिली/लीटर) या एसिटामिप्रिड 20SP (0.3 ग्राम/लीटर) का छिड़काव करें।\n'
+            '• **मकड़ी (Mites):** प्रोपरगाइट 57EC (2 मिली/लीटर) या घुलनशील सल्फर (3 ग्राम/लीटर) छिड़कें।\n'
+            '• **पीले/नीले ट्रैप:** खेत में 15 पीले व नीले चिपचिपे ट्रैप लगाएं और 10,000 ppm नीम तेल (2-3 मिली/लीटर) का छिड़काव करें।';
+      }
+      return '🦟 **Sucking Pests & Leaf Curl Virus Advisory:**\n\n'
+          '• **Symptoms:** Leaves cupping upwards (thrips) or downwards (mites), wrinkled puckered leaves, and stunted terminal shoots.\n'
+          '• **Chemical Spray:** Spray Imidacloprid 17.8SL @ 0.5 ml/L or Diafenthiuron 50WP @ 1 g/L for thrips and whiteflies.\n'
+          '• **Mite Control:** For spider mites, apply Propargite 57EC @ 2 ml/L or Wettable Sulphur 80WP @ 3 g/L.\n'
+          '• **Physical & Bio-Controls:** Erect 15 yellow and blue sticky traps per acre; spray Neem oil 10,000 ppm (3 ml/L) weekly as a deterrent.';
+    }
+
+    // 4. Caterpillars / Borers / Blast / Armyworm / Fall Armyworm / Fruit borer
+    if (q.contains('borer') || q.contains('blast') || q.contains('caterpillar') || q.contains('worm') ||
+        q.contains('armyworm') || q.contains('bollworm') || q.contains('pod borer') || q.contains('fruit borer') ||
+        q.contains('ಕಾಂಡ ಕೊರೆಯುವ') || q.contains('ಕಾಯಿ ಕೊರೆಯುವ') || q.contains('ಲದ್ದಿ ಹುಳು') || q.contains('ಹುಳು') ||
+        q.contains('ಬೆಂಕಿ ರೋಗ') || q.contains('ಇಲ್ಲಿ') || q.contains('इल्ली') || q.contains('कीड़ा') ||
+        q.contains('छेदक') || q.contains('तना छेदक') || q.contains('फल छेदक') || q.contains('ब्लास्ट')) {
+      if (language == 'kn') {
+        return '🐛 **ಕಾಂಡ ಕೊರೆಯುವ ಹುಳು, ಕಾಯಿ ಕೊರೆಯುವುದು ಮತ್ತು ಬೆಂಕಿ ರೋಗ ನಿಯಂತ್ರಣ:**\n\n'
+            '• **ಬೆಂಕಿ ರೋಗ (Ragi/Paddy Blast):** ಟ್ರೈಸೈಕ್ಲಾಜೋಲ್ 75WP (0.6 ಗ್ರಾಂ/ಲೀಟರ್) ಅಥವಾ ಐಸೊಪ್ರೊಥಿಯೋಲೇನ್ (1.5 ಮಿಲಿ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಕಾಂಡ & ಕಾಯಿ ಕೊರೆಯುವ ಹುಳು:** ಕೊರಾಜೆನ್ (ಕ್ಲೋರಾಂಟ್ರಾನಿಲಿಪ್ರೋಲ್ 18.5SC @ 0.3 ಮಿಲಿ/ಲೀಟರ್) ಅಥವಾ ಇಮಾಮೆಕ್ಟಿನ್ ಬೆಂಜೋಯೆಟ್ 5SG (0.4 ಗ್ರಾಂ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಮುಸುಕಿನ ಜೋಳದ ಲದ್ದಿ ಹುಳು (Fall Armyworm):** ಸುಳಿಗೆ ಬೀಳುವಂತೆ ಸ್ಪಿನೋಟೋರಾಮ್ 11.7SC (0.5 ಮಿಲಿ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಜೈವಿಕ ವಿಧಾನ:** ಎಕರೆಗೆ 5 ಮೋಹಕ ಬಲೆಗಳು (Pheromone traps) ಇರಿಸಿ ಮತ್ತು ಬೇವಿನ ಬೀಜದ ಕಷಾಯ (NSKE 5%) ಬಳಸಿ.';
+      } else if (language == 'hi') {
+        return '🐛 **तना छेदक, फल छेदक व ब्लास्ट रोग प्रबंधन:**\n\n'
+            '• **ब्लास्ट रोग:** ट्राइसाइक्लाजोल 75WP (0.6 ग्राम/लीटर) का तुरंत छिड़काव करें।\n'
+            '• **इल्ली एवं छेदक कीट:** कोराजन (क्लोरेंट्रानिलीप्रोल 18.5SC) 0.3 मिली/लीटर या इमामेक्टिन बेंजोएट 5SG (0.4 ग्राम/लीटर) का प्रयोग करें।\n'
+            '• **फॉल आर्मीवर्म:** मक्का में पौधे के पोंगे में कीटनाशक का घोल पहुंचे इस प्रकार छिड़काव करें।\n'
+            '• **जैविक ट्रैप:** प्रति एकड़ 5 फेरोमोन ट्रैप लगाएं और नीम अर्क (NSKE 5%) का नियमित उपयोग करें।';
+      }
+      return '🐛 **Borers, Caterpillars & Blast Disease Advisory:**\n\n'
+          '• **Blast Disease (Ragi/Paddy):** Spray Tricyclazole 75WP @ 0.6 g/L or Isoprothiolane 40EC @ 1.5 ml/L at first appearance.\n'
+          '• **Stem, Pod & Fruit Borers:** Apply Chlorantraniliprole 18.5SC (Coragen @ 0.3 ml/L) or Emamectin Benzoate 5SG @ 0.4 g/L.\n'
+          '• **Fall Armyworm (Maize):** Direct foliar nozzle directly into the plant whorl using Spinetoram 11.7SC @ 0.5 ml/L.\n'
+          '• **Bio-Controls:** Deploy 5 pheromone traps per acre and spray 5% Neem Seed Kernel Extract (NSKE) at dusk.';
+    }
+
+    // 5. Leaf Spots / Blight / Rust / Powdery Mildew
+    if (q.contains('spot') || q.contains('blight') || q.contains('rust') || q.contains('mildew') ||
+        q.contains('ಮಚ್ಚೆ') || q.contains('ಅಂಗಮಾರಿ') || q.contains('ಬೂದಿ ರೋಗ') || q.contains('ತುಕ್ಕು') ||
+        q.contains('धब्बा') || q.contains('झुलसा') || q.contains('गेरुआ') || q.contains('मिल्ड्यू')) {
+      if (language == 'kn') {
+        return '🍄 **ಎಲೆ ಚುಕ್ಕೆ, ಅಂಗಮಾರಿ ಮತ್ತು ಬೂದಿ ರೋಗ ಪರಿಹಾರ:**\n\n'
+            '• **ಎಲೆ ಚುಕ್ಕೆ & ಅಂಗಮಾರಿ (Leaf Spot/Blight):** ಮ್ಯಾಂಕೋಜೆಬ್ 75WP (2.5 ಗ್ರಾಂ/ಲೀಟರ್) ಅಥವಾ ಡೈಫೆನೊಕೊನಾಜೋಲ್ 25EC (0.5 ಮಿಲಿ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಬೂದಿ ರೋಗ (Powdery Mildew):** ನೀರಿನಲ್ಲಿ ಕರಗುವ ಗಂಧಕ (Wettable Sulphur 80WP @ 3 ಗ್ರಾಂ/ಲೀಟರ್) ಅಥವಾ ಹೆಕ್ಸಾಕೋನಾಜೋಲ್ (1 ಮಿಲಿ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ತಡೆಗಟ್ಟುವಿಕೆ:** ಗಾಳಿಯಾಡುವಂತೆ ಗಿಡಗಳ ನಡುವೆ ಸರಿಯಾದ ಅಂತರವಿರಲಿ ಮತ್ತು ಅತಿಯಾದ ತೇವಾಂಶ ಇರದಂತೆ ನೋಡಿಕೊಳ್ಳಿ.';
+      }
+      return '🍄 **Leaf Spot, Blight & Mildew Advisory:**\n\n'
+          '• **Leaf Spot & Blight:** Spray Mancozeb 75WP @ 2.5 g/L or Difenoconazole 25EC (Score @ 0.5 ml/L) or Saaf (2 g/L).\n'
+          '• **Powdery Mildew:** Apply Wettable Sulphur 80WP @ 3 g/L or Hexaconazole 5EC @ 1.5 ml/L.\n'
+          '• **Cultural Hygiene:** Remove badly infected lower foliage and avoid overhead sprinkler watering in late evenings.';
+    }
+
+    // 6. Arecanut / Betelnut issues (Koleroga, Mahali)
+    if (q.contains('areca') || q.contains('betel') || q.contains('koleroga') || q.contains('mahali') ||
+        q.contains('ಅಡಿಕೆ') || q.contains('ಕೊಳೆ ರೋಗ') || q.contains('ಸುಪಾರಿ') || q.contains('सुपारी')) {
+      if (language == 'kn') {
+        return '🌴 **ಅಡಿಕೆ ಕೊಳೆ ರೋಗ (ಮಹಾಲಿ) ಮತ್ತು ಹಳದಿ ಎಲೆ ರೋಗ ನಿರ್ವಹಣೆ:**\n\n'
+            '• **ಕೊಳೆ ರೋಗ (Koleroga):** ಮಳೆಗಾಲದ ಆರಂಭಕ್ಕೆ ಮುನ್ನ ಗೊನೆಗಳಿಗೆ ಶೇ. 1 ರ ಬೋರ್ಡೋ ದ್ರಾವಣ (100 ಲೀಟರ್ ನೀರಿಗೆ 1 ಕೆಜಿ ಮೈಲುತುತ್ತ + 1 ಕೆಜಿ ಸುಣ್ಣ) ಸಿಂಪಡಿಸಿ ಅಥವಾ ಪಾಲಿಥಿನ್ ಹೊದಿಕೆ (ಕೊಟ್ಟೆ) ಕಟ್ಟಿ.\n'
+            '• **ರೋಗ ಮುಂದುವರಿದರೆ:** ಮೆಟಲಾಕ್ಸಿಲ್ + ಮ್ಯಾಂಕೋಜೆಬ್ (ರಿಡೋಮಿಲ್ 2 ಗ್ರಾಂ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಹಳದಿ ಎಲೆ ರೋಗ:** ಮಣ್ಣಿಗೆ ಪ್ರತಿ ಗಿಡಕ್ಕೆ 15 ಕೆಜಿ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ, 100 ಗ್ರಾಂ ಬೋರಾಕ್ಸ್ ಮತ್ತು ಹನಿ ನೀರಾವರಿ ಒದಗಿಸಿ.';
+      }
+      return '🌴 **Arecanut Koleroga (Fruit Rot) Management:**\n\n'
+          '• **Monsoon Protection:** Spray 1% Bordeaux mixture thoroughly onto all bunches before heavy monsoon showers.\n'
+          '• **Protective Covering:** Tie waterproof polythene covers (Kotte) to bunches to prevent Phytophthora spore rain-wash.\n'
+          '• **Systemic Spray:** In high disease pressure, spray Metalaxyl + Mancozeb (Ridomil Gold @ 2 g/L).\n'
+          '• **Soil Drainage:** Clean plantation deep drainage channels to prevent water stagnation.';
+    }
+
+    // 7. Weed control / Herbicides
+    if (q.contains('weed') || q.contains('parthenium') || q.contains('herbicide') ||
+        q.contains('ಕಳೆ') || q.contains('ಕಳೆನಾಶಕ') || q.contains('ಹುಲ್ಲು') || q.contains('खरपतवार')) {
+      if (language == 'kn') {
+        return '🌿 **ಕಳೆ ನಿಯಂತ್ರಣ ಮತ್ತು ಕಳೆನಾಶಕ ಮಾರ್ಗದರ್ಶಿ:**\n\n'
+            '• **ಬಿತ್ತನೆ ಪೂರ್ವ/ಬಿತ್ತಿದ ತಕ್ಷಣ (Pre-emergence):** ಪೆಂಡಿಮೆಥಾಲಿನ್ 30EC (ಎಕರೆಗೆ 1 ಲೀಟರ್ ಅನ್ನು 200 ಲೀಟರ್ ನೀರಿಗೆ ಬೆರೆಸಿ) ಬಿತ್ತಿದ 48 ಗಂಟೆಗಳೊಳಗೆ ಮಣ್ಣಿನ ತೇವಾಂಶವಿರುವಾಗ ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಮುಸುಕಿನ ಜೋಳಕ್ಕೆ:** ಅಟ್ರಾಜಿನ್ 50WP (ಎಕರೆಗೆ 1 ಕೆಜಿ) ಬಿತ್ತಿದ ತಕ್ಷಣ ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಅಗಲ ಎಲೆಯ ಕಳೆಗಳಿಗೆ:** 2,4-D ಅಮೈನ್ ಸಾಲ್ಟ್ (2 ಮಿಲಿ/ಲೀಟರ್) ಕಳೆಗಳು 2-3 ಎಲೆಗಳ ಹಂತದಲ್ಲಿದ್ದಾಗ ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಸಾವಯವ ನಿಯಂತ್ರಣ:** ಬೆಳೆಗಳ ನಡುವೆ ಕಪ್ಪು ಪಾಲಿಥಿನ್ ಮಲ್ಚಿಂಗ್ ಅಥವಾ ಕಳೆ ಕೊಚ್ಚುವ ಯಂತ್ರ ಬಳಸಿ.';
+      }
+      return '🌿 **Weed Management & Herbicide Advisory:**\n\n'
+          '• **Pre-Emergence:** Apply Pendimethalin 30EC @ 1.0–1.2 L/acre within 48 hours of sowing when soil moisture is adequate.\n'
+          '• **Maize Specific:** Apply Atrazine 50WP @ 1 kg/acre immediately post-sowing.\n'
+          '• **Standing Broadleaf Weeds:** Spray 2,4-D Amine salt @ 2 ml/L or hand-weed at 20 and 40 DAS.\n'
+          '• **Organic Control:** Mulch using paddy straw or 25-micron mulch film to suppress sunlight and weed germination.';
+    }
+
+    // 8. Fertilizer / NPK / Dosage
+    if (q.contains('fertilizer') || q.contains('npk') || q.contains('urea') || q.contains('dap') ||
+        q.contains('potash') || q.contains('dose') || q.contains('dosage') ||
+        q.contains('ಗೊಬ್ಬರ') || q.contains('ಖಾತ') || q.contains('ರಸಗೊಬ್ಬರ') || q.contains('ಉರ್ವರಕ') || q.contains('उर्वरक') || q.contains('खाद')) {
+      if (language == 'kn') {
+        return '🧪 **ರಸಗೊಬ್ಬರ ಮತ್ತು NPK ಪೋಷಕಾಂಶಗಳ ಸಮಗ್ರ ನಿರ್ವಹಣೆ:**\n\n'
             '• **ಪ್ರಮಾಣಿತ NPK ಅನುಪಾತ:** ಆಹಾರ ಧಾನ್ಯಗಳಿಗೆ 4:2:1 (ಸಾರಜನಕ: ರಂಜಕ: ಪೊಟ್ಯಾಶ್) ಮತ್ತು ದ್ವಿದಳ ಧಾನ್ಯಗಳಿಗೆ 1:2:1.\n'
             '• **ಬಿತ್ತನೆ ಸಮಯ:** ರಂಜಕ (DAP) ಮತ್ತು ಪೊಟ್ಯಾಶ್ ಅನ್ನು ಬಿತ್ತನೆಯ ಸಮಯದಲ್ಲಿ ಪೂರ್ತಿಯಾಗಿ ತಳಪಾಯದ ಗೊಬ್ಬರವಾಗಿ ನೀಡಿ.\n'
             '• **ಯೂರಿಯಾ ಬಳಕೆ:** ಯೂರಿಯಾವನ್ನು 2-3 ಕಂತುಗಳಲ್ಲಿ (ಬಿತ್ತನೆಯ 25 ಮತ್ತು 45 ದಿನಗಳ ನಂತರ) ನೀಡುವುದು ಉಪಯುಕ್ತ.\n'
-            '• **ಮಣ್ಣಿನ ಫಲವತ್ತತೆ:** ಪ್ರತಿ ಎಕರೆಗೆ 2 ಟನ್ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ ಅಥವಾ 500 ಕೆಜಿ ಎರೆಹುಳು ಗೊಬ್ಬರ ಸೇರಿಸಿ.';
+            '• **ಸೂಕ್ಷ್ಮ ಪೋಷಕಾಂಶ:** ಎಕರೆಗೆ 10 ಕೆಜಿ ಜಿಂಕ್ ಸಲ್ಫೇಟ್ ಮತ್ತು 5 ಕೆಜಿ ಬೋರಾಕ್ಸ್ ಬಿತ್ತನೆಗೆ ಮುಂಚೆ ಮಣ್ಣಿಗೆ ಸೇರಿಸಿ.';
       } else if (language == 'hi') {
         return '🧪 **उर्वरक एवं NPK पोषण प्रबंधन:**\n\n'
             '• **संतुलित अनुपात:** अनाज फसलों के लिए 4:2:1 और दलहनी फसलों के लिए 1:2:1 NPK का उपयोग करें।\n'
             '• **बेसल खुराक:** बुवाई के समय सम्पूर्ण डीएपी और पोटाश डालें।\n'
             '• **यूरिया का विभाजन:** यूरिया को 2-3 चरणों में टॉप ड्रेसिंग के रूप में दें।\n'
-            '• **जैविक खाद:** प्रति एकड़ 2-3 टन गोबर की खाद अवश्य डालें।';
+            '• **सूक्ष्म तत्व:** प्रति एकड़ 10 किग्रा जिंक सल्फेट बुवाई के समय अवश्य डालें।';
       }
       return '🧪 **Fertilizer & NPK Nutrient Advisory:**\n\n'
           '• **Balanced Ratio:** Aim for 4:2:1 (N:P:K) for cereals and 1:2:1 for pulses and oilseeds.\n'
           '• **Basal Application:** Apply full Phosphorous (DAP/SSP) and Potash (MOP) alongside 1/3 Nitrogen at sowing.\n'
           '• **Top Dressing:** Split remaining Urea into two equal doses at 25–30 days (tillering) and 45–50 days (flowering).\n'
-          '• **Soil Health:** Incorporate 2 tons of well-rotted Farm Yard Manure (FYM) or 500 kg Vermicompost per acre.';
+          '• **Micro-Nutrients:** Apply 10 kg Zinc Sulphate and 5 kg Borax per acre as basal soil amendment.';
     }
 
-    // 3. Drip / Irrigation / Water saving
+    // 9. Drip / Irrigation / Water saving
     if (q.contains('water') || q.contains('drip') || q.contains('irrigation') || q.contains('borewell') ||
-        q.contains('ನೀರು') || q.contains('ನೀರಾವರಿ') || q.contains('सिंचाई') || q.contains('पानी')) {
+        q.contains('drought') || q.contains('ನೀರು') || q.contains('ನೀರಾವರಿ') || q.contains('ಬರ') ||
+        q.contains('ಸಿಂಚಾಯಿ') || q.contains('सिंचाई') || q.contains('पानी') || q.contains('सूखा')) {
       if (language == 'kn') {
         return '💧 **ಹನಿ ನೀರಾವರಿ ಮತ್ತು ನೀರಿನ ನಿರ್ವಹಣೆ:**\n\n'
             '• **ಹನಿ ನೀರಾವರಿ (Drip):** ಶೇ. 45-60 ರಷ್ಟು ನೀರನ್ನು ಉಳಿಸುತ್ತದೆ ಮತ್ತು ಇಳುವರಿಯನ್ನು ಶೇ. 25 ರಷ್ಟು ಹೆಚ್ಚಿಸುತ್ತದೆ.\n'
@@ -271,7 +419,7 @@ class AiAssistantService {
           '• **Government Subsidy:** Karnataka offers up to 90% subsidy for small and marginal farmers on micro-irrigation systems.';
     }
 
-    // 4. Best crops / Kharif / Rabi / Season
+    // 10. Best crops / Kharif / Rabi / Season
     if (q.contains('crop') || q.contains('season') || q.contains('kharif') || q.contains('rabi') ||
         q.contains('summer') || q.contains('profit') || q.contains('ಬೆಳೆ') || q.contains('ಫಸಲು') || q.contains('फसल')) {
       if (language == 'kn') {
@@ -288,19 +436,22 @@ class AiAssistantService {
           '• **Drought-Resilient Choices:** Finger Millet and Horsegram withstand irregular rainfall patterns effectively.';
     }
 
-    // 5. Government schemes / Subsidies / MSP
+    // 11. Government schemes / Subsidies / MSP
     if (q.contains('scheme') || q.contains('subsidy') || q.contains('pm-kisan') || q.contains('msp') ||
-        q.contains('ಯೋಜನೆ') || q.contains('ಸಹಾಯಧನ') || q.contains('योजना')) {
+        q.contains('krishi bhagya') || q.contains('samrakshane') ||
+        q.contains('ಯೋಜನೆ') || q.contains('ಸಹಾಯಧನ') || q.contains('ವಿಮೆ') || q.contains('योजना') || q.contains('सब्सिडी') || q.contains('बीमा')) {
       if (language == 'kn') {
         return '🏛️ **ಕರ್ನಾಟಕ ರೈತ ಕಲ್ಯಾಣ ಯೋಜನೆಗಳು:**\n\n'
             '• **ಪ್ರಧಾನ ಮಂತ್ರಿ ಕಿಸಾನ್ ಸಮ್ಮಾನ್ ನಿಧಿ:** ವಾರ್ಷಿಕ ₹6,000 ನೇರ ಆರ್ಥಿಕ ನೆರವು.\n'
             '• **ರೈತ ಸಿರಿ ಯೋಜನೆ:** ಸಿರಿಧಾನ್ಯ (ರಾಗಿ, ನವಣೆ, ಸಾಮೆ) ಬೆಳೆಯುವ ರೈತರಿಗೆ ಪ್ರತಿ ಹೆಕ್ಟೇರ್‌ಗೆ ₹10,000 ಪ್ರೋತ್ಸಾಹಧನ.\n'
+            '• **ಕೃಷಿ ಭಾಗ್ಯ ಯೋಜನೆ:** ಕೃಷಿ ಹೊಂಡ, ಪಾಲಿಥಿನ್ ಲೈನಿಂಗ್ ಮತ್ತು ಡೀಸೆಲ್ ಪಂಪ್‌ಸೆಟ್‌ಗಳಿಗೆ ಶೇ. 80-90 ರಿಯಾಯಿತಿ.\n'
             '• **ಸೂಕ್ಷ್ಮ ನೀರಾವರಿ ಯೋಜನೆ:** ಹನಿ ನೀರಾವರಿಗೆ ಶೇ. 90 ರಷ್ಟು ಸಹಾಯಧನ.\n'
             '• **ಕಿಸಾನ್ ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್ (KCC):** ಶೂನ್ಯ ಅಥವಾ ಕಡಿಮೆ ಬಡ್ಡಿದರದಲ್ಲಿ ಬೆಳೆ ಸಾಲ ಸೌಲಭ್ಯ.';
       }
       return '🏛️ **Key Agricultural Schemes in Karnataka:**\n\n'
           '• **PM-KISAN:** ₹6,000 annual direct income support in three equal installments.\n'
           '• **Raitha Siri Scheme:** ₹10,000 per hectare incentive for cultivating millets (Ragi, Foxtail, Little millet).\n'
+          '• **Krishi Bhagya:** 80–90% subsidy for farm ponds, polythene lining, and diesel pumpsets in dry zones.\n'
           '• **Micro-Irrigation Subsidy:** 90% subsidy for SC/ST and small/marginal farmers for drip and sprinkler systems.\n'
           '• **Kisan Credit Card (KCC):** Short-term crop loans at subsidized interest rates (subvention up to 3%).';
     }
@@ -310,16 +461,19 @@ class AiAssistantService {
       return '🌿 **ಕೃಷಿ ಸಲಹೆ:**\n\n'
           '• ನಿಮ್ಮ ಜಮೀನಿನ ಮಣ್ಣಿನ ಪ್ರಕಾರ ಮತ್ತು ನೀರಿನ ಲಭ್ಯತೆಯನ್ನು ಪರಿಶೀಲಿಸಿ ಬೆಳೆ ಆಯ್ಕೆ ಮಾಡಿ.\n'
           '• ಬೀಜೋಪಚಾರ (Seed Treatment) ಮಾಡುವುದರಿಂದ ಶೇ. 80 ರಷ್ಟು ಆರಂಭಿಕ ರೋಗಗಳನ್ನು ತಡೆಯಬಹುದು.\n'
-          '• ಹತ್ತಿರದ ಕೃಷಿ ವಿಜ್ಞಾನ ಕೇಂದ್ರ (KVK) ಅಥವಾ ರೈತ ಸಂಪರ್ಕ ಕೇಂದ್ರವನ್ನು ಸಂಪರ್ಕಿಸಿ ಮಣ್ಣು ಪರೀಕ್ಷೆ ಮಾಡಿಸಿ.';
+          '• ಹತ್ತಿರದ ಕೃಷಿ ವಿಜ್ಞಾನ ಕೇಂದ್ರ (KVK) ಅಥವಾ ರೈತ ಸಂಪರ್ಕ ಕೇಂದ್ರವನ್ನು ಸಂಪರ್ಕಿಸಿ ಮಣ್ಣು ಪರೀಕ್ಷೆ ಮಾಡಿಸಿ.\n'
+          '• ಕೀಟನಾಶಕ ಸಿಂಪಡಿಸುವಾಗ ಮುಂಜಾನೆ ಅಥವಾ ಸಂಜೆ ವೇಳೆ ಮಾತ್ರ ಸಿಂಪಡಿಸಿ.';
     } else if (language == 'hi') {
       return '🌿 **कृषि परामर्श:**\n\n'
           '• अपनी मिट्टी की जांच के आधार पर फसल का चयन करें।\n'
           '• बुवाई से पहले बीजोपचार अवश्य करें, इससे अधिकांश शुरुआती रोग रुकते हैं।\n'
-          '• जल संरक्षण हेतु ड्रिप सिंचाई और मल्चिंग अपनाएं।';
+          '• जल संरक्षण हेतु ड्रिप सिंचाई और मल्चिंग अपनाएं।\n'
+          '• दवाओं का छिड़काव सुबह या शाम के ठंडे समय में ही करें।';
     }
     return '🌿 **Agricultural Advisory Note:**\n\n'
         '• Choose certified seeds suited for your agro-climatic zone in Karnataka.\n'
         '• Conduct seed treatment with Trichoderma (5g/kg) or Carbendazim (2g/kg) before sowing to avert soil-borne pathogens.\n'
-        '• Get your soil tested at your nearest Krishi Vigyan Kendra (KVK) or Raitha Samparka Kendra to optimize fertilizer expenditures.';
+        '• Get your soil tested at your nearest Krishi Vigyan Kendra (KVK) or Raitha Samparka Kendra to optimize fertilizer expenditures.\n'
+        '• Apply foliar sprays during early morning or late afternoon to prevent scorching.';
   }
 }

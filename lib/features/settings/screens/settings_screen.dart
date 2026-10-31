@@ -81,14 +81,6 @@ class SettingsScreen extends ConsumerWidget {
           // Features Section
           _SettingsSection(title: l10n.t('features_section'), children: [
             _SettingsTile(
-              icon: Icons.cloud,
-              title: l10n.t('weather_api'),
-              subtitle: AppConfig.hasWeather ? l10n.t('configured') : l10n.t('add_key_env'),
-              trailing: Icon(AppConfig.hasWeather ? Icons.check_circle : Icons.warning_amber,
-                  color: AppConfig.hasWeather ? AppColors.leafGreen : AppColors.warmAmber),
-              onTap: () => context.push('/weather'),
-            ),
-            _SettingsTile(
               icon: Icons.auto_awesome,
               title: l10n.t('ai_assistant'),
               subtitle: AppConfig.hasAI ? l10n.t('configured') : l10n.t('add_key_env'),

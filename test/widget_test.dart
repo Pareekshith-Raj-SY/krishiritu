@@ -581,6 +581,18 @@ void main() {
       expect(responseKn.answer, contains('ಬೆಂಕಿ'));
       expect(responseKn.source, isNotEmpty);
 
+      // Test yellow leaves problem in English & Kannada
+      final yellowEn = await ai.askAssistant('My crop leaves are turning yellow, what is the remedy?', language: 'en');
+      expect(yellowEn.answer, contains('Yellow Leaves'));
+      expect(yellowEn.answer, contains('19:19:19'));
+
+      final yellowKn = await ai.askAssistant('ಎಲೆಗಳು ಹಳದಿಯಾಗುತ್ತಿವೆ ಪರಿಹಾರ ತಿಳಿಸಿ', language: 'kn');
+      expect(yellowKn.answer, contains('ಎಲೆ ಹಳದಿ'));
+
+      // Test wilting & root rot in English & Kannada
+      final wiltEn = await ai.askAssistant('How to stop plants wilting and root rot?', language: 'en');
+      expect(wiltEn.answer, contains('Wilting'));
+
       // Test fertilizer NPK query in English
       final responseEn = await ai.askAssistant('What is the fertilizer dosage for maize?', language: 'en');
       expect(responseEn.answer, isNotEmpty);
