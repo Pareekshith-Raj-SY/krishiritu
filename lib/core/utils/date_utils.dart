@@ -32,6 +32,30 @@ class AppDateUtils {
     }
   }
 
+  static String formatTime(DateTime d, [String langCode = 'en']) {
+    final hour = d.hour;
+    final minute = d.minute.toString().padLeft(2, '0');
+    final isPm = hour >= 12;
+    final hour12 = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+
+    if (langCode == 'kn') {
+      final period = isPm ? 'ಅಪರಾಹ್ನ' : 'ಪೂರ್ವಾಹ್ನ';
+      return '$hour12:$minute $period';
+    } else if (langCode == 'hi') {
+      final period = isPm ? 'अपराह्न' : 'पूर्वाह्न';
+      return '$hour12:$minute $period';
+    } else {
+      final period = isPm ? 'PM' : 'AM';
+      return '$hour12:$minute $period';
+    }
+  }
+
+  static String formatPresentDateTime(DateTime d, [String langCode = 'en']) {
+    final dateStr = formatPresentDate(d, langCode);
+    final timeStr = formatTime(d, langCode);
+    return '$dateStr • $timeStr';
+  }
+
   static String currentSeason() {
     final m = DateTime.now().month;
     if (m >= 6 && m <= 10) return 'Kharif';

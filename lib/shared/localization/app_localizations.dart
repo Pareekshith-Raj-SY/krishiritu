@@ -167,6 +167,26 @@ class AppLocalizations {
       'seasonal_risks': 'Seasonal Risks',
       'based_on_conditions': 'Based on typical Karnataka conditions for',
       'crop_risk_calendar': 'Karnataka Crop Risk Calendar',
+      'current_location': 'Current Location',
+      'use_current_location': 'Use Current Location',
+      'detect_current_location': 'Detect GPS Location',
+      'detecting_gps': 'Detecting GPS location...',
+      'gps_detected': 'Live GPS Location',
+      'gps_live': 'GPS Live',
+      'change_district': 'Change District',
+      'select_district': 'Select District',
+      'all_districts': 'All Karnataka Districts',
+      'present_information': 'Present Live Information',
+      'observation_time': 'Observed at',
+      'humidity': 'Humidity',
+      'rainfall': 'Rainfall',
+      'wind': 'Wind',
+      'feels_like': 'Feels like',
+      'dry': 'Dry',
+      'rain_active': 'Rainfall',
+      'refresh_weather': 'Refresh Weather',
+      'location_disabled': 'GPS location service is disabled on device.',
+      'location_denied': 'Location permission denied. Showing district weather.',
 
       // Settings & Profile (Image 4)
       'settings_profile': 'Settings & Profile',
@@ -516,6 +536,26 @@ class AppLocalizations {
       'seasonal_risks': 'ಋತುವಿನ ಅಪಾಯಗಳು',
       'based_on_conditions': 'ಕರ್ನಾಟಕದ ವಿಶಿಷ್ಟ ಪರಿಸ್ಥಿತಿಗಳ ಆಧಾರದ ಮೇಲೆ',
       'crop_risk_calendar': 'ಕರ್ನಾಟಕ ಬೆಳೆ ಅಪಾಯ ಕ್ಯಾಲೆಂಡರ್',
+      'current_location': 'ಪ್ರಸ್ತುತ ಸ್ಥಳ',
+      'use_current_location': 'ಪ್ರಸ್ತುತ ಸ್ಥಳ ಬಳಸಿ',
+      'detect_current_location': 'ಜಿಪಿಎಸ್ ಸ್ಥಳ ಪತ್ತೆಹಚ್ಚಿ',
+      'detecting_gps': 'ಜಿಪಿಎಸ್ ಸ್ಥಳ ಪತ್ತೆಹಚ್ಚಲಾಗುತ್ತಿದೆ...',
+      'gps_detected': 'ಲೈವ್ ಜಿಪಿಎಸ್ ಸ್ಥಳ',
+      'gps_live': 'ಜಿಪಿಎಸ್ ಲೈವ್',
+      'change_district': 'ಜಿಲ್ಲೆ ಬದಲಾಯಿಸಿ',
+      'select_district': 'ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ',
+      'all_districts': 'ಕರ್ನಾಟಕದ ಎಲ್ಲಾ ಜಿಲ್ಲೆಗಳು',
+      'present_information': 'ಪ್ರಸ್ತುತ ಲೈವ್ ಮಾಹಿತಿ',
+      'observation_time': 'ಅವಲೋಕನ ಸಮಯ',
+      'humidity': 'ತೇವಾಂಶ',
+      'rainfall': 'ಮಳೆ',
+      'wind': 'ಗಾಳಿ',
+      'feels_like': 'ಅನಿಸಿಕೆ',
+      'dry': 'ಶುಷ್ಕ (ಮಳೆ ಇಲ್ಲ)',
+      'rain_active': 'ಮಳೆ ಪ್ರಮಾಣ',
+      'refresh_weather': 'ಹವಾಮಾನ ನವೀಕರಿಸಿ',
+      'location_disabled': 'ಸಾಧನದಲ್ಲಿ ಜಿಪಿಎಸ್ ಸ್ಥಳ ಸೇವೆ ಆಫ್ ಆಗಿದೆ.',
+      'location_denied': 'ಸ್ಥಳ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಜಿಲ್ಲೆಯ ಹವಾಮಾನ ತೋರಿಸಲಾಗುತ್ತಿದೆ.',
 
       // Settings & Profile (Image 4)
       'settings_profile': 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು & ಪ್ರೊಫೈಲ್',
@@ -865,6 +905,26 @@ class AppLocalizations {
       'seasonal_risks': 'मौसमी जोखिम',
       'based_on_conditions': 'विशिष्ट कर्नाटक स्थितियों के आधार पर',
       'crop_risk_calendar': 'कर्नाटक फसल जोखिम कैलेंडर',
+      'current_location': 'वर्तमान स्थान',
+      'use_current_location': 'वर्तमान स्थान का उपयोग करें',
+      'detect_current_location': 'जीपीएस स्थान पहचानें',
+      'detecting_gps': 'जीपीएस स्थान का पता लगाया जा रहा है...',
+      'gps_detected': 'लाइव जीपीएस स्थान',
+      'gps_live': 'जीपीएस लाइव',
+      'change_district': 'ज़िला बदलें',
+      'select_district': 'ज़िला चुनें',
+      'all_districts': 'कर्नाटक के सभी ज़िले',
+      'present_information': 'वर्तमान लाइव जानकारी',
+      'observation_time': 'अवलोकन समय',
+      'humidity': 'आर्द्रता',
+      'rainfall': 'वर्षा',
+      'wind': 'हवा',
+      'feels_like': 'महसूस',
+      'dry': 'शुष्क (बारिश नहीं)',
+      'rain_active': 'वर्षा मात्रा',
+      'refresh_weather': 'मौसम ताज़ा करें',
+      'location_disabled': 'डिवाइस पर जीपीएस सेवा अक्षम है।',
+      'location_denied': 'स्थान अनुमति अस्वीकृत। ज़िले का मौसम दिखाया जा रहा है।',
 
       // Settings & Profile (Image 4)
       'settings_profile': 'सेटिंग्स और प्रोफ़ाइल',
@@ -1740,6 +1800,42 @@ class AppLocalizations {
       }
     }
     return 'Rainfed';
+  }
+
+  /// Translates meteorological weather condition to current language
+  String translateWeatherCondition(String condition) {
+    final lang = locale.languageCode;
+    final c = condition.toLowerCase();
+    if (lang == 'kn') {
+      if (c.contains('clear')) return 'ಸ್ವಚ್ಛ ಆಕಾಶ (Clear)';
+      if (c.contains('partly cloudy')) return 'ಭಾಗಶಃ ಮೋಡ (Partly Cloudy)';
+      if (c.contains('overcast')) return 'ಮೋಡ ಕವಿದ (Overcast)';
+      if (c.contains('fog') || c.contains('mist') || c.contains('haze')) return 'ಮಂಜು ಮುಸುಕಿದ (Foggy)';
+      if (c.contains('drizzle')) return 'ತುಂತುರು ಮಳೆ (Drizzle)';
+      if (c.contains('shower')) return 'ಮಳೆಯ ಸಿಂಚನ (Showers)';
+      if (c.contains('heavy')) return 'ಭಾರೀ ಮಳೆ (Heavy Rain)';
+      if (c.contains('thunder')) return 'ಗುಡುಗು ಸಹಿತ ಮಳೆ (Thunderstorm)';
+      if (c.contains('rain')) return 'ಮಳೆ (Rain)';
+      if (c.contains('pleasant')) return 'ಹಿತಕರ ವಾತಾವರಣ (Pleasant)';
+      if (c.contains('monsoon')) return 'ಮುಂಗಾರು ಮಳೆ (Monsoon)';
+      if (c.contains('cool')) return 'ಶೀತ ವಾತಾವರಣ (Cool)';
+      if (c.contains('warm')) return 'ಬೆಚ್ಚನೆಯ ಹವಾಮಾನ (Warm)';
+    } else if (lang == 'hi') {
+      if (c.contains('clear')) return 'साफ़ आसमान (Clear)';
+      if (c.contains('partly cloudy')) return 'आंशिक बादल (Partly Cloudy)';
+      if (c.contains('overcast')) return 'बादल छाए (Overcast)';
+      if (c.contains('fog') || c.contains('mist') || c.contains('haze')) return 'कोहरा (Fog)';
+      if (c.contains('drizzle')) return 'बूंदाबांदी (Drizzle)';
+      if (c.contains('shower')) return 'बौछारें (Showers)';
+      if (c.contains('heavy')) return 'भारी बारिश (Heavy Rain)';
+      if (c.contains('thunder')) return 'गरज के साथ बारिश (Thunderstorm)';
+      if (c.contains('rain')) return 'बारिश (Rain)';
+      if (c.contains('pleasant')) return 'सुहावना मौसम (Pleasant)';
+      if (c.contains('monsoon')) return 'मानसूनी बारिश (Monsoon)';
+      if (c.contains('cool')) return 'ठंडा मौसम (Cool)';
+      if (c.contains('warm')) return 'गर्म मौसम (Warm)';
+    }
+    return condition;
   }
 }
 

@@ -590,5 +590,96 @@ void main() {
       final cachedRes = await ai.askAssistant('What is the fertilizer dosage for maize?', language: 'en');
       expect(cachedRes.isCached, isTrue);
     });
+
+    test('WeatherService finds nearest district accurately from GPS coordinates', () {
+      // Coordinates near Mysuru (12.30, 76.64)
+      expect(WeatherService.findNearestDistrict(12.2958, 76.6394), equals('Mysuru'));
+
+      // Coordinates near Bengaluru (12.97, 77.59)
+      expect(WeatherService.findNearestDistrict(12.9716, 77.5946), equals('Bengaluru Urban'));
+
+      // Coordinates near Dharwad / Hubballi (15.45, 75.00)
+      expect(WeatherService.findNearestDistrict(15.4589, 75.0078), equals('Dharwad'));
+
+      // Coordinates near Mangaluru (12.91, 74.85)
+      expect(WeatherService.findNearestDistrict(12.9141, 74.8560), equals('Dakshina Kannada'));
+
+      // Karnataka has all 31 districts
+      expect(WeatherService.allDistricts.length, equals(31));
+    });
+
+    test('WeatherData includes observationTime, current location flag, and coordinates', () {
+      final now = DateTime(2026, 10, 31, 12, 45);
+      final data = WeatherData(
+        tempC: 28.5,
+        humidity: 46.0,
+        rainfall: 0.0,
+        condition: 'Clear sky',
+        city: 'Bengaluru',
+        fetchedAt: now,
+        observationTime: now,
+        windSpeedKmH: 9.0,
+        apparentTempC: 30.1,
+        conditionEmoji: '☀️',
+        source: 'Open-Meteo Live',
+        isCached: false,
+        latitude: 12.9716,
+        longitude: 77.5946,
+        isCurrentLocation: true,
+      );
+
+      final map = data.toMap();
+      expect(map['isCurrentLocation'], isTrue);
+      expect(map['observationTime'], isNotNull);
+      expect(map['latitude'], equals(12.9716));
+      expect(map['longitude'], equals(77.5946));
+
+      final restored = WeatherData.fromMap(map);
+      expect(restored.isCurrentLocation, isTrue);
+      expect(restored.tempC, equals(28.5));
+      expect(restored.humidity, equals(46.0));
+      expect(restored.windSpeedKmH, equals(9.0));
+      expect(restored.rainfall, equals(0.0));
+      expect(restored.observationTime.minute, equals(45));
+    });
+
+    test('AppDateUtils formatTime and formatPresentDateTime work in Kannada, Hindi and English', () {
+      final sample = DateTime(2026, 10, 31, 14, 30); // 2:30 PM, Saturday, Oct 31, 2026
+
+      // English
+      final timeEn = appdate.AppDateUtils.formatTime(sample, 'en');
+      expect(timeEn, equals('2:30 PM'));
+      final dtEn = appdate.AppDateUtils.formatPresentDateTime(sample, 'en');
+      expect(dtEn, contains('Saturday'));
+      expect(dtEn, contains('31 October 2026'));
+      expect(dtEn, contains('2:30 PM'));
+
+      // Kannada
+      final timeKn = appdate.AppDateUtils.formatTime(sample, 'kn');
+      expect(timeKn, contains('2:30'));
+      expect(timeKn, contains('ಅಪರಾಹ್ನ'));
+      final dtKn = appdate.AppDateUtils.formatPresentDateTime(sample, 'kn');
+      expect(dtKn, contains('ಶನಿವಾರ'));
+      expect(dtKn, contains('ಅಕ್ಟೋಬರ್'));
+
+      // Hindi
+      final timeHi = appdate.AppDateUtils.formatTime(sample, 'hi');
+      expect(timeHi, contains('2:30'));
+      expect(timeHi, contains('अपराह्न'));
+      final dtHi = appdate.AppDateUtils.formatPresentDateTime(sample, 'hi');
+      expect(dtHi, contains('शनिवार'));
+      expect(dtHi, contains('अक्टूबर'));
+    });
+
+    test('AppLocalizations translates weather conditions to Kannada and Hindi', () {
+      final l10nKn = AppLocalizations(const Locale('kn'));
+      expect(l10nKn.translateWeatherCondition('Clear sky'), contains('ಸ್ವಚ್ಛ ಆಕಾಶ'));
+      expect(l10nKn.translateWeatherCondition('Partly cloudy'), contains('ಭಾಗಶಃ ಮೋಡ'));
+      expect(l10nKn.translateWeatherCondition('Moderate rain'), contains('ಮಳೆ'));
+
+      final l10nHi = AppLocalizations(const Locale('hi'));
+      expect(l10nHi.translateWeatherCondition('Clear sky'), contains('साफ़ आसमान'));
+      expect(l10nHi.translateWeatherCondition('Partly cloudy'), contains('आंशिक बादल'));
+    });
   });
 }
