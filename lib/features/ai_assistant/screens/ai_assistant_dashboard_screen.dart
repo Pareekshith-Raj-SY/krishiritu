@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/services/ai_assistant_service.dart';
+import '../../../data/services/speech_service.dart';
 import '../../../shared/localization/app_localizations.dart';
 import '../../../app.dart';
 
 class AiAssistantDashboardScreen extends ConsumerStatefulWidget {
-  const AiAssistantDashboardScreen({super.key});
+  final String? initialQuery;
+  const AiAssistantDashboardScreen({super.key, this.initialQuery});
 
   @override
   ConsumerState<AiAssistantDashboardScreen> createState() => _AiAssistantDashboardScreenState();
@@ -50,6 +52,12 @@ class _AiAssistantDashboardScreenState extends ConsumerState<AiAssistantDashboar
         ),
       );
       _initialized = true;
+
+      if (widget.initialQuery != null && widget.initialQuery!.trim().isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleSend(widget.initialQuery!.trim());
+        });
+      }
     }
   }
 
@@ -126,6 +134,264 @@ class _AiAssistantDashboardScreenState extends ConsumerState<AiAssistantDashboar
     });
   }
 
+  void _startLiveVoiceRecognition(BuildContext context, AppLocalizations l10n, String langCode) async {
+    final speechService = SpeechService();
+    String liveText = '';
+    bool isListening = false;
+    StateSetter? modalSetState;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            modalSetState = setModalState;
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.forestGreen.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.mic, color: AppColors.forestGreen, size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isListening ? l10n.t('listening') : l10n.t('say_problem_title'),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.forestGreen,
+                                ),
+                              ),
+                              Text(
+                                langCode == 'kn'
+                                    ? 'ಕನ್ನಡ / English ಧ್ವನಿ ಗುರುತಿಸುವಿಕೆ'
+                                    : langCode == 'hi'
+                                        ? 'हिंदी / English वॉयस सपोर्ट'
+                                        : 'Live Kannada / Hindi / English voice',
+                                style: const TextStyle(fontSize: 12, color: AppColors.textMedium),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: AppColors.textMedium),
+                        onPressed: () async {
+                          await speechService.stopListening();
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  // Animated Pulsing Mic visualizer
+                  GestureDetector(
+                    onTap: () async {
+                      if (isListening) {
+                        await speechService.stopListening();
+                        modalSetState?.call(() => isListening = false);
+                      } else {
+                        final ok = await speechService.startListening(
+                          languageCode: langCode,
+                          onResult: (words) {
+                            modalSetState?.call(() {
+                              liveText = words;
+                            });
+                          },
+                          onDone: () {
+                            modalSetState?.call(() => isListening = false);
+                          },
+                        );
+                        modalSetState?.call(() => isListening = ok);
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isListening ? AppColors.errorRed : AppColors.forestGreen,
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isListening ? AppColors.errorRed : AppColors.forestGreen)
+                                .withValues(alpha: isListening ? 0.45 : 0.25),
+                            blurRadius: isListening ? 24 : 10,
+                            spreadRadius: isListening ? 6 : 2,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        isListening ? Icons.mic : Icons.mic_none,
+                        color: Colors.white,
+                        size: 44,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    isListening
+                        ? l10n.t('speech_listening_hint')
+                        : l10n.t('tap_mic_to_speak'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isListening ? AppColors.forestGreen : AppColors.textMedium,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  // Spoken text display area
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(minHeight: 74, maxHeight: 120),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF6FAF7),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isListening
+                            ? AppColors.forestGreen.withValues(alpha: 0.5)
+                            : Colors.grey.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        liveText.isNotEmpty
+                            ? liveText
+                            : (isListening
+                                ? '...'
+                                : (langCode == 'kn'
+                                    ? 'ನಿಮ್ಮ ಮಾತು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ...'
+                                    : langCode == 'hi'
+                                        ? 'आपकी आवाज यहाँ दिखाई देगी...'
+                                        : 'Your spoken problem will appear here...')),
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          height: 1.4,
+                          fontWeight: liveText.isNotEmpty ? FontWeight.w600 : FontWeight.normal,
+                          color: liveText.isNotEmpty ? AppColors.textDark : AppColors.textLight,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () async {
+                            await speechService.stopListening();
+                            if (ctx.mounted) {
+                              Navigator.pop(ctx);
+                              _showSpokenProblemModal(context, l10n, langCode);
+                            }
+                          },
+                          icon: const Icon(Icons.list_alt, size: 18),
+                          label: Text(
+                            langCode == 'kn' ? 'ಆಯ್ಕೆ ಪಟ್ಟಿ' : langCode == 'hi' ? 'विकल्प सूची' : 'Problem List',
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.forestGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: liveText.trim().isNotEmpty
+                              ? () async {
+                                  await speechService.stopListening();
+                                  if (ctx.mounted) Navigator.pop(ctx);
+                                  _controller.text = liveText.trim();
+                                  _handleSend(liveText.trim());
+                                }
+                              : null,
+                          icon: const Icon(Icons.send_rounded, size: 18),
+                          label: Text(
+                            l10n.t('stop_and_send'),
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    // Initialize & automatically start listening
+    final available = await speechService.initialize();
+    if (!available) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.t('speech_not_available')),
+            backgroundColor: AppColors.earthBrown,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (modalSetState != null) {
+      modalSetState!(() => isListening = true);
+      await speechService.startListening(
+        languageCode: langCode,
+        onResult: (words) {
+          modalSetState?.call(() {
+            liveText = words;
+          });
+        },
+        onDone: () {
+          modalSetState?.call(() => isListening = false);
+        },
+      );
+    }
+  }
+
   void _showSpokenProblemModal(BuildContext context, AppLocalizations l10n, String langCode) {
     showModalBottomSheet(
       context: context,
@@ -185,14 +451,21 @@ class _AiAssistantDashboardScreenState extends ConsumerState<AiAssistantDashboar
               ),
               Row(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.forestGreen.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+                  InkWell(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _startLiveVoiceRecognition(context, l10n, langCode);
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: AppColors.forestGreen.withValues(alpha: 0.14),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.mic, color: AppColors.forestGreen, size: 24),
                     ),
-                    child: const Icon(Icons.mic, color: AppColors.forestGreen, size: 22),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -221,8 +494,48 @@ class _AiAssistantDashboardScreenState extends ConsumerState<AiAssistantDashboar
                 ],
               ),
               const SizedBox(height: 14),
+              // Prominent Tap to Speak button
+              InkWell(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _startLiveVoiceRecognition(context, l10n, langCode);
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.forestGreen, Color(0xFF2E7D32)],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.forestGreen.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.mic, color: Colors.white, size: 22),
+                      const SizedBox(width: 10),
+                      Text(
+                        l10n.t('speak_now'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
               ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.45),
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.40),
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: sampleProblems.length,
@@ -503,11 +816,11 @@ class _AiAssistantDashboardScreenState extends ConsumerState<AiAssistantDashboar
               ),
               child: Row(
                 children: [
-                  // Mic button ("Say Problem")
+                  // Mic button ("Say Problem" - Starts live voice listening)
                   IconButton(
                     tooltip: l10n.t('say_problem'),
                     icon: const Icon(Icons.mic, color: AppColors.forestGreen, size: 24),
-                    onPressed: () => _showSpokenProblemModal(context, l10n, langCode),
+                    onPressed: () => _startLiveVoiceRecognition(context, l10n, langCode),
                   ),
                   Expanded(
                     child: TextField(

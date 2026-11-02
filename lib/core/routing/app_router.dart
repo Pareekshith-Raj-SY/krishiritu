@@ -55,7 +55,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/notifications', builder: (c, s) => const NotificationsScreen()),
           GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
           GoRoute(path: '/farm-profile', builder: (c, s) => const FarmProfileScreen()),
-          GoRoute(path: '/ai-assistant', builder: (c, s) => const AiAssistantDashboardScreen()),
+          GoRoute(path: '/ai-assistant', builder: (c, s) => AiAssistantDashboardScreen(initialQuery: s.extra as String?)),
         ],
       ),
     ],

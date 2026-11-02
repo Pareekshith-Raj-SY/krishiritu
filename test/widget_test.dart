@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +14,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:krishiritu/data/services/weather_service.dart';
 import 'package:krishiritu/data/providers/weather_provider.dart';
 import 'package:krishiritu/data/services/ai_assistant_service.dart';
+import 'package:krishiritu/data/services/speech_service.dart';
+import 'package:krishiritu/data/services/crop_diagnosis_service.dart';
 import 'package:krishiritu/shared/localization/app_localizations.dart';
 
 void main() {
@@ -744,6 +747,61 @@ void main() {
       await container.read(weatherProvider.notifier).setDistrict('Mysuru', forceRefresh: false);
       expect(container.read(weatherProvider).activeDistrict, equals('Mysuru'));
       expect(container.read(weatherProvider).isGpsActive, isFalse);
+    });
+
+    test('SpeechService maps languages to Kannada, Hindi, and English locales', () {
+      final speech = SpeechService();
+      expect(speech.getLocaleForLanguage('kn'), equals('kn_IN'));
+      expect(speech.getLocaleForLanguage('hi'), equals('hi_IN'));
+      expect(speech.getLocaleForLanguage('en'), equals('en_IN'));
+      expect(speech.isListening, isFalse);
+    });
+
+    test('CropDiagnosisService supports major Karnataka crops and weeds', () {
+      expect(CropDiagnosisService.supportedCrops, containsAll([
+        'Tomato', 'Ragi', 'Chilli', 'Paddy', 'Maize', 'Cotton', 'Arecanut', 'Weed',
+      ]));
+    });
+
+    test('CropDiagnosisService diagnoses crop photo with treatments and localizations', () async {
+      final service = CropDiagnosisService();
+      final dummyFile = File('test_tomato_leaf.jpg');
+
+      final result = await service.diagnosePhoto(
+        imageFile: dummyFile,
+        selectedCrop: 'Tomato',
+      );
+
+      expect(result.cropName, equals('Tomato'));
+      expect(result.diseaseName, contains('Leaf Curl'));
+      expect(result.confidencePercent, greaterThanOrEqualTo(90));
+      expect(result.chemicalTreatment, contains('Imidacloprid'));
+      expect(result.organicTreatment, contains('Neem'));
+
+      // Check localization methods
+      expect(result.localizedDisease('kn'), contains('ಟೊಮೆಟೊ'));
+      expect(result.localizedDisease('hi'), contains('टमाटर'));
+      expect(result.localizedChemical('kn'), contains('ಇಮಿಡಾಕ್ಲೋಪ್ರಿಡ್'));
+      expect(result.localizedOrganic('kn'), contains('ಬೇವಿನ'));
+      expect(result.localizedPreventive('kn'), contains('ಕಿತ್ತು'));
+    });
+
+    test('AppLocalizations contains valid keys for voice speech and crop health diagnosis', () {
+      final en = AppLocalizations(const Locale('en'));
+      final kn = AppLocalizations(const Locale('kn'));
+      final hi = AppLocalizations(const Locale('hi'));
+
+      expect(en.t('listening'), equals('Listening...'));
+      expect(kn.t('listening'), contains('ಆಲಿಸಲಾಗುತ್ತಿದೆ'));
+      expect(hi.t('listening'), contains('सुन रहे हैं'));
+
+      expect(en.t('crop_photo_diagnosis'), contains('Photo Agronomy'));
+      expect(kn.t('crop_photo_diagnosis'), contains('ರೋಗ ತಪಾಸಣೆ'));
+      expect(hi.t('crop_photo_diagnosis'), contains('फसल रोग'));
+
+      expect(en.t('chemical_treatment'), contains('Chemical Treatment'));
+      expect(kn.t('chemical_treatment'), contains('ಕೀಟನಾಶಕ'));
+      expect(hi.t('chemical_treatment'), contains('रासायनिक'));
     });
   });
 }

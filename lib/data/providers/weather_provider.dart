@@ -68,6 +68,7 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
   Future<void> _initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
       final savedDistrict = prefs.getString(_keyDistrict);
       final isGps = prefs.getBool(_keyIsGps) ?? false;
       final lat = prefs.getDouble(_keyLat);
@@ -75,6 +76,7 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
       final displayName = prefs.getString(_keyDisplayName);
 
       if (isGps && lat != null && lon != null) {
+        if (!mounted) return;
         state = state.copyWith(
           activeDistrict: savedDistrict ?? 'Bengaluru',
           locationDisplayName: displayName ?? savedDistrict ?? 'Bengaluru',
@@ -88,6 +90,7 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
       }
 
       if (savedDistrict != null && savedDistrict.isNotEmpty) {
+        if (!mounted) return;
         state = state.copyWith(
           activeDistrict: savedDistrict,
           locationDisplayName: displayName ?? savedDistrict,
@@ -101,6 +104,7 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
       // Check farm profile
       final farm = _ref.read(farmProvider);
       if (farm != null && farm.district.isNotEmpty) {
+        if (!mounted) return;
         state = state.copyWith(
           activeDistrict: farm.district,
           locationDisplayName: farm.district,
@@ -113,6 +117,7 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
 
       // Try GPS first before falling back to default
       final gpsSuccess = await detectGps(silently: true);
+      if (!mounted) return;
       if (!gpsSuccess) {
         // Fall back to Bengaluru
         state = state.copyWith(
@@ -124,16 +129,20 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
         await _fetchDistrictWeather('Bengaluru', forceRefresh: false);
       }
     } catch (_) {
-      state = state.copyWith(isLoading: false);
+      if (mounted) {
+        state = state.copyWith(isLoading: false);
+      }
     }
   }
 
   /// Detect device GPS location and update weather
   Future<bool> detectGps({bool silently = false}) async {
+    if (!mounted) return false;
     state = state.copyWith(isDetectingGps: true, isLoading: true, errorMessage: null);
 
     try {
       final gps = await _service.getCurrentGpsLocation();
+      if (!mounted) return false;
       if (gps != null) {
         final nearestDistrict = WeatherService.findNearestDistrict(gps.lat, gps.lon);
         final displayName = gps.locationName;
@@ -157,14 +166,20 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
           await prefs.setString(_keyDisplayName, displayName);
         } catch (_) {}
 
-        await _fetchCoordinatesWeather(gps.lat, gps.lon, displayName, forceRefresh: true);
+        if (mounted) {
+          await _fetchCoordinatesWeather(gps.lat, gps.lon, displayName, forceRefresh: true);
+        }
         return true;
       } else {
-        state = state.copyWith(isDetectingGps: false, isLoading: false);
+        if (mounted) {
+          state = state.copyWith(isDetectingGps: false, isLoading: false);
+        }
         return false;
       }
     } catch (e) {
-      state = state.copyWith(isDetectingGps: false, isLoading: false, errorMessage: e.toString());
+      if (mounted) {
+        state = state.copyWith(isDetectingGps: false, isLoading: false, errorMessage: e.toString());
+      }
       return false;
     }
   }
@@ -214,8 +229,10 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
   Future<void> _fetchDistrictWeather(String district, {required bool forceRefresh}) async {
     try {
       final data = await _service.getWeather(district, forceRefresh: forceRefresh);
+      if (!mounted) return;
       state = state.copyWith(weather: data, isLoading: false, errorMessage: null);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
@@ -228,8 +245,10 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
         locationDisplayName: displayName,
         forceRefresh: forceRefresh,
       );
+      if (!mounted) return;
       state = state.copyWith(weather: data, isLoading: false, errorMessage: null);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
