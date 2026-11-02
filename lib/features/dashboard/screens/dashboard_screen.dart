@@ -159,6 +159,8 @@ class DashboardScreen extends ConsumerWidget {
                   _seasonCard(context, l10n),
                   const SizedBox(height: 12),
                   const DashboardWeatherCard(),
+                  const SizedBox(height: 12),
+                  _aiAssistantDashboardCard(context, l10n),
                   const SizedBox(height: 16),
                   _sectionTitle(l10n.t('quick_actions')),
                   const SizedBox(height: 10),
@@ -169,7 +171,7 @@ class DashboardScreen extends ConsumerWidget {
                   _sectionTitle(l10n.t('explore_features')),
                   const SizedBox(height: 10),
                   _featureGrid(context, l10n),
-                  const SizedBox(height: 90),
+                  const SizedBox(height: 110),
                 ],
               ),
             ),
@@ -359,13 +361,167 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _sectionTitle(String t) => Text(
-        t,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w800,
-          color: AppColors.forestGreen,
-          shadows: [Shadow(color: Colors.white, blurRadius: 3)],
+  Widget _aiAssistantDashboardCard(BuildContext context, AppLocalizations l10n) {
+    return GestureDetector(
+      onTap: () => context.push('/ai-assistant'),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.forestGreen.withValues(alpha: 0.25), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: AppColors.forestGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.auto_awesome, color: AppColors.forestGreen, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.t('ask_ai_home_title'),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.forestGreen,
+                        ),
+                      ),
+                      Text(
+                        l10n.t('ask_ai_home_sub'),
+                        style: const TextStyle(fontSize: 11, color: AppColors.textMedium),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.leafGreen.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.leafGreen.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check_circle, size: 12, color: AppColors.leafGreen),
+                      const SizedBox(width: 4),
+                      Text(
+                        l10n.t('configured'),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.forestGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.textLight),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _symptomChip('🍂', l10n.t('problem_yellow_leaves')),
+                  const SizedBox(width: 6),
+                  _symptomChip('🐛', l10n.t('problem_pests')),
+                  const SizedBox(width: 6),
+                  _symptomChip('🥀', l10n.t('problem_wilting')),
+                  const SizedBox(width: 6),
+                  _symptomChip('🧪', l10n.t('problem_fertilizer')),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.forestGreen.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.mic, size: 14, color: AppColors.forestGreen),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l10n.t('say_problem_hint'),
+                      style: const TextStyle(fontSize: 11, color: AppColors.forestGreen, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    l10n.t('open_ai_assistant'),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.forestGreen),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _symptomChip(String emoji, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F7F4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.forestGreen.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textDark),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String t) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          t,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: AppColors.forestGreen,
+          ),
         ),
       );
 

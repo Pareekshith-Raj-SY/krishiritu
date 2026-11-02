@@ -21,6 +21,7 @@ import '../../features/season_history/screens/season_history_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/farms/screens/farm_profile_screen.dart';
+import '../../features/ai_assistant/screens/ai_assistant_dashboard_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -54,6 +55,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/notifications', builder: (c, s) => const NotificationsScreen()),
           GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
           GoRoute(path: '/farm-profile', builder: (c, s) => const FarmProfileScreen()),
+          GoRoute(path: '/ai-assistant', builder: (c, s) => const AiAssistantDashboardScreen()),
         ],
       ),
     ],

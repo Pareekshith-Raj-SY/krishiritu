@@ -9,7 +9,9 @@ import 'package:krishiritu/core/utils/date_utils.dart' as appdate;
 import 'package:krishiritu/core/config/app_config.dart';
 import 'package:krishiritu/data/services/auth_service.dart';
 import 'package:krishiritu/data/services/groq_crop_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:krishiritu/data/services/weather_service.dart';
+import 'package:krishiritu/data/providers/weather_provider.dart';
 import 'package:krishiritu/data/services/ai_assistant_service.dart';
 import 'package:krishiritu/shared/localization/app_localizations.dart';
 
@@ -692,6 +694,56 @@ void main() {
       final l10nHi = AppLocalizations(const Locale('hi'));
       expect(l10nHi.translateWeatherCondition('Clear sky'), contains('साफ़ आसमान'));
       expect(l10nHi.translateWeatherCondition('Partly cloudy'), contains('आंशिक बादल'));
+    });
+
+    test('AppLocalizations translates view_details and AI Assistant strings', () {
+      final l10nEn = AppLocalizations(const Locale('en'));
+      expect(l10nEn.t('view_details'), equals('Full Forecast →'));
+      expect(l10nEn.t('ai_dashboard_title'), contains('AI Assistant'));
+
+      final l10nKn = AppLocalizations(const Locale('kn'));
+      expect(l10nKn.t('view_details'), contains('ಪೂರ್ಣ'));
+      expect(l10nKn.t('ai_dashboard_title'), contains('ಸಹಾಯಕ'));
+
+      final l10nHi = AppLocalizations(const Locale('hi'));
+      expect(l10nHi.t('view_details'), contains('पूरा'));
+      expect(l10nHi.t('ai_dashboard_title'), contains('सहायक'));
+    });
+
+    test('AiAssistantService handles greetings, vegetable diseases, organic farming and schemes', () async {
+      final ai = AiAssistantService();
+
+      // Greetings
+      final greetingEn = await ai.askAssistant('Hello', language: 'en');
+      expect(greetingEn.answer, contains('Namaskara'));
+
+      final greetingKn = await ai.askAssistant('ನಮಸ್ಕಾರ', language: 'kn');
+      expect(greetingKn.answer, contains('ನಮಸ್ಕಾರ'));
+
+      // Vegetables
+      final tomato = await ai.askAssistant('Tomato leaf curl remedy', language: 'en');
+      expect(tomato.answer, contains('Tomato'));
+
+      // Organic Farming
+      final organic = await ai.askAssistant('Jeevamrutha preparation', language: 'en');
+      expect(organic.answer, contains('Jeevamrutha'));
+
+      // Schemes
+      final schemes = await ai.askAssistant('PM Kisan subsidy', language: 'en');
+      expect(schemes.answer, contains('PM-KISAN'));
+    });
+
+    test('weatherProvider initializes and allows district updates', () async {
+      SharedPreferences.setMockInitialValues({});
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final state = container.read(weatherProvider);
+      expect(state.activeDistrict, isNotEmpty);
+
+      await container.read(weatherProvider.notifier).setDistrict('Mysuru', forceRefresh: false);
+      expect(container.read(weatherProvider).activeDistrict, equals('Mysuru'));
+      expect(container.read(weatherProvider).isGpsActive, isFalse);
     });
   });
 }

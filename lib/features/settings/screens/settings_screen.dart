@@ -6,7 +6,6 @@ import '../../../core/config/app_config.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../shared/localization/app_localizations.dart';
 import '../../farms/providers/farm_provider.dart';
-import '../widgets/ai_assistant_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -86,7 +85,7 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: AppConfig.hasAI ? l10n.t('configured') : l10n.t('add_key_env'),
               trailing: Icon(AppConfig.hasAI ? Icons.check_circle : Icons.warning_amber,
                   color: AppConfig.hasAI ? AppColors.leafGreen : AppColors.warmAmber),
-              onTap: () => AiAssistantSheet.show(context),
+              onTap: () => context.push('/ai-assistant'),
             ),
             _SettingsTile(
               icon: Icons.storage,

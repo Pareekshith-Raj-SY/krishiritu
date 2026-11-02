@@ -20,7 +20,8 @@ class MainShell extends ConsumerWidget {
       return 2;
     }
     if (location.startsWith('/weather') || location.startsWith('/budget') ||
-        location.startsWith('/services') || location.startsWith('/crop-health')) {
+        location.startsWith('/services') || location.startsWith('/crop-health') ||
+        location.startsWith('/ai-assistant')) {
       return 3;
     }
     if (location.startsWith('/settings') || location.startsWith('/notifications') ||

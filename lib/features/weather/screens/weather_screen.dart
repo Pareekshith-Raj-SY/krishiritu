@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../data/services/weather_service.dart';
+import '../../../data/providers/weather_provider.dart';
 import '../../../shared/localization/app_localizations.dart';
 import '../../../app.dart';
 import '../../farms/providers/farm_provider.dart';
@@ -31,11 +32,40 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initWeather();
+      final wp = ref.read(weatherProvider);
+      if (wp.weather != null) {
+        setState(() {
+          _weather = wp.weather;
+          _isLoading = false;
+          _activeDistrict = wp.activeDistrict;
+          _activeLocationName = wp.locationDisplayName;
+          _isGpsActive = wp.isGpsActive;
+          _activeLat = wp.activeLat;
+          _activeLon = wp.activeLon;
+        });
+      } else {
+        _initWeather();
+      }
     });
   }
 
   Future<void> _initWeather() async {
+    final wp = ref.read(weatherProvider);
+    if (wp.weather != null) {
+      if (mounted) {
+        setState(() {
+          _weather = wp.weather;
+          _isLoading = false;
+          _activeDistrict = wp.activeDistrict;
+          _activeLocationName = wp.locationDisplayName;
+          _isGpsActive = wp.isGpsActive;
+          _activeLat = wp.activeLat;
+          _activeLon = wp.activeLon;
+        });
+      }
+      return;
+    }
+
     final farm = ref.read(farmProvider);
     final fallbackDistrict = farm?.district ?? 'Bengaluru';
 
@@ -72,6 +102,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             _isLoading = false;
           });
         }
+        ref.read(weatherProvider.notifier).detectGps();
         return;
       }
     } catch (_) {}
@@ -106,6 +137,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
           _isLoading = false;
         });
       }
+      ref.read(weatherProvider.notifier).setDistrict(district, forceRefresh: forceRefresh);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -149,6 +181,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             _weather = data;
             _isLoading = false;
           });
+          ref.read(weatherProvider.notifier).detectGps();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('📍 ${l10n.t('gps_detected')}: ${gps.locationName}'),

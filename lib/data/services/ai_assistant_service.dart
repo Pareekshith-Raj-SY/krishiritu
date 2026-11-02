@@ -24,7 +24,7 @@ class AiAssistantService {
   static final Map<String, String> _memoryCache = {};
   static final Map<String, Future<AiAdviceResponse>> _pending = {};
   static DateTime? _lastApiCallTime;
-  static const Duration _minCallCooldown = Duration(milliseconds: 2000);
+  static const Duration _minCallCooldown = Duration(milliseconds: 1500);
 
   /// Quick suggestions and common crop problems for farmers
   static const List<Map<String, String>> quickPrompts = [
@@ -86,6 +86,29 @@ class AiAssistantService {
     },
   ];
 
+  static Future<void> saveApiKey(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('groq_api_key', key.trim());
+    } catch (_) {}
+  }
+
+  static Future<String> getSavedApiKey() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('groq_api_key') ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  static Future<void> clearApiKey() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('groq_api_key');
+    } catch (_) {}
+  }
+
   /// Ask the AI Agricultural Assistant with complete rate-limit safety:
   /// 1. Fast in-memory cache lookup
   /// 2. SharedPreferences disk cache lookup
@@ -96,8 +119,13 @@ class AiAssistantService {
   Future<AiAdviceResponse> askAssistant(String question, {String language = 'en'}) async {
     final cleanQuery = question.trim();
     if (cleanQuery.isEmpty) {
-      return const AiAdviceResponse(
-        answer: 'Please enter your farming question or choose one of the topics above.',
+      final emptyMsg = language == 'kn'
+          ? 'ದಯವಿಟ್ಟು ನಿಮ್ಮ ಕೃಷಿ ಪ್ರಶ್ನೆಯನ್ನು ನಮೂದಿಸಿ ಅಥವಾ ಮೇಲಿನ ವಿಷಯಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ.'
+          : language == 'hi'
+              ? 'कृपया अपनी कृषि समस्या लिखें या ऊपर दिए गए विषयों में से चुनें।'
+              : 'Please enter your farming question or choose one of the topics above.';
+      return AiAdviceResponse(
+        answer: emptyMsg,
         source: 'KrishiRitu Guide',
       );
     }
@@ -227,7 +255,40 @@ class AiAssistantService {
   }
 
   String _synthesizeAgronomyAdvice(String query, String language) {
-    final q = query.toLowerCase();
+    final q = query.toLowerCase().trim();
+
+    // 0. Greetings & App Assistant Intro
+    if (q == 'hi' || q == 'hello' || q == 'hey' || q == 'namaskara' || q == 'namaste' ||
+        q.contains('who are you') || q.contains('ಯಾರು') || q.contains('ನೀವು ಯಾರು') ||
+        q.contains('help') || q.contains('ಸಹಾಯ') || q.contains('मदद') || q.contains('नमस्ते') || q.contains('ನಮಸ್ಕಾರ')) {
+      if (language == 'kn') {
+        return '🌾 **ನಮಸ್ಕಾರ, ರೈತ ಮಿತ್ರರೇ!** 🙏\n\n'
+            'ನಾನು ನಿಮ್ಮ ಕೃಷಿಋತು AI ಕೃಷಿ ಸಲಹೆಗಾರ. ನಿಮ್ಮ ಬೆಳೆಗೆ ಸಂಬಂಧಿಸಿದ ಯಾವುದೇ ಸಮಸ್ಯೆಗೆ ನಾನು ತ್ವರಿತ ಪರಿಹಾರ ನೀಡಬಲ್ಲೆ:\n\n'
+            '• **ಎಲೆ ಹಳದಿ ರೋಗ ಮತ್ತು ಪೋಷಕಾಂಶ ಕೊರತೆ**\n'
+            '• **ಕೀಟ, ಹುಳು ಮತ್ತು ರೋಗ ನಿಯಂತ್ರಣ (ಔಷಧ ಪ್ರಮಾಣ)**\n'
+            '• **ರಸಗೊಬ್ಬರ (NPK) ಮತ್ತು ಸಾವಯವ ಜೀವಾಮೃತ ಬಳಕೆ**\n'
+            '• **ಹನಿ ನೀರಾವರಿ ಮತ್ತು ಪ್ರಸ್ತುತ ಋತುವಿನ ಬೆಳೆಗಳು**\n'
+            '• **ಸರ್ಕಾರಿ ಸಬ್ಸಿಡಿ ಮತ್ತು ರೈತ ಯೋಜನೆಗಳು**\n\n'
+            'ನಿಮ್ಮ ಬೆಳೆಯ ರೋಗಲಕ್ಷಣವನ್ನು ಕೆಳಗೆ ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಧ್ವನಿ ಮೂಲಕ ಹೇಳಿ!';
+      } else if (language == 'hi') {
+        return '🌾 **नमस्ते, किसान भाई!** 🙏\n\n'
+            'मैं आपका कृषिऋतु AI कृषि सलाहकार हूँ। मैं आपकी फसल से जुड़ी हर समस्या का तुरंत समाधान दे सकता हूँ:\n\n'
+            '• **पत्तियों का पीलापन और पोषण प्रबंधन**\n'
+            '• **कीट व इल्ली नियंत्रण (कीटनाशक दवा और सही मात्रा)**\n'
+            '• **उर्वरक (NPK) और जैविक खाद (जीवामृत)**\n'
+            '• **ड्रिप सिंचाई और मौसम अनुसार सर्वोत्तम फसलें**\n'
+            '• **सरकारी अनुदान और किसान कल्याण योजनाएं**\n\n'
+            'अपनी फसल का लक्षण नीचे लिखें या बोलकर समाधान पूछें!';
+      }
+      return '🌾 **Namaskara & Welcome, Farmer!** 🙏\n\n'
+          'I am your KrishiRitu AI Agricultural Advisor. Ask me anything about your farm:\n\n'
+          '• **Leaf yellowing & nutrient deficiencies**\n'
+          '• **Pest, caterpillar & disease diagnosis with exact spray dosages**\n'
+          '• **Fertilizer scheduling (NPK) & Organic Jeevamrutha**\n'
+          '• **Water conservation & Seasonal crop suitability**\n'
+          '• **Government subsidies (PM-KISAN, Raitha Siri, Krishi Bhagya)**\n\n'
+          'Type your query below or tap any of the quick symptom chips to get started!';
+    }
 
     // 1. Yellowing leaves / Chlorosis / Nutrient deficiency
     if (q.contains('yellow') || q.contains('chlorosis') || q.contains('pale') ||
@@ -255,7 +316,7 @@ class AiAssistantService {
     // 2. Wilting / Root Rot / Damping off / Drying
     if (q.contains('wilt') || q.contains('root rot') || q.contains('damping') || q.contains('collar rot') ||
         q.contains('dry') || q.contains('dying') || q.contains('droop') ||
-        q.contains('ಒಣಗ') || q.contains('ಕೊಳೆತ') || q.contains('ಬುಡ ಕೊಳೆತ') || q.contains('बाड़') ||
+        q.contains('ಒಣಗ') || q.contains('ಕೊಳೆತ') || q.contains('ಬುಡ ಕೊಳೆತ') || q.contains('ಬಾಡು') ||
         q.contains('सूख') || q.contains('मुरझा') || q.contains('जड़ सड़न') || q.contains('गलन')) {
       if (language == 'kn') {
         return '🥀 **ಗಿಡ ಒಣಗುವುದು ಮತ್ತು ಬುಡ ಕೊಳೆತ ರೋಗ ನಿರ್ವಹಣೆ:**\n\n'
@@ -295,8 +356,8 @@ class AiAssistantService {
             '• **मकड़ी (Mites):** प्रोपरगाइट 57EC (2 मिली/लीटर) या घुलनशील सल्फर (3 ग्राम/लीटर) छिड़कें।\n'
             '• **पीले/नीले ट्रैप:** खेत में 15 पीले व नीले चिपचिपे ट्रैप लगाएं और 10,000 ppm नीम तेल (2-3 मिली/लीटर) का छिड़काव करें।';
       }
-      return '🦟 **Sucking Pests & Leaf Curl Virus Advisory:**\n\n'
-          '• **Symptoms:** Leaves cupping upwards (thrips) or downwards (mites), wrinkled puckered leaves, and stunted terminal shoots.\n'
+      return '🦟 **Sucking Pests & Leaf Curl Virus Advisory (Tomato, Chilli, Cotton):**\n\n'
+          '• **Symptoms in Tomato & Vegetables:** Leaves cupping upwards (thrips) or downwards (mites), wrinkled puckered leaves, and stunted terminal shoots.\n'
           '• **Chemical Spray:** Spray Imidacloprid 17.8SL @ 0.5 ml/L or Diafenthiuron 50WP @ 1 g/L for thrips and whiteflies.\n'
           '• **Mite Control:** For spider mites, apply Propargite 57EC @ 2 ml/L or Wettable Sulphur 80WP @ 3 g/L.\n'
           '• **Physical & Bio-Controls:** Erect 15 yellow and blue sticky traps per acre; spray Neem oil 10,000 ppm (3 ml/L) weekly as a deterrent.';
@@ -344,23 +405,41 @@ class AiAssistantService {
           '• **Cultural Hygiene:** Remove badly infected lower foliage and avoid overhead sprinkler watering in late evenings.';
     }
 
-    // 6. Arecanut / Betelnut issues (Koleroga, Mahali)
+    // 6. Arecanut & Coconut Plantation Issues
     if (q.contains('areca') || q.contains('betel') || q.contains('koleroga') || q.contains('mahali') ||
-        q.contains('ಅಡಿಕೆ') || q.contains('ಕೊಳೆ ರೋಗ') || q.contains('ಸುಪಾರಿ') || q.contains('सुपारी')) {
+        q.contains('coconut') || q.contains('ತೆಂಗು') || q.contains('ಅಡಿಕೆ') || q.contains('ಕೊಳೆ ರೋಗ') || q.contains('ಸುಪಾರಿ') || q.contains('सुपारी')) {
       if (language == 'kn') {
-        return '🌴 **ಅಡಿಕೆ ಕೊಳೆ ರೋಗ (ಮಹಾಲಿ) ಮತ್ತು ಹಳದಿ ಎಲೆ ರೋಗ ನಿರ್ವಹಣೆ:**\n\n'
-            '• **ಕೊಳೆ ರೋಗ (Koleroga):** ಮಳೆಗಾಲದ ಆರಂಭಕ್ಕೆ ಮುನ್ನ ಗೊನೆಗಳಿಗೆ ಶೇ. 1 ರ ಬೋರ್ಡೋ ದ್ರಾವಣ (100 ಲೀಟರ್ ನೀರಿಗೆ 1 ಕೆಜಿ ಮೈಲುತುತ್ತ + 1 ಕೆಜಿ ಸುಣ್ಣ) ಸಿಂಪಡಿಸಿ ಅಥವಾ ಪಾಲಿಥಿನ್ ಹೊದಿಕೆ (ಕೊಟ್ಟೆ) ಕಟ್ಟಿ.\n'
-            '• **ರೋಗ ಮುಂದುವರಿದರೆ:** ಮೆಟಲಾಕ್ಸಿಲ್ + ಮ್ಯಾಂಕೋಜೆಬ್ (ರಿಡೋಮಿಲ್ 2 ಗ್ರಾಂ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
-            '• **ಹಳದಿ ಎಲೆ ರೋಗ:** ಮಣ್ಣಿಗೆ ಪ್ರತಿ ಗಿಡಕ್ಕೆ 15 ಕೆಜಿ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ, 100 ಗ್ರಾಂ ಬೋರಾಕ್ಸ್ ಮತ್ತು ಹನಿ ನೀರಾವರಿ ಒದಗಿಸಿ.';
+        return '🌴 **ಅಡಿಕೆ ಮತ್ತು ತೆಂಗು ರೋಗ ನಿರ್ವಹಣೆ:**\n\n'
+            '• **ಅಡಿಕೆ ಕೊಳೆ ರೋಗ (ಮಹಾಲಿ):** ಮಳೆಗಾಲಕ್ಕೆ ಮುನ್ನ ಗೊನೆಗಳಿಗೆ ಶೇ. 1 ರ ಬೋರ್ಡೋ ದ್ರಾವಣ ಸಿಂಪಡಿಸಿ ಅಥವಾ ಪಾಲಿಥಿನ್ ಹೊದಿಕೆ (ಕೊಟ್ಟೆ) ಕಟ್ಟಿ.\n'
+            '• **ಅಡಿಕೆ ಹಳದಿ ಎಲೆ ರೋಗ:** ಪ್ರತಿ ಗಿಡಕ್ಕೆ 15 ಕೆಜಿ ಕೊಟ್ಟಿಗೆ ಗೊಬ್ಬರ, 100 ಗ್ರಾಂ ಬೋರಾಕ್ಸ್ ಮತ್ತು ಹನಿ ನೀರಾವರಿ ಒದಗಿಸಿ.\n'
+            '• **ತೆಂಗಿನ ಕಪ್ಪು ತಲೆ ಹುಳು:** ಪರೋಪಜೀವಿ ಕಣಜಗಳನ್ನು ಬಿಡುಗಡೆ ಮಾಡಿ ಮತ್ತು ಬೇವಿನ ಎಣ್ಣೆ ಸಿಂಪಡಿಸಿ.';
       }
-      return '🌴 **Arecanut Koleroga (Fruit Rot) Management:**\n\n'
-          '• **Monsoon Protection:** Spray 1% Bordeaux mixture thoroughly onto all bunches before heavy monsoon showers.\n'
-          '• **Protective Covering:** Tie waterproof polythene covers (Kotte) to bunches to prevent Phytophthora spore rain-wash.\n'
-          '• **Systemic Spray:** In high disease pressure, spray Metalaxyl + Mancozeb (Ridomil Gold @ 2 g/L).\n'
-          '• **Soil Drainage:** Clean plantation deep drainage channels to prevent water stagnation.';
+      return '🌴 **Arecanut & Coconut Plantation Advisory:**\n\n'
+          '• **Koleroga (Fruit Rot):** Spray 1% Bordeaux mixture on all bunches before heavy monsoon showers.\n'
+          '• **Protective Covering:** Tie waterproof polythene sheets (Kotte) to bunches to prevent rain wash-off.\n'
+          '• **Yellow Leaf Disease:** Apply 15 kg FYM, 100g Borax and ensure deep plantation drainage.\n'
+          '• **Coconut Pests:** Release Goniozus parasitoid wasps for black-headed caterpillar suppression.';
     }
 
-    // 7. Weed control / Herbicides
+    // 7. Vegetables: Tomato, Chilli, Onion, Potato, Ginger
+    if (q.contains('tomato') || q.contains('chilli') || q.contains('onion') || q.contains('potato') ||
+        q.contains('ginger') || q.contains('ಟೊಮೆಟೊ') || q.contains('ಮೆಣಸಿನಕಾಯಿ') || q.contains('ಈರುಳ್ಳಿ') ||
+        q.contains('ಆಲೂಗಡ್ಡೆ') || q.contains('ಶುಂಠಿ') || q.contains('टमाटर') || q.contains('मिर्च') || q.contains('प्याज')) {
+      if (language == 'kn') {
+        return '🍅 **ತರಕಾರಿ ಬೆಳೆಗಳ (ಟೊಮೆಟೊ, ಮೆಣಸಿನಕಾಯಿ, ಈರುಳ್ಳಿ, ಶುಂಠಿ) ಸಂರಕ್ಷಣೆ:**\n\n'
+            '• **ಟೊಮೆಟೊ ಮುದುಡು ರೋಗ:** ಬಿಳಿ ನೊಣ ನಿಯಂತ್ರಣಕ್ಕೆ ಅಸಿಟಾಮಿಪ್ರಿಡ್ (0.3 ಗ್ರಾಂ/ಲೀಟರ್) ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಈರುಳ್ಳಿ ನೇರಳೆ ಮಚ್ಚೆ ರೋಗ:** ಮ್ಯಾಂಕೋಜೆಬ್ (2.5 ಗ್ರಾಂ/ಲೀಟರ್) ಜೊತೆಗೆ ಅಂಟು (ಸ್ಪ್ರೆಡ್ಡರ್) ಬೆರೆಸಿ ಸಿಂಪಡಿಸಿ.\n'
+            '• **ಶುಂಠಿ ಗಡ್ಡೆ ಕೊಳೆ ರೋಗ:** ಮೆಟಲಾಕ್ಸಿಲ್ + ಮ್ಯಾಂಕೋಜೆಬ್ (2 ಗ್ರಾಂ/ಲೀಟರ್) ದ್ರಾವಣದಿಂದ ಬುಡ ತೊಯ್ಯಿಸಿ (Drenching).\n'
+            '• **ಮೆಣಸಿನಕಾಯಿ ಥ್ರಿಪ್ಸ್:** ಫಿಪ್ರೋನಿಲ್ 5SC (1.5 ಮಿಲಿ/ಲೀಟರ್) ಅಥವಾ ಡೈಫೆಂಥಿಯುರಾನ್ ಸಿಂಪಡಿಸಿ.';
+      }
+      return '🍅 **Vegetable Crops (Tomato, Chilli, Onion, Ginger) Protection:**\n\n'
+          '• **Tomato Leaf Curl:** Suppress whiteflies with Acetamiprid 20SP @ 0.3 g/L or Imidacloprid @ 0.5 ml/L.\n'
+          '• **Onion Purple Blotch:** Spray Mancozeb 75WP @ 2.5 g/L with a wetting agent/sticker.\n'
+          '• **Ginger Rhizome Rot:** Drench root beds with Metalaxyl + Mancozeb (Ridomil Gold @ 2 g/L).\n'
+          '• **Chilli Thrips & Mites:** Alternate Fipronil 5SC @ 1.5 ml/L with Diafenthiuron 50WP @ 1 g/L.';
+    }
+
+    // 8. Weed control / Herbicides
     if (q.contains('weed') || q.contains('parthenium') || q.contains('herbicide') ||
         q.contains('ಕಳೆ') || q.contains('ಕಳೆನಾಶಕ') || q.contains('ಹುಲ್ಲು') || q.contains('खरपतवार')) {
       if (language == 'kn') {
@@ -377,7 +456,7 @@ class AiAssistantService {
           '• **Organic Control:** Mulch using paddy straw or 25-micron mulch film to suppress sunlight and weed germination.';
     }
 
-    // 8. Fertilizer / NPK / Dosage
+    // 9. Fertilizer / NPK / Dosage / Urea / DAP
     if (q.contains('fertilizer') || q.contains('npk') || q.contains('urea') || q.contains('dap') ||
         q.contains('potash') || q.contains('dose') || q.contains('dosage') ||
         q.contains('ಗೊಬ್ಬರ') || q.contains('ಖಾತ') || q.contains('ರಸಗೊಬ್ಬರ') || q.contains('ಉರ್ವರಕ') || q.contains('उर्वरक') || q.contains('खाद')) {
@@ -401,10 +480,28 @@ class AiAssistantService {
           '• **Micro-Nutrients:** Apply 10 kg Zinc Sulphate and 5 kg Borax per acre as basal soil amendment.';
     }
 
-    // 9. Drip / Irrigation / Water saving
+    // 10. Organic Farming: Jeevamrutha, Beejamrutha, Panchagavya, Vermicompost
+    if (q.contains('organic') || q.contains('jeevamrutha') || q.contains('panchagavya') ||
+        q.contains('compost') || q.contains('ಸಾವಯವ') || q.contains('ಜೀವಾಮೃತ') || q.contains('ಪಂಚಗವ್ಯ') ||
+        q.contains('ಎರೆಹುಳು') || q.contains('जैविक') || q.contains('जीवामृत')) {
+      if (language == 'kn') {
+        return '🌱 **ಸಾವಯವ ಕೃಷಿ ಮತ್ತು ಜೀವಾಮೃತ ತಯಾರಿಕೆ:**\n\n'
+            '• **ಜೀವಾಮೃತ ತಯಾರಿಕೆ:** 200 ಲೀಟರ್ ನೀರಿಗೆ 10 ಕೆಜಿ ದೇಸಿ ಹಸುವಿನ ಸಗಣಿ + 10 ಲೀಟರ್ ಗೋಮೂತ್ರ + 2 ಕೆಜಿ ಬೆಲ್ಲ + 2 ಕೆಜಿ ಕಾಳುಹಿಟ್ಟು + ಒಂದು ಹಿಡಿ ಬದುವಿನ ಮಣ್ಣು ಬೆರೆಸಿ 3 ದಿನ ನೆರಳಿನಲ್ಲಿ ಇಡಿ.\n'
+            '• **ಬಳಕೆ:** ಎಕರೆಗೆ 200 ಲೀಟರ್ ಜೀವಾಮೃತವನ್ನು ತಿಂಗಳಿಗೊಮ್ಮೆ ಹನಿ ನೀರಾವರಿ ಅಥವಾ ಕಾಲುವೆ ನೀರಿನೊಂದಿಗೆ ನೀಡಿ.\n'
+            '• **ಬೀಜಾಮೃತ:** ಬಿತ್ತನೆ ಬೀಜಗಳಿಗೆ ಬೀಜಾಮೃತ ಉಪಚಾರ ಮಾಡುವುದರಿಂದ ಬೇರು ಕೊಳೆತ ಮತ್ತು ಶಿಲೀಂಧ್ರ ರೋಗ ಬರುವುದಿಲ್ಲ.\n'
+            '• **ಕೀಟನಾಶಕ:** ಬೇವಿನ ಬೀಜದ ಕಷಾಯ (NSKE 5%) ಅಥವಾ ಅಗ್ನಿಯಸ್ತ್ರ ಸಿಂಪಡಿಸಿ ಕೀಟಗಳನ್ನು ನಿಯಂತ್ರಿಸಿ.';
+      }
+      return '🌱 **Organic Farming & Jeevamrutha Formulation:**\n\n'
+          '• **Jeevamrutha Recipe:** Mix 10 kg native cow dung + 10 L cow urine + 2 kg jaggery + 2 kg pulse flour + handful of virgin soil in 200 L water. Ferment for 48–72 hours in shade.\n'
+          '• **Application:** Supply 200 L per acre through drip irrigation or flooding twice a month to boost microflora.\n'
+          '• **Seed Inoculation:** Treat seeds with Beejamrutha to suppress soil-borne fungal pathogens.\n'
+          '• **Bio-Repellent:** Spray 5% Neem Seed Kernel Extract (NSKE) or Agniastra for natural insect defense.';
+    }
+
+    // 11. Drip / Irrigation / Water saving
     if (q.contains('water') || q.contains('drip') || q.contains('irrigation') || q.contains('borewell') ||
         q.contains('drought') || q.contains('ನೀರು') || q.contains('ನೀರಾವರಿ') || q.contains('ಬರ') ||
-        q.contains('ಸಿಂಚಾಯಿ') || q.contains('सिंचाई') || q.contains('पानी') || q.contains('सूखा')) {
+        q.contains('सिंचाई') || q.contains('पानी') || q.contains('सूखा')) {
       if (language == 'kn') {
         return '💧 **ಹನಿ ನೀರಾವರಿ ಮತ್ತು ನೀರಿನ ನಿರ್ವಹಣೆ:**\n\n'
             '• **ಹನಿ ನೀರಾವರಿ (Drip):** ಶೇ. 45-60 ರಷ್ಟು ನೀರನ್ನು ಉಳಿಸುತ್ತದೆ ಮತ್ತು ಇಳುವರಿಯನ್ನು ಶೇ. 25 ರಷ್ಟು ಹೆಚ್ಚಿಸುತ್ತದೆ.\n'
@@ -419,7 +516,24 @@ class AiAssistantService {
           '• **Government Subsidy:** Karnataka offers up to 90% subsidy for small and marginal farmers on micro-irrigation systems.';
     }
 
-    // 10. Best crops / Kharif / Rabi / Season
+    // 12. Soil Testing & Health
+    if (q.contains('soil') || q.contains('ph') || q.contains('test') || q.contains('testing') ||
+        q.contains('ಮಣ್ಣು') || q.contains('ಮಣ್ಣು ಪರೀಕ್ಷೆ') || q.contains('ಭೂಮಿ') || q.contains('मिट्टी') || q.contains('मृदा')) {
+      if (language == 'kn') {
+        return '🔬 **ಮಣ್ಣು ಪರೀಕ್ಷೆ ಮತ್ತು ಮಣ್ಣಿನ ಆರೋಗ್ಯ ಕಾರ್ಡ್:**\n\n'
+            '• **ಮಾದರಿ ಸಂಗ್ರಹಣೆ:** ಜಮೀನಿನಲ್ಲಿ ‘V’ ಆಕಾರದಲ್ಲಿ 6-9 ಇಂಚು ಆಳದ ಮಣ್ಣನ್ನು 8-10 ಸ್ಥಳಗಳಲ್ಲಿ ಸಂಗ್ರಹಿಸಿ ಒಟ್ಟುಗೂಡಿಸಿ ಅರ್ಧ ಕೆಜಿ ಮಾದರಿ ಸಿದ್ಧಪಡಿಸಿ.\n'
+            '• **ಪರೀಕ್ಷಾ ಕೇಂದ್ರ:** ಹತ್ತಿರದ ಕೃಷಿ ವಿಜ್ಞಾನ ಕೇಂದ್ರ (KVK) ಅಥವಾ ರೈತ ಸಂಪರ್ಕ ಕೇಂದ್ರದಲ್ಲಿ ಮಣ್ಣು ಪರೀಕ್ಷೆ ಮಾಡಿಸಿ.\n'
+            '• **ಸೂಕ್ತ pH:** 6.5 ರಿಂದ 7.5 ರ ನಡುವಿನ pH ಬೆಳೆಗಳಿಗೆ ಉತ್ತಮ. ಆಮ್ಲ ಮಣ್ಣಿಗೆ ಕೃಷಿ ಸುಣ್ಣ ಮತ್ತು ಕ್ಷಾರ ಮಣ್ಣಿಗೆ ಜಿಪ್ಸಂ ಬಳಸಿ.\n'
+            '• **ಸಾವಯವ ಇಂಗಾಲ:** ಎಕರೆಗೆ 2 ಟನ್ ಕಾಂಪೋಸ್ಟ್ ಅಥವಾ ಸೆಣಬು/ಡೈಂಚಾ ಹಸಿರೆಲೆ ಗೊಬ್ಬರ ಸೇರಿಸಿ ಮಣ್ಣಿನ ಫಲವತ್ತತೆ ಹೆಚ್ಚಿಸಿ.';
+      }
+      return '🔬 **Soil Health & Soil Testing Advisory:**\n\n'
+          '• **Sampling Technique:** Collect V-shaped core samples from 6–9 inch depth across 8–10 points; mix thoroughly to create a 500g composite sample.\n'
+          '• **Testing Labs:** Submit to your local Krishi Vigyan Kendra (KVK) or Raitha Samparka Kendra for a Soil Health Card.\n'
+          '• **Optimal pH:** Aim for pH 6.5–7.5. Apply agricultural lime for acidic soils or Gypsum for alkaline soils.\n'
+          '• **Organic Carbon:** Incorporate 2 tonnes FYM/vermicompost or green manuring with Sunnhemp/Dhaincha.';
+    }
+
+    // 13. Best crops / Kharif / Rabi / Season
     if (q.contains('crop') || q.contains('season') || q.contains('kharif') || q.contains('rabi') ||
         q.contains('summer') || q.contains('profit') || q.contains('ಬೆಳೆ') || q.contains('ಫಸಲು') || q.contains('फसल')) {
       if (language == 'kn') {
@@ -436,7 +550,7 @@ class AiAssistantService {
           '• **Drought-Resilient Choices:** Finger Millet and Horsegram withstand irregular rainfall patterns effectively.';
     }
 
-    // 11. Government schemes / Subsidies / MSP
+    // 14. Government schemes / Subsidies / MSP
     if (q.contains('scheme') || q.contains('subsidy') || q.contains('pm-kisan') || q.contains('msp') ||
         q.contains('krishi bhagya') || q.contains('samrakshane') ||
         q.contains('ಯೋಜನೆ') || q.contains('ಸಹಾಯಧನ') || q.contains('ವಿಮೆ') || q.contains('योजना') || q.contains('सब्सिडी') || q.contains('बीमा')) {
@@ -458,22 +572,22 @@ class AiAssistantService {
 
     // General agricultural advisory
     if (language == 'kn') {
-      return '🌿 **ಕೃಷಿ ಸಲಹೆ:**\n\n'
+      return '🌿 **ಕೃಷಿ ಸಮಗ್ರ ಸಲಹೆ:**\n\n'
           '• ನಿಮ್ಮ ಜಮೀನಿನ ಮಣ್ಣಿನ ಪ್ರಕಾರ ಮತ್ತು ನೀರಿನ ಲಭ್ಯತೆಯನ್ನು ಪರಿಶೀಲಿಸಿ ಬೆಳೆ ಆಯ್ಕೆ ಮಾಡಿ.\n'
-          '• ಬೀಜೋಪಚಾರ (Seed Treatment) ಮಾಡುವುದರಿಂದ ಶೇ. 80 ರಷ್ಟು ಆರಂಭಿಕ ರೋಗಗಳನ್ನು ತಡೆಯಬಹುದು.\n'
-          '• ಹತ್ತಿರದ ಕೃಷಿ ವಿಜ್ಞಾನ ಕೇಂದ್ರ (KVK) ಅಥವಾ ರೈತ ಸಂಪರ್ಕ ಕೇಂದ್ರವನ್ನು ಸಂಪರ್ಕಿಸಿ ಮಣ್ಣು ಪರೀಕ್ಷೆ ಮಾಡಿಸಿ.\n'
-          '• ಕೀಟನಾಶಕ ಸಿಂಪಡಿಸುವಾಗ ಮುಂಜಾನೆ ಅಥವಾ ಸಂಜೆ ವೇಳೆ ಮಾತ್ರ ಸಿಂಪಡಿಸಿ.';
+          '• ಬಿತ್ತನೆಗೆ ಮುನ್ನ ಬೀಜೋಪಚಾರ (Seed Treatment) ಮಾಡುವುದರಿಂದ ಶೇ. 80 ರಷ್ಟು ಆರಂಭಿಕ ಶಿಲೀಂಧ್ರ ರೋಗಗಳನ್ನು ತಡೆಯಬಹುದು.\n'
+          '• ರಸಗೊಬ್ಬರವನ್ನು ಮಣ್ಣು ಪರೀಕ್ಷೆಯ ಶಿಫಾರಸಿನ ಆಧಾರದ ಮೇಲೆ ಸಮತೋಲನವಾಗಿ ಬಳಸಿ.\n'
+          '• ಕೀಟನಾಶಕ ಸಿಂಪಡಿಸುವಾಗ ಮುಂಜಾನೆ ಅಥವಾ ಸಂಜೆ ವೇಳೆ ಮಾತ್ರ ಸಿಂಪಡಿಸಿ ಮತ್ತು ಕಡ್ಡಾಯವಾಗಿ ರಕ್ಷಣಾತ್ಮಕ ಮಾಸ್ಕ್ ಧರಿಸಿ.';
     } else if (language == 'hi') {
-      return '🌿 **कृषि परामर्श:**\n\n'
-          '• अपनी मिट्टी की जांच के आधार पर फसल का चयन करें।\n'
+      return '🌿 **कृषि परामर्श निर्देश:**\n\n'
+          '• अपनी मिट्टी की जांच और पानी की उपलब्धता के आधार पर ही फसल व किस्म का चयन करें।\n'
           '• बुवाई से पहले बीजोपचार अवश्य करें, इससे अधिकांश शुरुआती रोग रुकते हैं।\n'
-          '• जल संरक्षण हेतु ड्रिप सिंचाई और मल्चिंग अपनाएं।\n'
-          '• दवाओं का छिड़काव सुबह या शाम के ठंडे समय में ही करें।';
+          '• रासायनिक कीटनाशकों का छिड़काव हमेशा सुबह या शाम के ठंडे समय में ही करें।\n'
+          '• जल संरक्षण हेतु ड्रिप सिंचाई और मल्चिंग अपनाएं।';
     }
     return '🌿 **Agricultural Advisory Note:**\n\n'
         '• Choose certified seeds suited for your agro-climatic zone in Karnataka.\n'
         '• Conduct seed treatment with Trichoderma (5g/kg) or Carbendazim (2g/kg) before sowing to avert soil-borne pathogens.\n'
-        '• Get your soil tested at your nearest Krishi Vigyan Kendra (KVK) or Raitha Samparka Kendra to optimize fertilizer expenditures.\n'
-        '• Apply foliar sprays during early morning or late afternoon to prevent scorching.';
+        '• Get your soil tested at your nearest Krishi Vigyan Kendra (KVK) to optimize fertilizer expenditures.\n'
+        '• Apply foliar sprays during early morning or late afternoon to prevent scorching and pesticide wash-off.';
   }
 }

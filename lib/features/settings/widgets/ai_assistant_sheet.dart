@@ -361,18 +361,17 @@ class _AiAssistantSheetState extends ConsumerState<AiAssistantSheet> {
     return SafeArea(
       top: false,
       bottom: true,
-      child: AnimatedPadding(
+      child: Padding(
         padding: EdgeInsets.only(bottom: bottomInset),
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.88,
-          decoration: const BoxDecoration(
-            color: Color(0xFFF7FBF8),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
+        child: SizedBox(
+          height: (MediaQuery.of(context).size.height * 0.88) - (bottomInset > 0 ? bottomInset : 0),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFF7FBF8),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
               // Drag handle
               Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 6),
@@ -572,7 +571,8 @@ class _AiAssistantSheetState extends ConsumerState<AiAssistantSheet> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _chatBubble(_AiChatMessage m) {
