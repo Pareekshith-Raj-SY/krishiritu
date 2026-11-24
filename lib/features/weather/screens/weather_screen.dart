@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../data/services/weather_service.dart';
+import '../../../data/services/location_service.dart';
 import '../../../data/providers/weather_provider.dart';
 import '../../../shared/localization/app_localizations.dart';
 import '../../../app.dart';
@@ -17,6 +18,7 @@ class WeatherScreen extends ConsumerStatefulWidget {
 
 class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   final WeatherService _weatherService = WeatherService();
+  final LocationService _locationService = LocationService();
   WeatherData? _weather;
   bool _isLoading = true;
   bool _isDetectingLocation = false;
@@ -76,23 +78,25 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     });
 
     try {
-      // First try to auto-detect device's live GPS location
-      final gps = await _weatherService.getCurrentGpsLocation();
-      if (gps != null && mounted) {
-        final nearestDistrict = WeatherService.findNearestDistrict(gps.lat, gps.lon);
+      // 1. Request location permission and get GPS coordinates
+      final loc = await _locationService.getCurrentLocation(requestIfNeeded: true);
+      if (loc.success && loc.latitude != null && loc.longitude != null && mounted) {
+        final district = loc.district ?? fallbackDistrict;
+        final displayName = loc.locationName ?? district;
         setState(() {
           _isGpsActive = true;
-          _activeLat = gps.lat;
-          _activeLon = gps.lon;
-          _activeLocationName = gps.locationName;
-          _activeDistrict = nearestDistrict;
+          _activeLat = loc.latitude;
+          _activeLon = loc.longitude;
+          _activeLocationName = displayName;
+          _activeDistrict = district;
           _isDetectingLocation = false;
         });
 
+        // 2. Fetch live weather for coordinates
         final data = await _weatherService.getWeatherForCoordinates(
-          latitude: gps.lat,
-          longitude: gps.lon,
-          locationDisplayName: gps.locationName,
+          latitude: loc.latitude!,
+          longitude: loc.longitude!,
+          locationDisplayName: displayName,
           forceRefresh: false,
         );
 
@@ -105,9 +109,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         ref.read(weatherProvider.notifier).detectGps();
         return;
       }
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) {
+        _errorMessage = e.toString();
+      }
+    }
 
-    // Fall back to farm district or Bengaluru
+    // Fall back to farm district or Bengaluru if GPS unavailable
     if (mounted) {
       setState(() {
         _isGpsActive = false;
@@ -141,6 +149,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
+          _weather = null;
           _errorMessage = e.toString();
           _isLoading = false;
         });
@@ -157,22 +166,24 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     });
 
     try {
-      final gps = await _weatherService.getCurrentGpsLocation();
-      if (gps != null) {
-        final nearestDistrict = WeatherService.findNearestDistrict(gps.lat, gps.lon);
+      final loc = await _locationService.getCurrentLocation(requestIfNeeded: true);
+      if (loc.success && loc.latitude != null && loc.longitude != null) {
+        final district = loc.district ?? 'Bengaluru';
+        final displayName = loc.locationName ?? district;
+
         setState(() {
           _isGpsActive = true;
-          _activeLat = gps.lat;
-          _activeLon = gps.lon;
-          _activeLocationName = gps.locationName;
-          _activeDistrict = nearestDistrict;
+          _activeLat = loc.latitude;
+          _activeLon = loc.longitude;
+          _activeLocationName = displayName;
+          _activeDistrict = district;
           _isDetectingLocation = false;
         });
 
         final data = await _weatherService.getWeatherForCoordinates(
-          latitude: gps.lat,
-          longitude: gps.lon,
-          locationDisplayName: gps.locationName,
+          latitude: loc.latitude!,
+          longitude: loc.longitude!,
+          locationDisplayName: displayName,
           forceRefresh: true,
         );
 
@@ -184,9 +195,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
           ref.read(weatherProvider.notifier).detectGps();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('📍 ${l10n.t('gps_detected')}: ${gps.locationName}'),
+              content: Text('📍 ${l10n.t('gps_detected')}: $displayName'),
               backgroundColor: AppColors.forestGreen,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(seconds: 3),
             ),
           );
         }
@@ -196,13 +207,42 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             _isDetectingLocation = false;
             _isLoading = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.t('location_denied')),
-              backgroundColor: AppColors.warmAmber,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+
+          if (loc.status == LocationStatus.serviceDisabled) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(loc.errorMessage ?? l10n.t('location_disabled')),
+                backgroundColor: AppColors.warmAmber,
+                duration: const Duration(seconds: 4),
+                action: SnackBarAction(
+                  label: 'Settings',
+                  textColor: Colors.white,
+                  onPressed: () => _locationService.openLocationSettings(),
+                ),
+              ),
+            );
+          } else if (loc.status == LocationStatus.permissionDeniedForever) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(loc.errorMessage ?? 'Location permission permanently denied.'),
+                backgroundColor: Colors.red.shade700,
+                duration: const Duration(seconds: 5),
+                action: SnackBarAction(
+                  label: 'Settings',
+                  textColor: Colors.white,
+                  onPressed: () => _locationService.openAppSettings(),
+                ),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(loc.errorMessage ?? l10n.t('location_denied')),
+                backgroundColor: AppColors.warmAmber,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
         }
       }
     } catch (e) {
@@ -222,17 +262,27 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         _isLoading = true;
         _errorMessage = null;
       });
-      final data = await _weatherService.getWeatherForCoordinates(
-        latitude: _activeLat!,
-        longitude: _activeLon!,
-        locationDisplayName: _activeLocationName,
-        forceRefresh: true,
-      );
-      if (mounted) {
-        setState(() {
-          _weather = data;
-          _isLoading = false;
-        });
+      try {
+        final data = await _weatherService.getWeatherForCoordinates(
+          latitude: _activeLat!,
+          longitude: _activeLon!,
+          locationDisplayName: _activeLocationName,
+          forceRefresh: true,
+        );
+        if (mounted) {
+          setState(() {
+            _weather = data;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _weather = null;
+            _errorMessage = e.toString();
+            _isLoading = false;
+          });
+        }
       }
     } else {
       _loadDistrictWeather(_activeDistrict, forceRefresh: true);
@@ -513,7 +563,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
               const CircularProgressIndicator(color: AppColors.skyBlue),
               const SizedBox(height: 14),
               Text(
-                _isDetectingLocation ? l10n.t('detecting_gps') : 'Fetching live meteorological weather...',
+                _isDetectingLocation ? l10n.t('detecting_gps') : 'Fetching live weather from OpenWeather...',
                 style: const TextStyle(color: AppColors.textMedium, fontSize: 13, fontWeight: FontWeight.w500),
               ),
             ],
@@ -525,27 +575,93 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     final data = _weather;
     if (data == null) {
       return Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.orange.shade200, width: 1.2),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 3)),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('⚠️', style: TextStyle(fontSize: 26)),
-            const SizedBox(width: 12),
-            Expanded(
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.cloud_off_rounded, color: AppColors.warmAmber, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Live Weather Unavailable',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.forestGreen,
+                        ),
+                      ),
+                      Text(
+                        _isGpsActive ? 'Location: $_activeLocationName (GPS)' : 'District: $_activeDistrict',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
               child: Text(
-                _errorMessage ?? 'Weather temporarily unavailable. Please retry.',
-                style: const TextStyle(color: AppColors.textMedium, fontSize: 13),
+                _errorMessage ?? 'Unable to retrieve real-time weather information from OpenWeather. Please check your network connection or API configuration.',
+                style: const TextStyle(
+                  color: AppColors.textMedium,
+                  fontSize: 12.5,
+                  height: 1.4,
+                ),
               ),
             ),
-            TextButton(
-              onPressed: _refreshWeather,
-              child: Text(l10n.t('retry')),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _refreshWeather,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: Text(l10n.t('retry')),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.forestGreen,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _openDistrictPicker(context, l10n),
+                  icon: const Icon(Icons.location_city, size: 16),
+                  label: Text(l10n.t('change_district')),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.forestGreen,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    side: const BorderSide(color: AppColors.forestGreen),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

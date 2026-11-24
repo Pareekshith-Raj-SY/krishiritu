@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,11 +14,29 @@ import 'package:krishiritu/data/services/auth_service.dart';
 import 'package:krishiritu/data/services/groq_crop_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:krishiritu/data/services/weather_service.dart';
+import 'package:krishiritu/data/services/location_service.dart';
 import 'package:krishiritu/data/providers/weather_provider.dart';
 import 'package:krishiritu/data/services/ai_assistant_service.dart';
 import 'package:krishiritu/data/services/speech_service.dart';
 import 'package:krishiritu/data/services/crop_diagnosis_service.dart';
 import 'package:krishiritu/shared/localization/app_localizations.dart';
+
+class MockWeatherHttpClient extends http.BaseClient {
+  final Future<http.Response> Function(http.Request request) handler;
+  MockWeatherHttpClient(this.handler);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    final httpRequest = request as http.Request;
+    final res = await handler(httpRequest);
+    return http.StreamedResponse(
+      Stream.value(res.bodyBytes),
+      res.statusCode,
+      headers: res.headers,
+      reasonPhrase: res.reasonPhrase,
+    );
+  }
+}
 
 void main() {
   // ─── CropRepository Tests ───────────────────────────────────────────────
@@ -802,6 +822,148 @@ void main() {
       expect(en.t('chemical_treatment'), contains('Chemical Treatment'));
       expect(kn.t('chemical_treatment'), contains('ಕೀಟನಾಶಕ'));
       expect(hi.t('chemical_treatment'), contains('रासायनिक'));
+    });
+  });
+
+  // ─── LocationService & OpenWeather API Verification ───────────────────────
+  group('LocationService & OpenWeather API Verification', () {
+    test('LocationResult correctly represents success with coordinates', () {
+      final res = LocationResult.success(
+        latitude: 12.2958,
+        longitude: 76.6394,
+        district: 'Mysuru',
+        locationName: 'Nanjangud',
+      );
+      expect(res.success, isTrue);
+      expect(res.latitude, equals(12.2958));
+      expect(res.longitude, equals(76.6394));
+      expect(res.district, equals('Mysuru'));
+      expect(res.locationName, equals('Nanjangud'));
+      expect(res.status, equals(LocationStatus.success));
+      expect(res.errorMessage, isNull);
+    });
+
+    test('LocationResult correctly represents permission and service failures', () {
+      final denied = LocationResult.failure(
+        status: LocationStatus.permissionDenied,
+        errorMessage: 'Location permission was denied.',
+      );
+      expect(denied.success, isFalse);
+      expect(denied.status, equals(LocationStatus.permissionDenied));
+      expect(denied.errorMessage, contains('denied'));
+
+      final disabled = LocationResult.failure(
+        status: LocationStatus.serviceDisabled,
+        errorMessage: 'GPS is disabled.',
+      );
+      expect(disabled.status, equals(LocationStatus.serviceDisabled));
+
+      final forever = LocationResult.failure(
+        status: LocationStatus.permissionDeniedForever,
+        errorMessage: 'Permanently denied.',
+      );
+      expect(forever.status, equals(LocationStatus.permissionDeniedForever));
+    });
+
+    test('WeatherService parses OpenWeather live 200 JSON with rain, humidity, temperature', () async {
+      SharedPreferences.setMockInitialValues({});
+      WeatherService.clearCache();
+
+      final mockJson = jsonEncode({
+        "coord": {"lon": 76.6394, "lat": 12.2958},
+        "weather": [
+          {"id": 500, "main": "Rain", "description": "light rain", "icon": "10d"}
+        ],
+        "main": {
+          "temp": 24.5,
+          "feels_like": 25.1,
+          "temp_min": 23.0,
+          "temp_max": 26.0,
+          "pressure": 1010,
+          "humidity": 78
+        },
+        "wind": {"speed": 4.5, "deg": 210},
+        "rain": {"1h": 2.4},
+        "clouds": {"all": 75},
+        "dt": 1698750000,
+        "name": "Mysuru",
+        "cod": 200
+      });
+
+      String requestedUrl = '';
+      final mockClient = MockWeatherHttpClient((request) async {
+        requestedUrl = request.url.toString();
+        return http.Response(mockJson, 200);
+      });
+
+      final service = WeatherService(client: mockClient, apiKey: 'test_openweather_key');
+      final weather = await service.getWeatherForCoordinates(
+        latitude: 12.2958,
+        longitude: 76.6394,
+        locationDisplayName: 'Mysuru Farm',
+        forceRefresh: true,
+      );
+
+      expect(weather, isNotNull);
+      expect(weather!.tempC, equals(24.5));
+      expect(weather.humidity, equals(78.0));
+      expect(weather.rainfall, equals(2.4));
+      expect(weather.condition, equals('light rain'));
+      expect(weather.apparentTempC, equals(25.1));
+      expect(weather.city, equals('Mysuru Farm'));
+      expect(weather.windSpeedKmH, closeTo(16.2, 0.1));
+      expect(weather.source, equals('OpenWeather Live'));
+      expect(weather.isCurrentLocation, isTrue);
+
+      // Verify that coordinates were sent to OpenWeather API
+      expect(requestedUrl, contains('lat=12.2958'));
+      expect(requestedUrl, contains('lon=76.6394'));
+      expect(requestedUrl, contains('units=metric'));
+    });
+
+    test('WeatherService throws WeatherApiException on 401 Unauthorized API key', () async {
+      SharedPreferences.setMockInitialValues({});
+      WeatherService.clearCache();
+
+      final mockClient = MockWeatherHttpClient((request) async {
+        return http.Response('{"cod":401,"message":"Invalid API key"}', 401);
+      });
+
+      final service = WeatherService(client: mockClient, apiKey: 'invalid_key');
+      expect(
+        () async => await service.getWeather('Bengaluru', forceRefresh: true),
+        throwsA(isA<WeatherApiException>().having((e) => e.statusCode, 'statusCode', equals(401))),
+      );
+    });
+
+    test('WeatherService throws WeatherApiException on 429 Rate Limit exceeded', () async {
+      SharedPreferences.setMockInitialValues({});
+      WeatherService.clearCache();
+
+      final mockClient = MockWeatherHttpClient((request) async {
+        return http.Response('{"cod":429,"message":"Your account is temporarily blocked"}', 429);
+      });
+
+      final service = WeatherService(client: mockClient, apiKey: 'limited_key');
+      expect(
+        () async => await service.getWeather('Bengaluru', forceRefresh: true),
+        throwsA(isA<WeatherApiException>().having((e) => e.statusCode, 'statusCode', equals(429))),
+      );
+    });
+
+    test('WeatherService throws WeatherApiException on network failure', () async {
+      SharedPreferences.setMockInitialValues({});
+      WeatherService.clearCache();
+
+      final mockClient = MockWeatherHttpClient((request) async {
+        throw const SocketException('Failed host lookup');
+      });
+
+      final service = WeatherService(client: mockClient, apiKey: 'test_key');
+      expect(
+        () async => await service.getWeather('Bengaluru', forceRefresh: true),
+        throwsA(isA<WeatherApiException>().having((e) => e.message, 'message', contains('Network failure'))),
+      );
     });
   });
 }

@@ -87,11 +87,12 @@ class DashboardWeatherCard extends ConsumerWidget {
                             Navigator.pop(ctx);
                             final success = await weatherNotifier.detectGps();
                             if (context.mounted && !success) {
+                              final msg = ref.read(weatherProvider).errorMessage ?? l10n.t('location_denied');
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(l10n.t('location_denied')),
+                                  content: Text(msg),
                                   backgroundColor: AppColors.warmAmber,
-                                  duration: const Duration(seconds: 3),
+                                  duration: const Duration(seconds: 4),
                                 ),
                               );
                             }

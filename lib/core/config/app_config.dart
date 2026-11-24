@@ -23,9 +23,19 @@ class AppConfig {
     if (compileTime.isNotEmpty) return compileTime;
     final env = _safeEnv('SUPABASE_ANON_KEY');
     if (env.isNotEmpty) return env;
-    return 'sb_publishable_1BQ_wOaZufFWXWwmSzoe3Q_FNeo6Fx9';
+    return 'sb_publishable_p2wBuqJO1hbP7WsqT-EmsA_d5IZQt9P';
   }
-  static String get openWeatherKey => _safeEnv('OPENWEATHER_API_KEY');
+
+  static String get openWeatherKey {
+    const compileTime = String.fromEnvironment('OPENWEATHER_API_KEY');
+    if (compileTime.isNotEmpty && !compileTime.contains('your-')) return compileTime.trim();
+    final env = _safeEnv('OPENWEATHER_API_KEY');
+    if (env.isNotEmpty && !env.contains('your-')) return env.trim();
+    return '';
+  }
+
+  static bool get hasWeatherKey => openWeatherKey.isNotEmpty;
+
   static String get anthropicKey => _safeEnv('ANTHROPIC_API_KEY');
   static String get groqApiKey {
     const compileTimeKey = String.fromEnvironment('GROQ_API_KEY');

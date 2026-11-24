@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/weather_service.dart';
+import '../services/location_service.dart';
 import '../../features/farms/providers/farm_provider.dart';
 
 class WeatherState {
@@ -13,6 +14,7 @@ class WeatherState {
   final bool isLoading;
   final bool isDetectingGps;
   final String? errorMessage;
+  final LocationStatus? locationStatus;
 
   const WeatherState({
     this.weather,
@@ -24,6 +26,7 @@ class WeatherState {
     this.isLoading = true,
     this.isDetectingGps = false,
     this.errorMessage,
+    this.locationStatus,
   });
 
   WeatherState copyWith({
@@ -36,6 +39,7 @@ class WeatherState {
     bool? isLoading,
     bool? isDetectingGps,
     String? errorMessage,
+    LocationStatus? locationStatus,
   }) {
     return WeatherState(
       weather: weather ?? this.weather,
@@ -47,6 +51,7 @@ class WeatherState {
       isLoading: isLoading ?? this.isLoading,
       isDetectingGps: isDetectingGps ?? this.isDetectingGps,
       errorMessage: errorMessage,
+      locationStatus: locationStatus ?? this.locationStatus,
     );
   }
 }
@@ -54,6 +59,7 @@ class WeatherState {
 class WeatherNotifier extends StateNotifier<WeatherState> {
   final Ref _ref;
   final WeatherService _service = WeatherService();
+  final LocationService _locationService = LocationService();
 
   static const String _keyDistrict = 'weather_active_district';
   static const String _keyIsGps = 'weather_is_gps';
@@ -119,7 +125,6 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
       final gpsSuccess = await detectGps(silently: true);
       if (!mounted) return;
       if (!gpsSuccess) {
-        // Fall back to Bengaluru
         state = state.copyWith(
           activeDistrict: 'Bengaluru',
           locationDisplayName: 'Bengaluru',
@@ -141,44 +146,56 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
     state = state.copyWith(isDetectingGps: true, isLoading: true, errorMessage: null);
 
     try {
-      final gps = await _service.getCurrentGpsLocation();
+      final loc = await _locationService.getCurrentLocation(requestIfNeeded: !silently);
       if (!mounted) return false;
-      if (gps != null) {
-        final nearestDistrict = WeatherService.findNearestDistrict(gps.lat, gps.lon);
-        final displayName = gps.locationName;
+
+      if (loc.success && loc.latitude != null && loc.longitude != null) {
+        final district = loc.district ?? 'Bengaluru';
+        final displayName = loc.locationName ?? district;
 
         state = state.copyWith(
           isGpsActive: true,
-          activeLat: gps.lat,
-          activeLon: gps.lon,
-          activeDistrict: nearestDistrict,
+          activeLat: loc.latitude,
+          activeLon: loc.longitude,
+          activeDistrict: district,
           locationDisplayName: displayName,
           isDetectingGps: false,
+          locationStatus: loc.status,
+          errorMessage: null,
         );
 
         // Save preferences
         try {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool(_keyIsGps, true);
-          await prefs.setDouble(_keyLat, gps.lat);
-          await prefs.setDouble(_keyLon, gps.lon);
-          await prefs.setString(_keyDistrict, nearestDistrict);
+          await prefs.setDouble(_keyLat, loc.latitude!);
+          await prefs.setDouble(_keyLon, loc.longitude!);
+          await prefs.setString(_keyDistrict, district);
           await prefs.setString(_keyDisplayName, displayName);
         } catch (_) {}
 
         if (mounted) {
-          await _fetchCoordinatesWeather(gps.lat, gps.lon, displayName, forceRefresh: true);
+          await _fetchCoordinatesWeather(loc.latitude!, loc.longitude!, displayName, forceRefresh: true);
         }
         return true;
       } else {
         if (mounted) {
-          state = state.copyWith(isDetectingGps: false, isLoading: false);
+          state = state.copyWith(
+            isDetectingGps: false,
+            isLoading: false,
+            locationStatus: loc.status,
+            errorMessage: silently ? null : loc.errorMessage,
+          );
         }
         return false;
       }
     } catch (e) {
       if (mounted) {
-        state = state.copyWith(isDetectingGps: false, isLoading: false, errorMessage: e.toString());
+        state = state.copyWith(
+          isDetectingGps: false,
+          isLoading: false,
+          errorMessage: e.toString(),
+        );
       }
       return false;
     }
@@ -231,6 +248,9 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
       final data = await _service.getWeather(district, forceRefresh: forceRefresh);
       if (!mounted) return;
       state = state.copyWith(weather: data, isLoading: false, errorMessage: null);
+    } on WeatherApiException catch (e) {
+      if (!mounted) return;
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
     } catch (e) {
       if (!mounted) return;
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
@@ -247,6 +267,9 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
       );
       if (!mounted) return;
       state = state.copyWith(weather: data, isLoading: false, errorMessage: null);
+    } on WeatherApiException catch (e) {
+      if (!mounted) return;
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
     } catch (e) {
       if (!mounted) return;
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

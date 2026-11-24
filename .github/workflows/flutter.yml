@@ -35,14 +35,33 @@ jobs:
           git config --global --add safe.directory $HOME/flutter
           echo "$HOME/flutter/bin" >> $GITHUB_PATH
           echo "FLUTTER_ROOT=$HOME/flutter" >> $GITHUB_ENV
+          mkdir -p $HOME/flutter/examples
           $HOME/flutter/bin/flutter precache --android
 
       - name: Prepare Environment File
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
           if [ -f .env.example ]; then
             cp .env.example .env
           else
             touch .env
+          fi
+          # Securely inject secrets from GitHub Secrets into .env
+          if [ -n "$OPENWEATHER_API_KEY" ]; then
+            grep -q "^OPENWEATHER_API_KEY=" .env && sed -i "s|^OPENWEATHER_API_KEY=.*|OPENWEATHER_API_KEY=$OPENWEATHER_API_KEY|" .env || echo "OPENWEATHER_API_KEY=$OPENWEATHER_API_KEY" >> .env
+          fi
+          if [ -n "$SUPABASE_URL" ]; then
+            grep -q "^SUPABASE_URL=" .env && sed -i "s|^SUPABASE_URL=.*|SUPABASE_URL=$SUPABASE_URL|" .env || echo "SUPABASE_URL=$SUPABASE_URL" >> .env
+          fi
+          if [ -n "$SUPABASE_ANON_KEY" ]; then
+            grep -q "^SUPABASE_ANON_KEY=" .env && sed -i "s|^SUPABASE_ANON_KEY=.*|SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY|" .env || echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+          fi
+          if [ -n "$GROQ_API_KEY" ]; then
+            grep -q "^GROQ_API_KEY=" .env && sed -i "s|^GROQ_API_KEY=.*|GROQ_API_KEY=$GROQ_API_KEY|" .env || echo "GROQ_API_KEY=$GROQ_API_KEY" >> .env
           fi
 
       - name: Install Dependencies
@@ -61,7 +80,14 @@ jobs:
           fi
 
       - name: Build Android Release APK
-        run: flutter build apk --release --android-skip-build-dependency-validation
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+        run: |
+          DART_DEFINES=""
+          if [ -n "$OPENWEATHER_API_KEY" ]; then
+            DART_DEFINES="--dart-define=OPENWEATHER_API_KEY=$OPENWEATHER_API_KEY"
+          fi
+          flutter build apk --release --android-skip-build-dependency-validation $DART_DEFINES
 
       - name: Verify Generated APK Location
         run: |
@@ -80,5 +106,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.11 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.11" --notes "Release APK with strict credential verification for Google and email sign-in" || \
+          gh release create v1.0.11 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.11" --notes "Release APK with live GPS location and OpenWeather API integration" || \
           gh release upload v1.0.11 build/app/outputs/flutter-apk/app-release.apk --clobber
