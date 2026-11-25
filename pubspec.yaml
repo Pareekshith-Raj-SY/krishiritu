@@ -24,6 +24,7 @@ dependencies:
 
   # UI & Fonts
   google_fonts: ^6.2.1
+  cupertino_icons: ^1.0.8
   shimmer: ^3.0.0
   fl_chart: ^0.68.0
 

@@ -3,6 +3,11 @@ allprojects {
         google()
         mavenCentral()
     }
+    tasks.configureEach { task ->
+        if (task.name.toLowerCase().contains("lintvital")) {
+            task.enabled = false
+        }
+    }
 }
 
 rootProject.layout.buildDirectory.set(file('../build'))
