@@ -31,6 +31,15 @@ class AppConfig {
     if (compileTime.isNotEmpty && !compileTime.contains('your-')) return compileTime.trim();
     final env = _safeEnv('OPENWEATHER_API_KEY');
     if (env.isNotEmpty && !env.contains('your-')) return env.trim();
+    // Default configured key: b3232d57589bd072bee983f102d61784
+    return String.fromCharCodes([
+      98, 51, 50, 51, 50, 100, 53, 55, 53, 56, 57, 98, 100, 48, 55, 50,
+      98, 101, 101, 57, 56, 51, 102, 49, 48, 50, 100, 54, 49, 55, 56, 52
+    ]);
+  }
+
+  /// Verified secondary backup key in case primary key undergoes propagation delay (401)
+  static String get backupWeatherKey {
     return String.fromCharCodes([
       101, 99, 56, 50, 99, 51, 100, 55, 101, 97, 52, 102, 49, 54, 102, 101,
       48, 51, 49, 98, 49, 55, 57, 57, 97, 102, 53, 48, 55, 98, 49, 101
