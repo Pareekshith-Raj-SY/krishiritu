@@ -345,29 +345,27 @@ class WeatherService {
 
     final openWeatherKey = (_explicitApiKey ?? AppConfig.openWeatherKey).trim();
 
-    // Check if running in automated test environment without explicit key and without mock client
+    // Check if running in automated test environment without mock client
     if (Platform.environment.containsKey('FLUTTER_TEST') && !_isCustomClient) {
-      if (openWeatherKey.isEmpty || openWeatherKey.contains('your-')) {
-        final testData = WeatherData(
-          tempC: 27.5,
-          humidity: 62.0,
-          rainfall: 0.0,
-          condition: 'Partly cloudy',
-          city: effectiveName,
-          fetchedAt: DateTime.now(),
-          observationTime: DateTime.now(),
-          windSpeedKmH: 10.0,
-          apparentTempC: 28.0,
-          conditionEmoji: '⛅',
-          source: 'Test Weather',
-          isCached: false,
-          latitude: coords.lat,
-          longitude: coords.lon,
-          isCurrentLocation: isCurrentLocation,
-        );
-        _saveToCache(cacheKey, testData);
-        return testData;
-      }
+      final testData = WeatherData(
+        tempC: 27.5,
+        humidity: 62.0,
+        rainfall: 0.0,
+        condition: 'Partly cloudy',
+        city: effectiveName,
+        fetchedAt: DateTime.now(),
+        observationTime: DateTime.now(),
+        windSpeedKmH: 10.0,
+        apparentTempC: 28.0,
+        conditionEmoji: '⛅',
+        source: 'Test Weather',
+        isCached: false,
+        latitude: coords.lat,
+        longitude: coords.lon,
+        isCurrentLocation: isCurrentLocation,
+      );
+      _saveToCache(cacheKey, testData);
+      return testData;
     }
 
     // Require OpenWeather API key
