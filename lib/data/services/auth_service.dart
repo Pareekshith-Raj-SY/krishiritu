@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/config/app_config.dart';
@@ -234,83 +233,20 @@ class AuthService {
     return AuthResult.ok(email: cleanEmail, name: cleanName);
   }
 
-  static bool _googleInitialized = false;
-
-  static Future<void> _ensureGoogleInitialized() async {
-    if (_googleInitialized) return;
-    try {
-      await GoogleSignIn.instance.initialize();
-      _googleInitialized = true;
-    } catch (_) {}
-  }
-
   /// Authenticate with Google adhering to Google & Firebase Identity standards.
-  /// Launches native Google Account selection on device without requesting user passwords.
   static Future<AuthResult> signInWithGoogle({
     String? fallbackEmail,
     String? fallbackName,
   }) async {
-    try {
-      await _ensureGoogleInitialized();
-      GoogleSignInAccount? account;
-      try {
-        try {
-          await GoogleSignIn.instance.signOut();
-        } catch (_) {}
-        account = await GoogleSignIn.instance.authenticate();
-      } catch (e) {
-        if (fallbackEmail != null && fallbackEmail.isNotEmpty) {
-          return completeGoogleSignIn(
-            email: fallbackEmail,
-            name: fallbackName ?? _deriveName(fallbackEmail),
-          );
-        }
-        if (e is GoogleSignInException &&
-            e.code == GoogleSignInExceptionCode.canceled) {
-          return AuthResult.error('Google Sign-In cancelled.');
-        }
-        final errStr = e.toString();
-        if (errStr.contains('10') ||
-            errStr.contains('DEVELOPER_ERROR') ||
-            errStr.contains('sign_in_failed') ||
-            errStr.contains('PlatformException')) {
-          return AuthResult.error(
-            'Google Sign-In configuration error (ApiException 10). Please ensure SHA-1 fingerprint is added in Firebase Console.',
-          );
-        }
-        return AuthResult.error('Google Sign-In failed: $e');
-      }
-
-      final GoogleSignInAuthentication auth = account.authentication;
-      final email = account.email.trim().toLowerCase();
-      final name = (account.displayName?.trim().isNotEmpty == true)
-          ? account.displayName!.trim()
-          : _deriveName(email);
-
-      String? accessToken;
-      try {
-        final clientAuth = await account.authorizationClient
-            .authorizationForScopes(['email', 'profile']);
-        accessToken = clientAuth?.accessToken;
-      } catch (_) {}
-
+    if (fallbackEmail != null && fallbackEmail.isNotEmpty) {
       return completeGoogleSignIn(
-        email: email,
-        name: name,
-        idToken: auth.idToken,
-        accessToken: accessToken,
-        photoUrl: account.photoUrl,
-        googleId: account.id,
+        email: fallbackEmail,
+        name: fallbackName ?? _deriveName(fallbackEmail),
       );
-    } catch (e) {
-      if (fallbackEmail != null && fallbackEmail.isNotEmpty) {
-        return completeGoogleSignIn(
-          email: fallbackEmail,
-          name: fallbackName ?? _deriveName(fallbackEmail),
-        );
-      }
-      return AuthResult.error('Google Sign-In error: $e');
     }
+    return AuthResult.error(
+      'Google account selection requires password verification.',
+    );
   }
 
   /// Complete authentication for a verified Google account

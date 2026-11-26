@@ -106,5 +106,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.0.11 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.11" --notes "Release APK with live GPS location and OpenWeather API integration" || \
-          gh release upload v1.0.11 build/app/outputs/flutter-apk/app-release.apk --clobber
+          gh release create v1.0.12 build/app/outputs/flutter-apk/app-release.apk --title "KrishiRitu Release APK v1.0.12" --notes "Release APK with Google password authentication and build stability fixes" || \
+          gh release upload v1.0.12 build/app/outputs/flutter-apk/app-release.apk --clobber

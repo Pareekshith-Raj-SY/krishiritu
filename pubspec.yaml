@@ -52,7 +52,6 @@ dependencies:
   url_launcher: ^6.3.0
   path_provider: ^2.1.4
   speech_to_text: ^7.4.0
-  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:
