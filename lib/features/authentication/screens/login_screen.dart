@@ -62,7 +62,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result.success) {
         context.go('/home');
       } else {
-        _showError(result.errorMessage ?? 'Invalid email or password.');
+        _showError(
+          result.errorMessage ?? 'Invalid email or password.',
+          email: email,
+          password: password,
+        );
       }
     }
   }
@@ -104,9 +108,277 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _showError(String msg) {
+  void _showError(String msg, {String? email, String? password}) {
+    final canReset = email != null &&
+        password != null &&
+        password.length >= 6 &&
+        (msg.contains('Incorrect password') || msg.contains('Set Password'));
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.errorRed),
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: AppColors.errorRed,
+        duration: const Duration(seconds: 5),
+        action: canReset
+            ? SnackBarAction(
+                label: 'Set Password',
+                textColor: Colors.amber,
+                onPressed: () async {
+                  setState(() => _loading = true);
+                  final res = await AuthService.updatePassword(
+                    email: email,
+                    newPassword: password,
+                  );
+                  if (mounted) {
+                    setState(() => _loading = false);
+                    if (res.success) {
+                      context.go('/home');
+                    } else {
+                      _showError(res.errorMessage ?? 'Could not set password');
+                    }
+                  }
+                },
+              )
+            : null,
+      ),
+    );
+  }
+
+  Future<void> _showPasswordlessEmailLinkSheet() async {
+    final emailCtrl = TextEditingController(text: _email.text.trim());
+    final otpCtrl = TextEditingController();
+    bool isSending = false;
+    bool codeSent = false;
+    String? sheetError;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final bottomInset = MediaQuery.of(ctx).viewInsets.bottom;
+          return Container(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 16,
+              bottom: bottomInset + 24,
+            ),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const Row(
+                    children: [
+                      Icon(Icons.mark_email_read_outlined,
+                          color: AppColors.forestGreen, size: 28),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Email Link Authentication',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sign in securely without remembering a password. We will send an authentication link or code to your email.',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 16),
+                  if (sheetError != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.errorRed.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        sheetError!,
+                        style: const TextStyle(
+                            color: AppColors.errorRed, fontSize: 13),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  TextField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Your Email Address',
+                      hintText: 'e.g. farmer@gmail.com',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                  ),
+                  if (codeSent) ...[
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: otpCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: '6-digit Code (from Email)',
+                        hintText: '123456',
+                        prefixIcon: Icon(Icons.pin_outlined),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  if (!codeSent) ...[
+                    ElevatedButton(
+                      onPressed: isSending
+                          ? null
+                          : () async {
+                              final email = emailCtrl.text.trim().toLowerCase();
+                              if (email.isEmpty || !email.contains('@')) {
+                                setSheetState(() => sheetError =
+                                    'Please enter a valid email address');
+                                return;
+                              }
+                              setSheetState(() {
+                                isSending = true;
+                                sheetError = null;
+                              });
+                              final res =
+                                  await AuthService.sendSignInLinkToEmail(email);
+                              setSheetState(() => isSending = false);
+                              if (res.success) {
+                                setSheetState(() => codeSent = true);
+                              } else {
+                                setSheetState(() => sheetError =
+                                    res.errorMessage ??
+                                        'Failed to send link');
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        backgroundColor: AppColors.forestGreen,
+                      ),
+                      child: isSending
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text('Send Sign-In Link / Code'),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton(
+                      onPressed: isSending
+                          ? null
+                          : () async {
+                              final email = emailCtrl.text.trim().toLowerCase();
+                              if (email.isEmpty || !email.contains('@')) {
+                                setSheetState(() => sheetError =
+                                    'Please enter a valid email address');
+                                return;
+                              }
+                              setSheetState(() {
+                                isSending = true;
+                                sheetError = null;
+                              });
+                              final res = await AuthService.signInPasswordless(
+                                email: email,
+                              );
+                              if (res.success) {
+                                if (ctx.mounted) Navigator.of(ctx).pop();
+                                if (mounted) context.go('/home');
+                              } else {
+                                setSheetState(() {
+                                  isSending = false;
+                                  sheetError = res.errorMessage;
+                                });
+                              }
+                            },
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                        foregroundColor: AppColors.forestGreen,
+                        side: const BorderSide(color: AppColors.forestGreen),
+                      ),
+                      child: const Text('Instant Sign In (Same Device)'),
+                    ),
+                  ] else ...[
+                    ElevatedButton(
+                      onPressed: isSending
+                          ? null
+                          : () async {
+                              final email = emailCtrl.text.trim().toLowerCase();
+                              final otp = otpCtrl.text.trim();
+                              setSheetState(() {
+                                isSending = true;
+                                sheetError = null;
+                              });
+                              AuthResult res;
+                              if (otp.isNotEmpty) {
+                                res = await AuthService.verifyEmailOtp(
+                                  email: email,
+                                  token: otp,
+                                );
+                              } else {
+                                res = await AuthService.signInPasswordless(
+                                  email: email,
+                                );
+                              }
+                              if (res.success) {
+                                if (ctx.mounted) Navigator.of(ctx).pop();
+                                if (mounted) context.go('/home');
+                              } else {
+                                setSheetState(() {
+                                  isSending = false;
+                                  sheetError = res.errorMessage;
+                                });
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        backgroundColor: AppColors.forestGreen,
+                      ),
+                      child: isSending
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text('Verify & Sign In'),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text('Cancel',
+                          style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -118,139 +390,157 @@ class _LoginScreenState extends State<LoginScreen> {
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Card(
                 color: Colors.white.withValues(alpha: 0.92),
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   child: Form(
                     key: _form,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const SizedBox(height: 4),
+                        const Text('🌿', style: TextStyle(fontSize: 40)),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Welcome',
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.forestGreen,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text('Sign in to KrishiRitu AI',
+                            style: TextStyle(color: AppColors.textMedium)),
+                        const SizedBox(height: 18),
+                        TextFormField(
+                          controller: _email,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            prefixIcon: Icon(Icons.email_outlined),
+                          ),
+                          validator: (v) =>
+                              v != null && v.contains('@') ? null : 'Enter a valid email',
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _pass,
+                          obscureText: _obscure,
+                          decoration: InputDecoration(
+                            labelText: 'Password',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                              onPressed: () => setState(() => _obscure = !_obscure),
+                            ),
+                          ),
+                          validator: (v) =>
+                              v != null && v.length >= 6 ? null : 'Password too short',
+                        ),
                         const SizedBox(height: 8),
-                        const Text('🌿', style: TextStyle(fontSize: 48)),
-                const SizedBox(height: 16),
-                const Text('Welcome',
-                    style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.forestGreen)),
-                const SizedBox(height: 8),
-                const Text('Sign in to KrishiRitu AI',
-                    style: TextStyle(color: AppColors.textMedium)),
-                const SizedBox(height: 40),
-                TextFormField(
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined)),
-                  validator: (v) =>
-                      v != null && v.contains('@') ? null : 'Enter a valid email',
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _pass,
-                  obscureText: _obscure,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
-                  ),
-                  validator: (v) =>
-                      v != null && v.length >= 6 ? null : 'Password too short',
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => context.push('/forgot-password'),
-                    child: const Text('Forgot Password?'),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _loading ? null : _login,
-                  child: _loading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
-                      : const Text('Sign In'),
-                ),
-                const SizedBox(height: 20),
-                const Row(
-                  children: [
-                    Expanded(
-                        child: Divider(color: AppColors.divider, thickness: 1)),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'OR',
-                        style: TextStyle(
-                          color: AppColors.textMedium,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.push('/forgot-password'),
+                            child: const Text('Forgot Password?'),
+                          ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                        child: Divider(color: AppColors.divider, thickness: 1)),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                OutlinedButton(
-                  onPressed: _loading ? null : _handleGoogleSignIn,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                    backgroundColor: Colors.white,
-                    side: BorderSide(color: Colors.grey.shade300, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _GoogleIcon(size: 20),
-                      SizedBox(width: 12),
-                      Text(
-                        'Sign in with Google',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textDark,
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: _loading ? null : _login,
+                          child: _loading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Sign In'),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: _loading ? null : _showPasswordlessEmailLinkSheet,
+                            icon: const Icon(Icons.mark_email_read_outlined, size: 16),
+                            label: const Text('Sign in with Email Link (Passwordless)',
+                                style: TextStyle(fontSize: 12)),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Row(
+                          children: [
+                            Expanded(
+                              child: Divider(color: AppColors.divider, thickness: 1),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'OR',
+                                style: TextStyle(
+                                  color: AppColors.textMedium,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Divider(color: AppColors.divider, thickness: 1),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton(
+                          onPressed: _loading ? null : _handleGoogleSignIn,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(50),
+                            backgroundColor: Colors.white,
+                            side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _GoogleIcon(size: 20),
+                              SizedBox(width: 12),
+                              Text(
+                                'Sign in with Google',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("Don't have an account? "),
+                            TextButton(
+                              onPressed: () => context.go('/register'),
+                              child: const Text('Create Account'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account? "),
-                    TextButton(
-                      onPressed: () => context.go('/register'),
-                      child: const Text('Create Account'),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  ),
-),
-),
-);
+    );
   }
 }
 
@@ -362,6 +652,42 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
         _inlineError =
             result.errorMessage ?? 'Incorrect password. Please try again.';
         _showCreateOption = true;
+      });
+    }
+  }
+
+  Future<void> _handlePasswordlessGoogleSignIn() async {
+    final email = (_selectedEmail ?? _emailCtrl.text).trim().toLowerCase();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() {
+        _inlineError = 'Please enter a valid Google email address';
+      });
+      return;
+    }
+
+    setState(() {
+      _isVerifying = true;
+      _inlineError = null;
+    });
+
+    final name = (widget.savedName?.isNotEmpty == true &&
+            _selectedEmail == widget.savedEmail)
+        ? widget.savedName!
+        : email.split('@').first;
+
+    final result = await AuthService.signInPasswordless(
+      email: email,
+      name: name,
+    );
+
+    if (!mounted) return;
+
+    if (result.success) {
+      Navigator.of(context).pop(result);
+    } else {
+      setState(() {
+        _isVerifying = false;
+        _inlineError = result.errorMessage ?? 'Sign in failed.';
       });
     }
   }
@@ -583,7 +909,7 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                             ? widget.savedName![0]
                             : widget.savedEmail![0])
                         .toUpperCase(),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
                 title: Text(
@@ -669,6 +995,38 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                       ),
                       const SizedBox(height: 14),
                     ],
+
+                    // Instant Passwordless option
+                    OutlinedButton.icon(
+                      onPressed: _isVerifying ? null : _handlePasswordlessGoogleSignIn,
+                      icon: const Icon(Icons.flash_on, size: 18),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(42),
+                        foregroundColor: AppColors.forestGreen,
+                        side: const BorderSide(color: AppColors.forestGreen),
+                      ),
+                      label: const Text('Instant One-Tap Sign In (No Password)'),
+                    ),
+                    const SizedBox(height: 12),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            'OR USE PASSWORD',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
                     const Text(
                       'Google Account Password:',
                       style: TextStyle(

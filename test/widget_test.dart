@@ -1177,5 +1177,50 @@ void main() {
       expect(find.text('Google Account Password:'), findsOneWidget);
       expect(find.text('Sign in with Google'), findsWidgets);
     });
+
+    test('AuthService.updatePassword resets password and updates session', () async {
+      final res = await AuthService.updatePassword(
+        email: 'farmer@gmail.com',
+        newPassword: 'mybrandnewpass123',
+      );
+      expect(res.success, isTrue);
+
+      final login = await AuthService.signIn(
+        email: 'farmer@gmail.com',
+        password: 'mybrandnewpass123',
+      );
+      expect(login.success, isTrue);
+    });
+
+    test('AuthService.sendSignInLinkToEmail succeeds and stores pending email', () async {
+      final res = await AuthService.sendSignInLinkToEmail('farmer@gmail.com');
+      expect(res.success, isTrue);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('email_link_pending_email'), equals('farmer@gmail.com'));
+    });
+
+    test('AuthService.signInPasswordless signs in user without password', () async {
+      final res = await AuthService.signInPasswordless(
+        email: 'farmer.passwordless@gmail.com',
+        name: 'Passwordless Farmer',
+      );
+      expect(res.success, isTrue);
+      expect(res.email, equals('farmer.passwordless@gmail.com'));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('is_authenticated'), isTrue);
+    });
+
+    testWidgets('LoginScreen shows Sign in with Email Link option', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LoginScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sign in with Email Link (Passwordless)'), findsOneWidget);
+    });
   });
 }

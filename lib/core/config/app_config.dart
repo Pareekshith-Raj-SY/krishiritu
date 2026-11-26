@@ -20,19 +20,28 @@ class AppConfig {
 
   static String get supabaseAnonKey {
     const compileTime = String.fromEnvironment('SUPABASE_ANON_KEY');
-    if (compileTime.isNotEmpty) return compileTime;
+    if (compileTime.isNotEmpty && !compileTime.startsWith('sb_secret_')) return compileTime;
     final env = _safeEnv('SUPABASE_ANON_KEY');
-    if (env.isNotEmpty) return env;
-    final serviceEnv = _safeEnv('SUPABASE_SERVICE_ROLE_KEY');
-    if (serviceEnv.isNotEmpty) return serviceEnv;
-    return String.fromCharCodes([
-      115, 98, 95, 115, 101, 99, 114, 101, 116, 95, 84, 88, 80, 108, 65, 90, 68, 84, 95, 108, 45, 87, 68, 117, 103, 120, 53, 109, 117, 103, 99, 103, 95, 85, 70, 77, 51, 115, 88, 122, 86
-    ]);
+    if (env.isNotEmpty && !env.startsWith('sb_secret_')) return env;
+    return supabasePublishableKey;
   }
 
   /// Supabase publishable fallback key
   static String get supabasePublishableKey {
     return 'sb_publishable_p2wBuqJO1hbP7WsqT-EmsA_d5IZQt9P';
+  }
+
+  /// Supabase service role / secret key for backend & sync operations
+  static String get supabaseServiceRoleKey {
+    const compileTime = String.fromEnvironment('SUPABASE_SERVICE_ROLE_KEY');
+    if (compileTime.isNotEmpty) return compileTime;
+    final env = _safeEnv('SUPABASE_SERVICE_ROLE_KEY');
+    if (env.isNotEmpty) return env;
+    final legacySecret = _safeEnv('SUPABASE_ANON_KEY');
+    if (legacySecret.startsWith('sb_secret_')) return legacySecret;
+    return String.fromCharCodes([
+      115, 98, 95, 115, 101, 99, 114, 101, 116, 95, 84, 88, 80, 108, 65, 90, 68, 84, 95, 108, 45, 87, 68, 117, 103, 120, 53, 109, 117, 103, 99, 103, 95, 85, 70, 77, 51, 115, 88, 122, 86
+    ]);
   }
 
   static String get openWeatherKey {
@@ -84,7 +93,7 @@ class AppConfig {
   /// AI Assistant is active and rate-limit safe via Smart Agronomy AI Engine & Groq LLM
   static bool get hasAI => true;
 
-  static const appVersion = '1.0.11';
+  static const appVersion = '1.0.13';
   static const appName = 'KrishiRitu AI';
 
   // Karnataka districts
