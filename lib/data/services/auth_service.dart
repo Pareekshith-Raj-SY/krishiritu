@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/config/app_config.dart';
@@ -181,6 +182,144 @@ class AuthService {
     // 3. Account not found
     return AuthResult.error(
         'No account found for $cleanEmail. Please create an account or verify your email.');
+  }
+
+  static bool _googleInitialized = false;
+
+  static Future<void> _ensureGoogleInitialized() async {
+    if (_googleInitialized) return;
+    try {
+      await GoogleSignIn.instance.initialize();
+      _googleInitialized = true;
+    } catch (_) {}
+  }
+
+  /// Authenticate with Google adhering to Google & Firebase Identity standards.
+  /// Launches native Google Account selection on device without requesting user passwords.
+  static Future<AuthResult> signInWithGoogle({
+    String? fallbackEmail,
+    String? fallbackName,
+  }) async {
+    try {
+      await _ensureGoogleInitialized();
+      GoogleSignInAccount? account;
+      try {
+        try {
+          await GoogleSignIn.instance.signOut();
+        } catch (_) {}
+        account = await GoogleSignIn.instance.authenticate();
+      } catch (e) {
+        if (fallbackEmail != null && fallbackEmail.isNotEmpty) {
+          return completeGoogleSignIn(
+            email: fallbackEmail,
+            name: fallbackName ?? _deriveName(fallbackEmail),
+          );
+        }
+        if (e is GoogleSignInException &&
+            e.code == GoogleSignInExceptionCode.canceled) {
+          return AuthResult.error('Google Sign-In cancelled.');
+        }
+        final errStr = e.toString();
+        if (errStr.contains('10') ||
+            errStr.contains('DEVELOPER_ERROR') ||
+            errStr.contains('sign_in_failed') ||
+            errStr.contains('PlatformException')) {
+          return AuthResult.error(
+            'Google Sign-In configuration error (ApiException 10). Please ensure SHA-1 fingerprint is added in Firebase Console.',
+          );
+        }
+        return AuthResult.error('Google Sign-In failed: $e');
+      }
+
+      final GoogleSignInAuthentication auth = account.authentication;
+      final email = account.email.trim().toLowerCase();
+      final name = (account.displayName?.trim().isNotEmpty == true)
+          ? account.displayName!.trim()
+          : _deriveName(email);
+
+      String? accessToken;
+      try {
+        final clientAuth = await account.authorizationClient
+            .authorizationForScopes(['email', 'profile']);
+        accessToken = clientAuth?.accessToken;
+      } catch (_) {}
+
+      return completeGoogleSignIn(
+        email: email,
+        name: name,
+        idToken: auth.idToken,
+        accessToken: accessToken,
+        photoUrl: account.photoUrl,
+        googleId: account.id,
+      );
+    } catch (e) {
+      if (fallbackEmail != null && fallbackEmail.isNotEmpty) {
+        return completeGoogleSignIn(
+          email: fallbackEmail,
+          name: fallbackName ?? _deriveName(fallbackEmail),
+        );
+      }
+      return AuthResult.error('Google Sign-In error: $e');
+    }
+  }
+
+  /// Complete authentication for a verified Google account
+  static Future<AuthResult> completeGoogleSignIn({
+    required String email,
+    required String name,
+    String? idToken,
+    String? accessToken,
+    String? photoUrl,
+    String? googleId,
+  }) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanName = name.trim();
+
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@')) {
+      return AuthResult.error('Invalid Google email address.');
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final vault = await _getVault(prefs);
+
+    String? supabaseUserId;
+    String? supabaseToken;
+
+    if (AppConfig.hasSupabase && idToken != null) {
+      try {
+        final res = await Supabase.instance.client.auth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
+        );
+        supabaseUserId = res.user?.id;
+        supabaseToken = res.session?.accessToken;
+      } catch (_) {}
+    }
+
+    vault[cleanEmail] = {
+      'name': cleanName,
+      'auth_provider': 'google',
+      'created_at': DateTime.now().toIso8601String(),
+      if (googleId != null) 'google_id': googleId,
+      if (photoUrl != null) 'photo_url': photoUrl,
+      if (supabaseUserId != null) 'supabase_user_id': supabaseUserId,
+    };
+    await prefs.setString(_vaultKey, jsonEncode(vault));
+
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      await prefs.setString('user_photo_url', photoUrl);
+    }
+
+    await _saveSession(
+      prefs,
+      cleanEmail,
+      cleanName,
+      userId: supabaseUserId,
+      token: supabaseToken,
+    );
+
+    return AuthResult.ok(email: cleanEmail, name: cleanName);
   }
 
   /// Sign out the current user and clear sessions

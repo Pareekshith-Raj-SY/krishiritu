@@ -1078,4 +1078,40 @@ void main() {
       expect(find.text('Simulation Results'), findsOneWidget);
     });
   });
+
+  // ─── Google Sign-In & Passwordless Auth Verification ───────────────────────
+  group('Google Sign-In & Passwordless Auth', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test('AuthService.completeGoogleSignIn signs in passwordlessly and saves session', () async {
+      final result = await AuthService.completeGoogleSignIn(
+        email: 'farmer.google@gmail.com',
+        name: 'Karnataka Farmer',
+        idToken: 'mock_google_id_token_12345',
+        googleId: 'google_user_9999',
+      );
+
+      expect(result.success, isTrue);
+      expect(result.email, equals('farmer.google@gmail.com'));
+      expect(result.name, equals('Karnataka Farmer'));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('is_authenticated'), isTrue);
+      expect(prefs.getString('user_email'), equals('farmer.google@gmail.com'));
+      expect(prefs.getString('user_name'), equals('Karnataka Farmer'));
+    });
+
+    test('AuthService.signInWithGoogle fallback performs passwordless authentication', () async {
+      final result = await AuthService.signInWithGoogle(
+        fallbackEmail: 'test.farmer@gmail.com',
+        fallbackName: 'Test Farmer',
+      );
+
+      expect(result.success, isTrue);
+      expect(result.email, equals('test.farmer@gmail.com'));
+      expect(result.name, equals('Test Farmer'));
+    });
+  });
 }

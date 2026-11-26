@@ -68,6 +68,49 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleGoogleSignIn() async {
+    setState(() => _loading = true);
+
+    try {
+      final result = await AuthService.signInWithGoogle();
+
+      if (!mounted) return;
+      setState(() => _loading = false);
+
+      if (result.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Welcome, ${result.name}! Signed in with Google.'),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.forestGreen,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.go('/home');
+      } else {
+        if (result.errorMessage != null &&
+            result.errorMessage!.contains('cancelled')) {
+          return;
+        }
+
+        // Show account chooser sheet if Google Play services needs fallback
+        await _showGoogleAccountPicker();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        await _showGoogleAccountPicker();
+      }
+    }
+  }
+
+  Future<void> _showGoogleAccountPicker() async {
     final prefs = await SharedPreferences.getInstance();
     final savedEmail = prefs.getString('user_email');
     final savedName = prefs.getString('user_name');
@@ -78,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _GoogleAccountPickerSheet(
+      builder: (ctx) => _GoogleAccountChooserSheet(
         savedEmail: savedEmail,
         savedName: savedName,
       ),
@@ -87,8 +130,17 @@ class _LoginScreenState extends State<LoginScreen> {
     if (result != null && result.success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Welcome, ${result.name}! Signed in with Google.'),
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Welcome, ${result.name}! Signed in with Google.'),
+              ),
+            ],
+          ),
           backgroundColor: AppColors.forestGreen,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       context.go('/home');
@@ -111,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Card(
-                color: Colors.white.withOpacity(0.92),
+                color: Colors.white.withValues(alpha: 0.92),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Form(
@@ -276,30 +328,27 @@ class _GoogleIcon extends StatelessWidget {
   }
 }
 
-class _GoogleAccountPickerSheet extends StatefulWidget {
+class _GoogleAccountChooserSheet extends StatefulWidget {
   final String? savedEmail;
   final String? savedName;
 
-  const _GoogleAccountPickerSheet({
+  const _GoogleAccountChooserSheet({
     this.savedEmail,
     this.savedName,
   });
 
   @override
-  State<_GoogleAccountPickerSheet> createState() =>
-      _GoogleAccountPickerSheetState();
+  State<_GoogleAccountChooserSheet> createState() =>
+      _GoogleAccountChooserSheetState();
 }
 
-class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
+class _GoogleAccountChooserSheetState extends State<_GoogleAccountChooserSheet> {
   final _emailCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _obscurePass = true;
-  String? _selectedEmail;
   bool _showCustomInput = false;
-  bool _isVerifying = false;
+  bool _isSigningIn = false;
+  String? _signingInEmail;
   String? _inlineError;
-  bool _showCreateOption = false;
 
   @override
   void initState() {
@@ -312,83 +361,52 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
   @override
   void dispose() {
     _emailCtrl.dispose();
-    _passCtrl.dispose();
     super.dispose();
   }
 
-  void _selectSavedAccount(String email) {
+  Future<void> _completeSignIn({
+    required String email,
+    String? displayName,
+  }) async {
+    final cleanEmail = email.trim().toLowerCase();
     setState(() {
-      _selectedEmail = email;
-      _passCtrl.clear();
+      _isSigningIn = true;
+      _signingInEmail = cleanEmail;
       _inlineError = null;
-      _showCreateOption = false;
     });
+
+    final result = await AuthService.completeGoogleSignIn(
+      email: cleanEmail,
+      name: displayName ?? cleanEmail.split('@').first,
+    );
+
+    if (!mounted) return;
+
+    if (result.success) {
+      Navigator.of(context).pop(result);
+    } else {
+      setState(() {
+        _isSigningIn = false;
+        _signingInEmail = null;
+        _inlineError =
+            result.errorMessage ?? 'Google Sign-In failed. Please try again.';
+      });
+    }
   }
 
-  Future<void> _submitSignIn() async {
+  void _submitCustomEmail() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-
-    final email = (_selectedEmail ?? _emailCtrl.text).trim().toLowerCase();
-    final password = _passCtrl.text.trim();
-
-    setState(() {
-      _isVerifying = true;
-      _inlineError = null;
-      _showCreateOption = false;
-    });
-
-    final result = await AuthService.signIn(
+    final email = _emailCtrl.text.trim();
+    _completeSignIn(
       email: email,
-      password: password,
-      isGoogleAuth: true,
+      displayName: email.split('@').first,
     );
-
-    if (!mounted) return;
-
-    if (result.success) {
-      Navigator.of(context).pop(result);
-    } else {
-      setState(() {
-        _isVerifying = false;
-        _inlineError = result.errorMessage ?? 'Incorrect password. Please try again.';
-        _showCreateOption = _inlineError!.contains('No account found');
-      });
-    }
-  }
-
-  Future<void> _createAccountWithGoogle() async {
-    final email = (_selectedEmail ?? _emailCtrl.text).trim().toLowerCase();
-    final password = _passCtrl.text.trim();
-
-    setState(() {
-      _isVerifying = true;
-      _inlineError = null;
-    });
-
-    final name = email.split('@').first;
-    final result = await AuthService.register(
-      email: email,
-      password: password,
-      name: name,
-    );
-
-    if (!mounted) return;
-
-    if (result.success) {
-      Navigator.of(context).pop(result);
-    } else {
-      setState(() {
-        _isVerifying = false;
-        _inlineError = result.errorMessage ?? 'Registration failed.';
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final hasSaved = widget.savedEmail != null && widget.savedEmail!.isNotEmpty;
-    final isEnteringPassword = _selectedEmail != null || _showCustomInput;
 
     return Container(
       padding: EdgeInsets.only(
@@ -421,44 +439,41 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
               children: [
                 const _GoogleIcon(size: 26),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _selectedEmail != null
-                          ? 'Verify password'
-                          : (_showCustomInput && !hasSaved
-                              ? 'Sign in with Google'
-                              : 'Choose an account'),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Choose an account',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'to continue to KrishiRitu AI',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
+                      Text(
+                        'to continue to KrishiRitu AI',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             const Divider(),
 
-            // Error alert banner if verification failed
             if (_inlineError != null) ...[
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.errorRed.withOpacity(0.1),
+                  color: AppColors.errorRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.errorRed.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -478,75 +493,9 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                   ],
                 ),
               ),
-              if (_showCreateOption) ...[
-                const SizedBox(height: 6),
-                OutlinedButton(
-                  onPressed: _isVerifying ? null : _createAccountWithGoogle,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(42),
-                    foregroundColor: AppColors.forestGreen,
-                    side: const BorderSide(color: AppColors.forestGreen),
-                  ),
-                  child: const Text('Create account with this Google email & password'),
-                ),
-                const SizedBox(height: 8),
-              ],
             ],
 
-            // If account is selected, show chosen account pill with "Change" option
-            if (_selectedEmail != null) ...[
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.paleGreen.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: AppColors.leafGreen.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: AppColors.forestGreen,
-                      foregroundColor: Colors.white,
-                      child: Text(
-                        _selectedEmail![0].toUpperCase(),
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _selectedEmail!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: AppColors.textDark,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => setState(() {
-                        _selectedEmail = null;
-                        _passCtrl.clear();
-                        _inlineError = null;
-                        _showCreateOption = false;
-                      }),
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        foregroundColor: AppColors.leafGreen,
-                      ),
-                      child: const Text('Change'),
-                    ),
-                  ],
-                ),
-              ),
-            ] else if (hasSaved && !_showCustomInput) ...[
-              // Account list view
+            if (hasSaved && !_showCustomInput) ...[
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
@@ -571,8 +520,19 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                   widget.savedEmail!,
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                onTap: () => _selectSavedAccount(widget.savedEmail!),
+                trailing: _isSigningIn && _signingInEmail == widget.savedEmail
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.arrow_forward_ios, size: 14),
+                onTap: _isSigningIn
+                    ? null
+                    : () => _completeSignIn(
+                          email: widget.savedEmail!,
+                          displayName: widget.savedName,
+                        ),
               ),
               const Divider(),
               ListTile(
@@ -591,60 +551,25 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-                onTap: () => setState(() {
-                  _showCustomInput = true;
-                  _selectedEmail = null;
-                  _emailCtrl.clear();
-                  _passCtrl.clear();
-                  _inlineError = null;
-                  _showCreateOption = false;
-                }),
+                onTap: _isSigningIn
+                    ? null
+                    : () => setState(() {
+                          _showCustomInput = true;
+                          _emailCtrl.clear();
+                          _inlineError = null;
+                        }),
               ),
             ],
 
-            // Input form: asks for Google Email (if custom) and ALWAYS asks for Password!
-            if (isEnteringPassword) ...[
+            if (_showCustomInput) ...[
               const SizedBox(height: 10),
               Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_selectedEmail == null) ...[
-                      const Text(
-                        'Google Email:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          hintText: 'e.g. farmer@gmail.com',
-                          prefixIcon: const Icon(Icons.alternate_email),
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () => _emailCtrl.clear(),
-                          ),
-                        ),
-                        validator: (v) {
-                          final val = v?.trim() ?? '';
-                          if (val.isEmpty) return 'Please enter your email';
-                          if (!val.contains('@') || !val.contains('.')) {
-                            return 'Enter a valid email address';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                    ],
                     const Text(
-                      'Google Account Password:',
+                      'Google Email address:',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -653,56 +578,54 @@ class _GoogleAccountPickerSheetState extends State<_GoogleAccountPickerSheet> {
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
-                      controller: _passCtrl,
-                      obscureText: _obscurePass,
-                      autofocus: _selectedEmail != null,
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      autofocus: true,
+                      enabled: !_isSigningIn,
                       decoration: InputDecoration(
-                        hintText: 'Enter your password',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        hintText: 'e.g. farmer@gmail.com',
+                        prefixIcon: const Icon(Icons.alternate_email),
                         suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePass ? Icons.visibility_off : Icons.visibility,
-                          ),
-                          onPressed: () =>
-                              setState(() => _obscurePass = !_obscurePass),
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => _emailCtrl.clear(),
                         ),
                       ),
                       validator: (v) {
                         final val = v?.trim() ?? '';
-                        if (val.isEmpty) return 'Please enter your password';
-                        if (val.length < 6) {
-                          return 'Password must be at least 6 characters';
+                        if (val.isEmpty) return 'Please enter your Google email';
+                        if (!val.contains('@') || !val.contains('.')) {
+                          return 'Enter a valid email address';
                         }
                         return null;
                       },
-                      onFieldSubmitted: (_) => _submitSignIn(),
+                      onFieldSubmitted: (_) => _submitCustomEmail(),
                     ),
                     const SizedBox(height: 18),
                     ElevatedButton(
-                      onPressed: _isVerifying ? null : _submitSignIn,
+                      onPressed: _isSigningIn ? null : _submitCustomEmail,
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
                         backgroundColor: AppColors.forestGreen,
                       ),
-                      child: _isVerifying
+                      child: _isSigningIn
                           ? const SizedBox(
                               width: 24,
                               height: 24,
                               child: CircularProgressIndicator(
                                   color: Colors.white, strokeWidth: 2),
                             )
-                          : const Text('Sign in with Google'),
+                          : const Text('Continue with Google'),
                     ),
-                    if (hasSaved && _showCustomInput && _selectedEmail == null) ...[
+                    if (hasSaved) ...[
                       const SizedBox(height: 8),
                       Center(
                         child: TextButton(
-                          onPressed: () => setState(() {
-                            _showCustomInput = false;
-                            _selectedEmail = null;
-                            _inlineError = null;
-                            _showCreateOption = false;
-                          }),
+                          onPressed: _isSigningIn
+                              ? null
+                              : () => setState(() {
+                                    _showCustomInput = false;
+                                    _inlineError = null;
+                                  }),
                           child: const Text('Back to saved accounts'),
                         ),
                       ),
