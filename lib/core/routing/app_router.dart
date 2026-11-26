@@ -46,7 +46,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (c, s) => CropDetailScreen(cropId: s.pathParameters['cropId'] ?? ''),
           ),
           GoRoute(path: '/season-twin', builder: (c, s) => const SeasonTwinScreen()),
-          GoRoute(path: '/simulator', builder: (c, s) => const ScenarioSimulatorScreen()),
+          GoRoute(
+            path: '/simulator',
+            builder: (c, s) => ScenarioSimulatorScreen(initialCrop: s.extra as String?),
+          ),
           GoRoute(path: '/crop-health', builder: (c, s) => const CropHealthScreen()),
           GoRoute(path: '/weather', builder: (c, s) => const WeatherScreen()),
           GoRoute(path: '/budget', builder: (c, s) => const BudgetScreen()),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:krishiritu/data/repositories/crop_repository.dart';
@@ -20,6 +21,7 @@ import 'package:krishiritu/data/services/ai_assistant_service.dart';
 import 'package:krishiritu/data/services/speech_service.dart';
 import 'package:krishiritu/data/services/crop_diagnosis_service.dart';
 import 'package:krishiritu/shared/localization/app_localizations.dart';
+import 'package:krishiritu/features/scenario_simulator/screens/scenario_simulator_screen.dart';
 
 class MockWeatherHttpClient extends http.BaseClient {
   final Future<http.Response> Function(http.Request request) handler;
@@ -964,6 +966,116 @@ void main() {
         () async => await service.getWeather('Bengaluru', forceRefresh: true),
         throwsA(isA<WeatherApiException>().having((e) => e.message, 'message', contains('Network failure'))),
       );
+    });
+  });
+
+  group('ScenarioSimulatorScreen', () {
+    testWidgets('renders ScenarioSimulatorScreen with default crop Ragi and auto-populated parameters', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [
+            Locale('en'),
+            Locale('kn'),
+            Locale('hi'),
+          ],
+          home: ScenarioSimulatorScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Check scenario parameters header & crop dropdown
+      expect(find.text('📊 Scenario Parameters'), findsOneWidget);
+      expect(find.text('Ragi'), findsWidgets);
+
+      // Check baseline values shown: Current Market Price, Base Cost, Expected Yield
+      expect(find.text('₹35/kg'), findsWidgets);
+      expect(find.text('₹14000'), findsOneWidget);
+      expect(find.text('1000 kg'), findsOneWidget);
+
+      // Check default scenario tags
+      expect(find.text('🌦️ Monsoon Delay: 10 days'), findsOneWidget);
+      expect(find.text('📈 Input Cost Increase: +10%'), findsOneWidget);
+      expect(find.text('📉 Yield Reduction: -12%'), findsOneWidget);
+
+      // Check simulation results automatically displayed
+      expect(find.text('Simulation Results'), findsOneWidget);
+      expect(find.text('Net Profit / Loss'), findsOneWidget);
+      expect(find.text('Run Simulation'), findsOneWidget);
+    });
+
+    testWidgets('changing crop automatically updates all scenario parameters and re-simulates', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [
+            Locale('en'),
+            Locale('kn'),
+            Locale('hi'),
+          ],
+          home: ScenarioSimulatorScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on dropdown to select Paddy
+      final dropdownFinder = find.byType(DropdownButtonFormField<String>);
+      expect(dropdownFinder, findsOneWidget);
+      await tester.tap(dropdownFinder);
+      await tester.pumpAndSettle();
+
+      final paddyItem = find.text('Paddy').last;
+      await tester.tap(paddyItem);
+      await tester.pumpAndSettle();
+
+      // Verify parameters automatically updated for Paddy
+      expect(find.text('₹22/kg'), findsWidgets);
+      expect(find.text('₹22000'), findsOneWidget);
+      expect(find.text('2000 kg'), findsOneWidget);
+      expect(find.text('🌦️ Monsoon Delay: 15 days'), findsOneWidget);
+      expect(find.text('📈 Input Cost Increase: +12%'), findsOneWidget);
+      expect(find.text('📉 Yield Reduction: -18%'), findsOneWidget);
+
+      // Simulation results still present and computed
+      expect(find.text('Simulation Results'), findsOneWidget);
+    });
+
+    testWidgets('tapping Run Simulation button re-runs and keeps results active', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [
+            Locale('en'),
+            Locale('kn'),
+            Locale('hi'),
+          ],
+          home: ScenarioSimulatorScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final runBtn = find.text('Run Simulation');
+      expect(runBtn, findsOneWidget);
+      await tester.ensureVisible(runBtn);
+      await tester.tap(runBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Simulation Results'), findsOneWidget);
     });
   });
 }
