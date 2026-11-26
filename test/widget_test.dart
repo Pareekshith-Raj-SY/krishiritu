@@ -22,6 +22,7 @@ import 'package:krishiritu/data/services/speech_service.dart';
 import 'package:krishiritu/data/services/crop_diagnosis_service.dart';
 import 'package:krishiritu/shared/localization/app_localizations.dart';
 import 'package:krishiritu/features/scenario_simulator/screens/scenario_simulator_screen.dart';
+import 'package:krishiritu/features/authentication/screens/login_screen.dart';
 
 class MockWeatherHttpClient extends http.BaseClient {
   final Future<http.Response> Function(http.Request request) handler;
@@ -1079,13 +1080,70 @@ void main() {
     });
   });
 
-  // ─── Google Sign-In & Passwordless Auth Verification ───────────────────────
-  group('Google Sign-In & Passwordless Auth', () {
+  // ─── Google Sign-In & Password Auth Verification ───────────────────────────
+  group('Google Sign-In & Password Auth', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('AuthService.completeGoogleSignIn signs in passwordlessly and saves session', () async {
+    test('AuthService.signIn with isGoogleAuth accepts correct password for existing account', () async {
+      final result = await AuthService.signIn(
+        email: 'pareekshithrajsy@gmail.com',
+        password: 'farmer123',
+        isGoogleAuth: true,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.email, equals('pareekshithrajsy@gmail.com'));
+      expect(result.name, equals('Pareekshith Raj'));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('is_authenticated'), isTrue);
+      expect(prefs.getString('user_email'), equals('pareekshithrajsy@gmail.com'));
+    });
+
+    test('AuthService.signIn with isGoogleAuth rejects wrong password for existing account', () async {
+      final result = await AuthService.signIn(
+        email: 'pareekshithrajsy@gmail.com',
+        password: 'incorrectpassword',
+        isGoogleAuth: true,
+      );
+
+      expect(result.success, isFalse);
+      expect(result.errorMessage, contains('Incorrect password'));
+    });
+
+    test('AuthService.signIn with isGoogleAuth rejects uncreated account with No account found', () async {
+      final result = await AuthService.signIn(
+        email: 'new.farmer.google@gmail.com',
+        password: 'mysecurepassword123',
+        isGoogleAuth: true,
+      );
+
+      expect(result.success, isFalse);
+      expect(result.errorMessage, contains('No account found'));
+    });
+
+    test('AuthService.createOrUpdateGoogleAccount registers or updates password', () async {
+      final result = await AuthService.createOrUpdateGoogleAccount(
+        email: 'farmer@gmail.com',
+        password: 'brandnewpassword123',
+        name: 'Karnataka Farmer',
+      );
+
+      expect(result.success, isTrue);
+      expect(result.email, equals('farmer@gmail.com'));
+
+      // Verify sign in with updated password succeeds
+      final loginRes = await AuthService.signIn(
+        email: 'farmer@gmail.com',
+        password: 'brandnewpassword123',
+        isGoogleAuth: true,
+      );
+      expect(loginRes.success, isTrue);
+    });
+
+    test('AuthService.completeGoogleSignIn signs in and saves session', () async {
       final result = await AuthService.completeGoogleSignIn(
         email: 'farmer.google@gmail.com',
         name: 'Karnataka Farmer',
@@ -1103,15 +1161,21 @@ void main() {
       expect(prefs.getString('user_name'), equals('Karnataka Farmer'));
     });
 
-    test('AuthService.signInWithGoogle fallback performs passwordless authentication', () async {
-      final result = await AuthService.signInWithGoogle(
-        fallbackEmail: 'test.farmer@gmail.com',
-        fallbackName: 'Test Farmer',
+    testWidgets('LoginScreen tapping Sign in with Google prompts for password', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LoginScreen(),
+        ),
       );
+      await tester.pumpAndSettle();
 
-      expect(result.success, isTrue);
-      expect(result.email, equals('test.farmer@gmail.com'));
-      expect(result.name, equals('Test Farmer'));
+      final googleBtn = find.text('Sign in with Google');
+      expect(googleBtn, findsOneWidget);
+      await tester.tap(googleBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Google Account Password:'), findsOneWidget);
+      expect(find.text('Sign in with Google'), findsWidgets);
     });
   });
 }

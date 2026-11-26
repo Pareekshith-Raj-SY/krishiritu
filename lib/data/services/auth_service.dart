@@ -184,6 +184,56 @@ class AuthService {
         'No account found for $cleanEmail. Please create an account or verify your email.');
   }
 
+  /// Creates a new Google account with password or updates existing password
+  /// adhering to Firebase Password Authentication standards
+  /// (https://firebase.google.com/docs/auth/android/password-auth).
+  static Future<AuthResult> createOrUpdateGoogleAccount({
+    required String email,
+    required String password,
+    String? name,
+  }) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanPass = password.trim();
+    final cleanName = (name != null && name.trim().isNotEmpty)
+        ? name.trim()
+        : _deriveName(cleanEmail);
+
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@')) {
+      return AuthResult.error('Please enter a valid Google email address.');
+    }
+    if (cleanPass.length < 6) {
+      return AuthResult.error('Password must be at least 6 characters.');
+    }
+
+    final reg = await register(
+      email: cleanEmail,
+      password: cleanPass,
+      name: cleanName,
+    );
+
+    if (reg.success) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_google_user', true);
+      return reg;
+    }
+
+    // If register returns an error (e.g. user already exists in Supabase),
+    // update local vault password and sign in directly
+    final prefs = await SharedPreferences.getInstance();
+    final vault = await _getVault(prefs);
+    vault[cleanEmail] = {
+      'password': cleanPass,
+      'name': cleanName,
+      'auth_provider': 'google',
+      'created_at': DateTime.now().toIso8601String(),
+    };
+    await prefs.setString(_vaultKey, jsonEncode(vault));
+    await prefs.setBool('is_google_user', true);
+    await _saveSession(prefs, cleanEmail, cleanName);
+
+    return AuthResult.ok(email: cleanEmail, name: cleanName);
+  }
+
   static bool _googleInitialized = false;
 
   static Future<void> _ensureGoogleInitialized() async {
