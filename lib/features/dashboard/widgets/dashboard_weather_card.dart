@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../data/providers/weather_provider.dart';
+import '../../../data/services/location_service.dart';
 import '../../../data/services/weather_service.dart';
 import '../../../shared/localization/app_localizations.dart';
 import '../../farms/providers/farm_provider.dart';
@@ -11,6 +13,123 @@ import '../../../app.dart';
 
 class DashboardWeatherCard extends ConsumerWidget {
   const DashboardWeatherCard({super.key});
+
+  Future<void> _onWeatherCardTapped(BuildContext context, WidgetRef ref) async {
+    final locationService = LocationService();
+    final serviceEnabled = await locationService.isLocationServiceEnabled();
+    final permission = await locationService.checkPermission();
+
+    if (!context.mounted) return;
+
+    if (!serviceEnabled ||
+        permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      _showTurnOnLocationDialog(
+        context: context,
+        ref: ref,
+        locationService: locationService,
+        serviceDisabled: !serviceEnabled,
+        permissionDeniedForever: permission == LocationPermission.deniedForever,
+      );
+    } else {
+      ref.read(weatherProvider.notifier).detectGps();
+      context.push('/weather');
+    }
+  }
+
+  void _showTurnOnLocationDialog({
+    required BuildContext context,
+    required WidgetRef ref,
+    required LocationService locationService,
+    required bool serviceDisabled,
+    required bool permissionDeniedForever,
+  }) {
+    final l10n = AppLocalizations.of(context);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.forestGreen.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.location_on_rounded, color: AppColors.forestGreen, size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l10n.t('turn_on_location_title'),
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.forestGreen,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          l10n.t('turn_on_location_desc'),
+          style: const TextStyle(fontSize: 14, color: AppColors.textMedium, height: 1.4),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    if (context.mounted) {
+                      context.push('/weather');
+                    }
+                  },
+                  child: Text(
+                    l10n.t('continue_without_location'),
+                    style: const TextStyle(fontSize: 12, color: AppColors.textLight, fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.forestGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  if (serviceDisabled) {
+                    await locationService.openLocationSettings();
+                  } else if (permissionDeniedForever) {
+                    await locationService.openAppSettings();
+                  } else {
+                    await locationService.requestPermission();
+                  }
+                  ref.read(weatherProvider.notifier).detectGps();
+                  if (context.mounted) {
+                    context.push('/weather');
+                  }
+                },
+                icon: const Icon(Icons.my_location_rounded, size: 16),
+                label: Text(
+                  l10n.t('turn_on_location_btn'),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showLocationPicker(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -268,7 +387,7 @@ class DashboardWeatherCard extends ConsumerWidget {
     final emoji = weather?.conditionEmoji ?? '🌤️';
 
     return GestureDetector(
-      onTap: () => context.push('/weather'),
+      onTap: () => _onWeatherCardTapped(context, ref),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
@@ -334,36 +453,6 @@ class DashboardWeatherCard extends ConsumerWidget {
                     onPressed: isLoading ? null : () => weatherNotifier.refresh(),
                   ),
                   const SizedBox(width: 4),
-
-                  // Configured status pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.leafGreen.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.leafGreen.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isLoading ? Icons.sync : Icons.check_circle,
-                          size: 12,
-                          color: AppColors.leafGreen,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          isLoading ? 'Syncing...' : l10n.t('configured'),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.forestGreen,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 6),
                   const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.textLight),
                 ],
               ),

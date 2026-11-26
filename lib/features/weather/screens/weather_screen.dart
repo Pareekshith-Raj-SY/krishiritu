@@ -33,7 +33,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final wp = ref.read(weatherProvider);
       if (wp.weather != null) {
         setState(() {
@@ -45,10 +45,92 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
           _activeLat = wp.activeLat;
           _activeLon = wp.activeLon;
         });
-      } else {
+      }
+
+      // If GPS is not active, check whether location is enabled
+      if (!wp.isGpsActive) {
+        final serviceEnabled = await _locationService.isLocationServiceEnabled();
+        if (!serviceEnabled && mounted) {
+          _showTurnOnLocationPrompt();
+        } else if (serviceEnabled) {
+          _detectCurrentGpsLocation();
+        }
+      } else if (wp.weather == null) {
         _initWeather();
       }
     });
+  }
+
+  void _showTurnOnLocationPrompt() {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.forestGreen.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.location_on_rounded, color: AppColors.forestGreen, size: 24),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l10n.t('turn_on_location_title'),
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.forestGreen,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          l10n.t('turn_on_location_desc'),
+          style: const TextStyle(fontSize: 14, color: AppColors.textMedium, height: 1.4),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(
+                    l10n.t('continue_without_location'),
+                    style: const TextStyle(fontSize: 12, color: AppColors.textLight, fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.forestGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await _locationService.openLocationSettings();
+                },
+                icon: const Icon(Icons.my_location_rounded, size: 16),
+                label: Text(
+                  l10n.t('turn_on_location_btn'),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _initWeather() async {
@@ -473,6 +555,46 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(children: [
+          if (!_isGpsActive)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.warmAmber.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.warmAmber.withValues(alpha: 0.35)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.location_off_rounded, color: AppColors.warmAmber, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.t('turn_on_gps_banner'),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                    ),
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                    onPressed: () async {
+                      final enabled = await _locationService.isLocationServiceEnabled();
+                      if (!enabled) {
+                        await _locationService.openLocationSettings();
+                      } else {
+                        _detectCurrentGpsLocation();
+                      }
+                    },
+                    child: Text(
+                      l10n.t('turn_on_location_btn'),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.forestGreen),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           _liveWeatherCard(l10n, locale.languageCode, farm?.district),
           const SizedBox(height: 12),
           _quickActionButtons(l10n),
@@ -628,7 +750,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                 border: Border.all(color: Colors.grey.shade200),
               ),
               child: Text(
-                _errorMessage ?? 'Unable to retrieve real-time weather information from OpenWeather. Please check your network connection or API configuration.',
+                _errorMessage ?? 'Unable to retrieve real-time weather information. Please check your network connection or location settings.',
                 style: const TextStyle(
                   color: AppColors.textMedium,
                   fontSize: 12.5,

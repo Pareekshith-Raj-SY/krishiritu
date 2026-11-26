@@ -187,6 +187,11 @@ class AppLocalizations {
       'refresh_weather': 'Refresh Weather',
       'location_disabled': 'GPS location service is disabled on device.',
       'location_denied': 'Location permission denied. Showing district weather.',
+      'turn_on_location_title': 'Turn On Location',
+      'turn_on_location_desc': 'Please turn on your device location to get live and accurate farm weather for your exact fields.',
+      'turn_on_location_btn': 'Turn On Location',
+      'continue_without_location': 'Continue Without Location',
+      'turn_on_gps_banner': 'Device location is off. Turn on GPS to view live weather for your farm.',
 
       // Settings & Profile (Image 4)
       'settings_profile': 'Settings & Profile',
@@ -619,6 +624,11 @@ class AppLocalizations {
       'refresh_weather': 'ಹವಾಮಾನ ನವೀಕರಿಸಿ',
       'location_disabled': 'ಸಾಧನದಲ್ಲಿ ಜಿಪಿಎಸ್ ಸ್ಥಳ ಸೇವೆ ಆಫ್ ಆಗಿದೆ.',
       'location_denied': 'ಸ್ಥಳ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಜಿಲ್ಲೆಯ ಹವಾಮಾನ ತೋರಿಸಲಾಗುತ್ತಿದೆ.',
+      'turn_on_location_title': 'ಲೊಕೇಶನ್ ಆನ್ ಮಾಡಿ',
+      'turn_on_location_desc': 'ನಿಮ್ಮ ಜಮೀನಿನ ನಿಖರವಾದ ಲೈವ್ ಹವಾಮಾನವನ್ನು ಪಡೆಯಲು ದಯವಿಟ್ಟು ಸಾಧನದ ಲೊಕೇಶನ್ (GPS) ಆನ್ ಮಾಡಿ.',
+      'turn_on_location_btn': 'ಲೊಕೇಶನ್ ಆನ್ ಮಾಡಿ',
+      'continue_without_location': 'ಲೊಕೇಶನ್ ಇಲ್ಲದೆ ಮುಂದುವರಿಯಿರಿ',
+      'turn_on_gps_banner': 'ಸಾಧನದ ಲೊಕೇಶನ್ ಆಫ್ ಆಗಿದೆ. ಲೈವ್ ಹವಾಮಾನಕ್ಕಾಗಿ ಜಿಪಿಎಸ್ ಆನ್ ಮಾಡಿ.',
 
       // Settings & Profile (Image 4)
       'settings_profile': 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು & ಪ್ರೊಫೈಲ್',
@@ -1051,6 +1061,11 @@ class AppLocalizations {
       'refresh_weather': 'मौसम ताज़ा करें',
       'location_disabled': 'डिवाइस पर जीपीएस सेवा अक्षम है।',
       'location_denied': 'स्थान अनुमति अस्वीकृत। ज़िले का मौसम दिखाया जा रहा है।',
+      'turn_on_location_title': 'लोकेशन चालू करें',
+      'turn_on_location_desc': 'अपने खेत का सटीक लाइव मौसम प्राप्त करने के लिए कृपया डिवाइस लोकेशन (GPS) चालू करें।',
+      'turn_on_location_btn': 'लोकेशन चालू करें',
+      'continue_without_location': 'लोकेशन के बिना जारी रखें',
+      'turn_on_gps_banner': 'डिवाइस लोकेशन बंद है। लाइव मौसम के लिए जीपीएस चालू करें।',
 
       // Settings & Profile (Image 4)
       'settings_profile': 'सेटिंग्स और प्रोफ़ाइल',
